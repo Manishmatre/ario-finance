@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Table from "../../components/ui/Table";
-import { Select } from "../../components/ui/Select";
+import Select from "../../components/ui/Select";
 import axios from "../../utils/axiosInstance";
 import { useAuth } from "../../contexts/AuthContext";
+import Loader from "../../components/ui/Loader";
+import EmptyState from "../../components/ui/EmptyState";
+import Pagination from "../../components/ui/Pagination";
 
 export default function LedgerView() {
   const { token } = useAuth();
@@ -11,6 +14,8 @@ export default function LedgerView() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const totalPages = 2;
 
   // Fetch accounts on mount
   useEffect(() => {
@@ -48,8 +53,8 @@ export default function LedgerView() {
   }, [selectedAccount, token]);
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Ledger View</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">Ledger View</h2>
       {error && <div className="text-red-500 mb-2">{error}</div>}
       <div className="mb-4 max-w-xs">
         <label className="block mb-1">Select Account</label>
@@ -60,7 +65,9 @@ export default function LedgerView() {
         />
       </div>
       {loading ? (
-        <div>Loading...</div>
+        <Loader />
+      ) : entries.length === 0 ? (
+        <EmptyState message="No ledger entries found." />
       ) : (
         <Table
           columns={[
@@ -72,6 +79,7 @@ export default function LedgerView() {
           data={entries}
         />
       )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

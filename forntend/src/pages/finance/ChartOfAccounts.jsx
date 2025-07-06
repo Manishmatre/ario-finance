@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../../contexts/AuthContext";
 import axios from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
+import Button from "../../components/ui/Button";
+import Loader from "../../components/ui/Loader";
+import EmptyState from "../../components/ui/EmptyState";
 
 export default function ChartOfAccounts() {
   const { token } = useAuth();
@@ -79,15 +82,14 @@ export default function ChartOfAccounts() {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Chart of Accounts</h2>
-      <button
-        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded"
-        onClick={() => setModalOpen(true)}
-      >
+      <Button className="mb-4" onClick={() => setModalOpen(true)}>
         + Add Account
-      </button>
+      </Button>
       {error && <div className="text-red-500 mb-2">{error}</div>}
       {loading ? (
-        <div>Loading...</div>
+        <Loader />
+      ) : accounts.length === 0 ? (
+        <EmptyState message="No accounts found." />
       ) : (
         <Table
           columns={[
@@ -99,16 +101,14 @@ export default function ChartOfAccounts() {
           data={accounts.map((a) => ({
             ...a,
             actions: (
-              <button
-                className="text-red-600 hover:underline"
-                onClick={() => deleteAccount(a._id)}
-              >
+              <Button variant="danger" onClick={() => deleteAccount(a._id)}>
                 Delete
-              </button>
+              </Button>
             ),
           }))}
         />
       )}
+      {/* Pagination could go here if needed */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <h3 className="text-lg font-bold mb-2">Add Account</h3>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -131,13 +131,9 @@ export default function ChartOfAccounts() {
               <option value="expense">Expense</option>
             </select>
           </div>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            type="submit"
-            disabled={loading}
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Adding..." : "Add Account"}
-          </button>
+          </Button>
         </form>
       </Modal>
     </div>

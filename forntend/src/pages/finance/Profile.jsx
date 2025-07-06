@@ -2,16 +2,11 @@ import React from "react";
 import PageHeading from "../../components/ui/PageHeading";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Profile() {
-  // Mock user data
-  const user = {
-    name: "Demo Admin",
-    email: "admin@ario.com",
-    phone: "+91 98765 43210",
-    role: "Administrator",
-    avatar: "https://ui-avatars.com/api/?name=Demo+Admin&background=3b82f6&color=fff&size=128"
-  };
+  const { user } = useAuth();
+  const avatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=3b82f6&color=fff&size=128`;
 
   return (
     <div className="px-2 sm:px-4 py-6 max-w-2xl mx-auto">
@@ -24,11 +19,11 @@ export default function Profile() {
         ]}
       />
       <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center mb-6">
-        <img src={user.avatar} alt="Avatar" className="w-24 h-24 rounded-full mb-4 shadow" />
-        <div className="text-xl font-bold text-gray-800 mb-1">{user.name}</div>
-        <div className="text-gray-500 mb-1">{user.email}</div>
-        <div className="text-gray-500 mb-1">{user.phone}</div>
-        <div className="text-blue-700 font-medium">{user.role}</div>
+        <img src={avatar} alt="Avatar" className="w-24 h-24 rounded-full mb-4 shadow" />
+        <div className="text-xl font-bold text-gray-800 mb-1">{user?.name || 'User'}</div>
+        <div className="text-gray-500 mb-1">{user?.email || '-'}</div>
+        <div className="text-gray-500 mb-1">{user?.phone || '-'}</div>
+        <div className="text-blue-700 font-medium">{user?.role || ''}</div>
       </div>
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold mb-2 text-blue-700">Change Password</h3>

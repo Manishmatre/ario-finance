@@ -5,91 +5,288 @@ import Select from "../../components/ui/Select";
 import Button from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import PageHeading from "../../components/ui/PageHeading";
+import { MoneyInput } from "../../components/ui/MoneyInput";
+import { Card } from "../../components/ui/Card";
+import { FiCheckCircle } from "react-icons/fi";
 
 const ACCOUNT_TYPES = [
   { value: '', label: 'Select type' },
-  { value: 'Current', label: 'Current' },
-  { value: 'Savings', label: 'Savings' },
+  { value: 'Current', label: 'Current Account' },
+  { value: 'Savings', label: 'Savings Account' },
+  { value: 'Fixed Deposit', label: 'Fixed Deposit' },
+  { value: 'Recurring Deposit', label: 'Recurring Deposit' },
+  { value: 'NRE', label: 'NRE Account' },
+  { value: 'NRO', label: 'NRO Account' },
   { value: 'Other', label: 'Other' },
 ];
+
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
+  { value: 'dormant', label: 'Dormant' },
+  { value: 'frozen', label: 'Frozen' },
 ];
 
+const BANK_OPTIONS = [
+  { value: '', label: 'Select Bank' },
+  { value: 'SBI', label: 'State Bank of India' },
+  { value: 'HDFC', label: 'HDFC Bank' },
+  { value: 'ICICI', label: 'ICICI Bank' },
+  { value: 'Axis', label: 'Axis Bank' },
+  { value: 'Kotak', label: 'Kotak Mahindra Bank' },
+  { value: 'Yes Bank', label: 'Yes Bank' },
+  { value: 'PNB', label: 'Punjab National Bank' },
+  { value: 'Canara', label: 'Canara Bank' },
+  { value: 'Bank of Baroda', label: 'Bank of Baroda' },
+  { value: 'Union Bank', label: 'Union Bank of India' },
+  { value: 'Other', label: 'Other Bank' },
+];
+
+
+
 export default function AddBankAccount() {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors }, watch } = useForm();
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const onSubmit = (data) => {
-    setSuccess(true);
-    setTimeout(() => {
-      navigate('/finance/accounts');
-    }, 1200);
-    reset();
+  const watchBankName = watch("bankName");
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/finance/accounts');
+      }, 1200);
+      reset();
+    } catch (error) {
+      console.error('Failed to add account:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="px-2 sm:px-4 py-6 max-w-2xl mx-auto">
+    <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Add Bank/Account"
-        subtitle="Enter account details"
+        title="Add Bank Account"
+        subtitle="Create new bank account with opening balance"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
           { label: "Chart of Accounts", to: "/finance/accounts" },
-          { label: "Add Account" }
+          { label: "Add Bank Account" }
         ]}
       />
-      <div className="bg-white rounded-lg shadow-md p-6">
-        {success && <div className="text-green-600 text-center font-medium mb-2">Account added successfully!</div>}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label="Bank Name"
-            error={errors.bankName && "Required"}
-            {...register("bankName", { required: true })}
-            autoFocus
-          />
-          <div>
-            <label className="block mb-1 font-medium">Type</label>
-            <Select
-              options={ACCOUNT_TYPES}
-              {...register("type", { required: true })}
-              error={errors.type}
-            />
-            {errors.type && <div className="text-red-500 text-xs mt-1">Required</div>}
-          </div>
-          <Input
-            label="Account Holder"
-            error={errors.accountHolder && "Required"}
-            {...register("accountHolder", { required: true })}
-          />
-          <Input
-            label="Account Number"
-            error={errors.bankAccountNo && "Required"}
-            {...register("bankAccountNo", { required: true })}
-          />
-          <Input
-            label="IFSC Code"
-            error={errors.ifsc && "Required"}
-            {...register("ifsc", { required: true })}
-          />
-          <Input
-            label="Branch Name"
-            error={errors.branchName && "Required"}
-            {...register("branchName", { required: true })}
-          />
-          <div>
-            <label className="block mb-1 font-medium">Status</label>
-            <Select
-              options={STATUS_OPTIONS}
-              {...register("status", { required: true })}
-              error={errors.status}
-            />
-            {errors.status && <div className="text-red-500 text-xs mt-1">Required</div>}
-          </div>
-          <Button type="submit" className="w-full mt-2">Add Account</Button>
-        </form>
+
+
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="p-4 border-b border-gray-100">
+          <h3 className="text-lg font-medium text-gray-800">Bank Account Details</h3>
+        </div>
+        <div className="p-6">
+          {success && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <FiCheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <span className="text-green-800">Bank account added successfully!</span>
+              </div>
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Bank Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name *</label>
+                <Select
+                  options={BANK_OPTIONS}
+                  {...register("bankName", { required: true })}
+                  placeholder="Select bank"
+                />
+                {errors.bankName && (
+                  <span className="text-red-500 text-sm">Bank name is required</span>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Type *</label>
+                <Select
+                  options={ACCOUNT_TYPES}
+                  {...register("type", { required: true })}
+                  placeholder="Select account type"
+                />
+                {errors.type && (
+                  <span className="text-red-500 text-sm">Account type is required</span>
+                )}
+              </div>
+            </div>
+
+            {/* Account Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Holder Name *</label>
+                <input 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  placeholder="Enter account holder name"
+                  {...register("accountHolder", { required: true })}
+                />
+                {errors.accountHolder && (
+                  <span className="text-red-500 text-sm">Account holder name is required</span>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Number *</label>
+                <input 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  placeholder="Enter account number"
+                  {...register("bankAccountNo", { required: true })}
+                />
+                {errors.bankAccountNo && (
+                  <span className="text-red-500 text-sm">Account number is required</span>
+                )}
+              </div>
+            </div>
+
+            {/* Bank Codes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">IFSC Code *</label>
+              <input 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" 
+                placeholder="e.g., SBIN0001234"
+                {...register("ifsc", { required: true, pattern: /^[A-Z]{4}0[A-Z0-9]{6}$/ })}
+              />
+              {errors.ifsc && (
+                <span className="text-red-500 text-sm">
+                  {errors.ifsc.type === 'pattern' ? 'Invalid IFSC format' : 'IFSC code is required'}
+                </span>
+              )}
+            </div>
+
+            {/* Branch Information */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Branch Name *</label>
+              <input 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                placeholder="Enter branch name"
+                {...register("branchName", { required: true })}
+              />
+              {errors.branchName && (
+                <span className="text-red-500 text-sm">Branch name is required</span>
+              )}
+            </div>
+
+            {/* Balance Information */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-blue-900 mb-3">Balance Information</h4>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Current Balance (₹) *</label>
+                <MoneyInput 
+                  {...register("currentBalance", { required: true, min: 0 })} 
+                  placeholder="0.00"
+                />
+                {errors.currentBalance && (
+                  <span className="text-red-500 text-sm">Current balance is required</span>
+                )}
+              </div>
+            </div>
+
+            {/* Additional Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Status *</label>
+                <Select
+                  options={STATUS_OPTIONS}
+                  {...register("status", { required: true })}
+                  placeholder="Select status"
+                />
+                {errors.status && (
+                  <span className="text-red-500 text-sm">Status is required</span>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Interest Rate (%)</label>
+                <input 
+                  type="number"
+                  step="0.01"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  placeholder="e.g., 4.5"
+                  {...register("interestRate")}
+                />
+              </div>
+            </div>
+
+            {/* Account Features */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Account Features</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <label className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    className="mr-2" 
+                    {...register("features.internetBanking")}
+                  />
+                  <span className="text-sm">Internet Banking</span>
+                </label>
+                <label className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    className="mr-2" 
+                    {...register("features.mobileBanking")}
+                  />
+                  <span className="text-sm">Mobile Banking</span>
+                </label>
+                <label className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    className="mr-2" 
+                    {...register("features.debitCard")}
+                  />
+                  <span className="text-sm">Debit Card</span>
+                </label>
+                <label className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    className="mr-2" 
+                    {...register("features.chequeBook")}
+                  />
+                  <span className="text-sm">Cheque Book</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+              <textarea 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                rows="3"
+                placeholder="Any additional notes about this account..."
+                {...register("notes")} 
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading ? 'Adding Account...' : 'Add Bank Account'}
+              </Button>
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => navigate('/finance/accounts')}
+                className="flex-1"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

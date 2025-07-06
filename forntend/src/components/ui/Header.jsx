@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link, useLocation, NavLink } from "react-router-dom";
 import { FiSearch, FiBell, FiUser, FiSettings, FiLogOut, FiChevronDown, FiX } from "react-icons/fi";
 
 export default function Header({ sidebarOpen, setSidebarOpen }) {
-  const { token, logout, user: authUser } = useAuth();
+  const { token, logout, user: authUser, company } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -19,6 +19,8 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
   const notificationsRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   // Get user and tenant info
   const user = JSON.parse(localStorage.getItem("user")) || { name: authUser?.name || "User", email: authUser?.email || "" };
@@ -47,6 +49,17 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
     setUnreadCount(unread);
   }, [notifications]);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [dropdownOpen]);
+
   const handleLogout = () => {
     logout();
     navigate("/auth/login");
@@ -73,6 +86,8 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
       read: true
     })));
   };
+
+  const avatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=3b82f6&color=fff&size=32`;
 
   // Don't show header on auth pages
   if (location.pathname.startsWith('/auth')) {
@@ -192,55 +207,50 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                 )}
               </div>
               {/* Profile Dropdown */}
-              <div className="relative" ref={profileRef}>
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-2 focus:outline-none"
+                  onClick={() => setDropdownOpen((v) => !v)}
                 >
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold">
-                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  <span className="hidden md:inline-block ml-2 text-sm font-medium text-gray-700">
-                    {user.name || 'User'}
-                  </span>
-                  <FiChevronDown className={`ml-1 h-4 w-4 text-gray-500 transition-transform ${isProfileOpen ? 'transform rotate-180' : ''}`} />
+                  <img
+                    src={avatar}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full border-2 border-blue-200 shadow-sm"
+                  />
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
                 </button>
-                {isProfileOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                    <div className="py-1" role="none">
-                      <div className="px-4 py-2 border-b">
-                        <p className="text-sm text-gray-900 font-medium truncate">{user.name || 'User'}</p>
-                        <p className="text-xs text-gray-500 truncate">{user.email || 'user@example.com'}</p>
-                      </div>
-                      <Link
-                        to="/profile"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <FiUser className="mr-3 h-5 w-5 text-gray-400" />
-                        Your Profile
-                      </Link>
-                      <Link
-                        to="/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <FiSettings className="mr-3 h-5 w-5 text-gray-400" />
-                        Settings
-                      </Link>
-                      <button
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          handleLogout();
-                        }}
-                        className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                      >
-                        <FiLogOut className="mr-3 h-5 w-5 text-red-400" />
-                        Sign out
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <div
+                  className={`absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50 transition-all duration-200 ease-in-out
+                    ${dropdownOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
+                >
+                  <NavLink
+                    to="/finance/profile"
+                    className={({ isActive }) =>
+                      `block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition rounded-t ${isActive ? 'bg-blue-50 text-blue-700' : ''}`
+                    }
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <span className="inline-flex items-center gap-2"><FiUser /> Profile</span>
+                  </NavLink>
+                  <NavLink
+                    to="/finance/settings"
+                    className={({ isActive }) =>
+                      `block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition ${isActive ? 'bg-blue-50 text-blue-700' : ''}`
+                    }
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <span className="inline-flex items-center gap-2"><FiSettings /> Settings</span>
+                  </NavLink>
+                  <button
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 transition rounded-b"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    <span className="inline-flex items-center gap-2"><FiLogOut /> Logout</span>
+                  </button>
+                </div>
               </div>
             </>
           ) : (

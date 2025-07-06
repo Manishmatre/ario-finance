@@ -1,36 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { FiHome, FiBook, FiCreditCard, FiUsers, FiFileText, FiTrendingUp, FiChevronDown, FiSettings, FiUser, FiLayers, FiList, FiDollarSign, FiBriefcase, FiLogOut, FiPlusCircle, FiCheckCircle, FiShoppingCart, FiDatabase, FiPieChart } from "react-icons/fi";
 // import navLinks from '../../routes/financeNavLinks';
 
 const payablesMenu = [
-  { to: "/finance/bills", label: "Purchase Bills" },
-  { to: "/finance/vendors", label: "Vendors" },
-  { to: "/finance/vendor-ledger", label: "Vendor Ledger" },
-  { to: "/finance/advance-vendor", label: "Advance To Vendor" },
-  { to: "/finance/vendor-payments", label: "Vendor Payments" },
+  { to: "/finance/bills", label: "Purchase Bills", icon: <FiFileText /> },
+  { to: "/finance/vendors", label: "Vendors", icon: <FiUsers /> },
+  { to: "/finance/vendor-ledger", label: "Vendor Ledger", icon: <FiLayers /> },
+  { to: "/finance/advance-vendor", label: "Advance To Vendor", icon: <FiTrendingUp /> },
+  { to: "/finance/vendor-payments", label: "Vendor Payments", icon: <FiCreditCard /> },
 ];
 
 const transactionsMenu = [
-  { to: "/finance/add-transaction", label: "Add Transaction" },
-  { to: "/finance/transaction-approval", label: "Transaction Approval" },
-  { to: "/finance/journal", label: "Journal Entries" },
-  { to: "/finance/ledger", label: "Ledger View" },
+  { to: "/finance/add-transaction", label: "Add Transaction", icon: <FiPlusCircle /> },
+  { to: "/finance/transaction-approval", label: "Transaction Approval", icon: <FiCheckCircle /> },
+  { to: "/finance/journal", label: "Journal Entries", icon: <FiFileText /> },
+  { to: "/finance/ledger", label: "Ledger View", icon: <FiLayers /> },
 ];
 
 const accountsMenu = [
-  { to: "/finance/accounts", label: "Chart of Accounts" },
-  { to: "/finance/bankbook", label: "Bankbook" },
-  { to: "/finance/cashbook", label: "Cashbook" },
-  { to: "/finance/petty-cash", label: "Petty Cash Register" },
-  { to: "/finance/add-bank-account", label: "Add Bank Account" },
+  { to: "/finance/accounts", label: "Chart of Accounts", icon: <FiBook /> },
+  { to: "/finance/bankbook", label: "Bankbook", icon: <FiCreditCard /> },
+  { to: "/finance/cashbook", label: "Cashbook", icon: <FiDollarSign /> },
+  { to: "/finance/petty-cash", label: "Petty Cash Register", icon: <FiBriefcase /> },
+  { to: "/finance/add-bank-account", label: "Add Bank Account", icon: <FiPlusCircle /> },
 ];
 
 const navLinks = [
-  { to: "/finance", label: "Dashboard" },
-  { to: "/finance/cash-advance", label: "Cash Advance To Employee" },
-  { to: "/finance/cash-reimburse", label: "Cash Reimbursement" },
-  { to: "/finance/grn-matching", label: "GRN Matching" },
+  { to: "/finance", label: "Dashboard", icon: <FiHome /> },
+  { to: "/finance/cash-advance", label: "Cash Advance To Employee", icon: <FiDollarSign /> },
+  { to: "/finance/cash-reimburse", label: "Cash Reimbursement", icon: <FiDollarSign /> },
+  { to: "/finance/grn-matching", label: "GRN Matching", icon: <FiList /> },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -38,6 +39,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const [payablesOpen, setPayablesOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(false);
+
+  // Helper to close all dropdowns except the one being opened
+  const handleDropdown = (dropdown) => {
+    setAccountsOpen(dropdown === 'accounts');
+    setTransactionsOpen(dropdown === 'transactions');
+    setPayablesOpen(dropdown === 'payables');
+  };
+
   return (
     <aside
       className={`fixed md:static z-30 top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 shadow-lg p-4 border-r border-gray-800
@@ -54,7 +63,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 to={link.to}
                 end={link.to === "/finance"}
                 className={({ isActive }) =>
-                  `block rounded px-3 py-2 text-sm font-medium flex items-center gap-2
+                  `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2
                     transition-all duration-200 ease-in-out transform
                     relative group
                     ${
@@ -66,18 +75,20 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 }
                 onClick={() => setSidebarOpen(false)}
               >
+                {link.icon}
                 {link.label}
               </NavLink>
             ))}
             {/* Payables Dropdown */}
             <div>
               <button
-                className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm font-medium transition-all duration-200 ease-in-out
+                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
                   ${payablesOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
-                onClick={() => setPayablesOpen(v => !v)}
+                onClick={() => handleDropdown(payablesOpen ? '' : 'payables')}
               >
+                <FiShoppingCart />
                 <span>Payables</span>
-                <svg className={`w-4 h-4 ml-2 transition-transform ${payablesOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${payablesOpen ? 'rotate-180' : ''}`} />
               </button>
               <div
                 className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
@@ -89,11 +100,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     key={sub.to}
                     to={sub.to}
                     className={({ isActive }) =>
-                      `block rounded px-3 py-2 text-sm font-medium transition-all duration-200 ease-in-out
+                      `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
                       ${isActive ? 'bg-blue-600 text-white' : 'text-gray-200 hover:bg-blue-800 hover:text-white'}`
                     }
                     onClick={() => setSidebarOpen(false)}
                   >
+                    {sub.icon}
                     {sub.label}
                   </NavLink>
                 ))}
@@ -102,12 +114,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             {/* Transactions Dropdown */}
             <div>
               <button
-                className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm font-medium transition-all duration-200 ease-in-out
+                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
                   ${transactionsOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
-                onClick={() => setTransactionsOpen(v => !v)}
+                onClick={() => handleDropdown(transactionsOpen ? '' : 'transactions')}
               >
+                <FiDatabase />
                 <span>Transactions</span>
-                <svg className={`w-4 h-4 ml-2 transition-transform ${transactionsOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${transactionsOpen ? 'rotate-180' : ''}`} />
               </button>
               <div
                 className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
@@ -119,11 +132,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     key={sub.to}
                     to={sub.to}
                     className={({ isActive }) =>
-                      `block rounded px-3 py-2 text-sm font-medium transition-all duration-200 ease-in-out
+                      `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
                       ${isActive ? 'bg-blue-600 text-white' : 'text-gray-200 hover:bg-blue-800 hover:text-white'}`
                     }
                     onClick={() => setSidebarOpen(false)}
                   >
+                    {sub.icon}
                     {sub.label}
                   </NavLink>
                 ))}
@@ -132,12 +146,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             {/* Accounts Dropdown */}
             <div>
               <button
-                className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm font-medium transition-all duration-200 ease-in-out
+                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
                   ${accountsOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
-                onClick={() => setAccountsOpen(v => !v)}
+                onClick={() => handleDropdown(accountsOpen ? '' : 'accounts')}
               >
+                <FiPieChart />
                 <span>Accounts</span>
-                <svg className={`w-4 h-4 ml-2 transition-transform ${accountsOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${accountsOpen ? 'rotate-180' : ''}`} />
               </button>
               <div
                 className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
@@ -149,11 +164,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     key={sub.to}
                     to={sub.to}
                     className={({ isActive }) =>
-                      `block rounded px-3 py-2 text-sm font-medium transition-all duration-200 ease-in-out
+                      `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
                       ${isActive ? 'bg-blue-600 text-white' : 'text-gray-200 hover:bg-blue-800 hover:text-white'}`
                     }
                     onClick={() => setSidebarOpen(false)}
                   >
+                    {sub.icon}
                     {sub.label}
                   </NavLink>
                 ))}
@@ -163,7 +179,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             <NavLink
               to="/finance/profile"
               className={({ isActive }) =>
-                `block rounded px-3 py-2 text-sm font-medium flex items-center gap-2
+                `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2
                   transition-all duration-200 ease-in-out transform
                   relative group
                   ${
@@ -175,13 +191,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
               }
               onClick={() => setSidebarOpen(false)}
             >
+              <FiUser />
               Profile
             </NavLink>
             {/* Settings Link */}
             <NavLink
               to="/finance/settings"
               className={({ isActive }) =>
-                `block rounded px-3 py-2 text-sm font-medium flex items-center gap-2
+                `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2
                   transition-all duration-200 ease-in-out transform
                   relative group
                   ${
@@ -193,13 +210,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
               }
               onClick={() => setSidebarOpen(false)}
             >
+              <FiSettings />
               Settings
             </NavLink>
           </>
         ) : (
           <>
-            <NavLink to="/auth/login" className="block rounded px-3 py-2 text-sm font-medium text-blue-300 hover:bg-gray-800 hover:text-white">Login</NavLink>
-            <NavLink to="/auth/register" className="block rounded px-3 py-2 text-sm font-medium text-blue-300 hover:bg-gray-800 hover:text-white">Register</NavLink>
+            <NavLink to="/auth/login" className="flex items-center w-full rounded px-3 py-2 text-sm font-medium text-blue-300 hover:bg-gray-800 hover:text-white">Login</NavLink>
+            <NavLink to="/auth/register" className="flex items-center w-full rounded px-3 py-2 text-sm font-medium text-blue-300 hover:bg-gray-800 hover:text-white">Register</NavLink>
           </>
         )}
       </nav>

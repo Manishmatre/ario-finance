@@ -27,10 +27,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { token } = useAuth();
   return (
     <aside
-      className={`fixed md:static z-30 top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 p-4 shadow transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      className={`fixed md:static z-30 top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 shadow-lg p-4 border-r border-gray-800
+        transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
     >
-      <div className="font-bold text-lg mb-6 text-blue-600">Finance & Accounts</div>
-      <nav className="flex flex-col gap-2">
+      <div className="font-bold text-lg mb-6 text-gray-300 tracking-wide">Finance & Accounts</div>
+      <nav className="flex flex-col gap-1">
         {token ? (
           navLinks.map(link => (
             <NavLink
@@ -38,9 +40,15 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
               to={link.to}
               end={link.to === "/finance"}
               className={({ isActive }) =>
-                `block rounded px-3 py-2 text-sm font-medium transition-all duration-150 ${
-                  isActive ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-200"
-                }`
+                `block rounded px-3 py-2 text-sm font-medium flex items-center gap-2
+                  transition-all duration-200 ease-in-out transform
+                  relative group
+                  ${
+                    isActive
+                      ? "bg-blue-700 text-white shadow scale-105 border-l-4 border-blue-400"
+                      : "text-gray-200 hover:bg-gray-800 hover:text-white hover:scale-105"
+                  }
+                `
               }
               onClick={() => setSidebarOpen(false)}
             >
@@ -49,8 +57,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
           ))
         ) : (
           <>
-            <NavLink to="/auth/login" className="block rounded px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50">Login</NavLink>
-            <NavLink to="/auth/register" className="block rounded px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50">Register</NavLink>
+            <NavLink to="/auth/login" className="block rounded px-3 py-2 text-sm font-medium text-blue-300 hover:bg-gray-800 hover:text-white">Login</NavLink>
+            <NavLink to="/auth/register" className="block rounded px-3 py-2 text-sm font-medium text-blue-300 hover:bg-gray-800 hover:text-white">Register</NavLink>
           </>
         )}
       </nav>

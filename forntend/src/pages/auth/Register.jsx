@@ -529,7 +529,7 @@ export default function Register() {
               )}
             </button>
           </div>
-// ...
+
         </form>
       )}
 

@@ -60,7 +60,7 @@ export default function PurchaseBills() {
                 <label className="block mb-1">Amount</label>
                 <input type="number" step="0.01" className="border rounded px-2 py-1 w-full" required />
               </div>
-              <div>
+    <div>
                 <label className="block mb-1">File (PDF/JPG)</label>
                 <input type="file" className="border rounded px-2 py-1 w-full" accept=".pdf,.jpg,.jpeg,.png" required />
               </div>

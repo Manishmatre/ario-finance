@@ -4,7 +4,7 @@ export default function Table({ data, columns }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border border-gray-300 bg-white rounded-lg shadow-sm">
-        <thead>
+      <thead>
           <tr>
             {columns.map(col => (
               <th key={col.accessor || col.Header} className="px-4 py-2 border-b bg-gray-50 text-left font-semibold text-gray-700">
@@ -12,8 +12,8 @@ export default function Table({ data, columns }) {
               </th>
             ))}
           </tr>
-        </thead>
-        <tbody>
+      </thead>
+      <tbody>
           {data.map((row, i) => (
             <tr key={row.id || row._id || i} className="hover:bg-blue-50 transition-colors">
               {columns.map(col => (
@@ -23,8 +23,8 @@ export default function Table({ data, columns }) {
               ))}
             </tr>
           ))}
-        </tbody>
-      </table>
+      </tbody>
+    </table>
     </div>
   );
 }

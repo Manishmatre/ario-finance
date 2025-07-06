@@ -12,7 +12,7 @@ import AddTransaction from './pages/finance/AddTransaction';
 import EditTransaction from './pages/finance/EditTransaction';
 import TransactionApproval from './pages/finance/TransactionApproval';
 import PurchaseBills from './pages/finance/PurchaseBills';
-import Vendors from './pages/finance/Vendors';  
+import Vendors from './pages/finance/Vendors';
 import VendorLedger from './pages/finance/VendorLedger';
 import AdvanceToVendor from './pages/finance/AdvanceToVendor';
 import VendorPayments from './pages/finance/VendorPayments';
@@ -27,6 +27,9 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import Register from './pages/auth/Register';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import AddBankAccount from './pages/finance/AddBankAccount';
+import Settings from './pages/finance/Settings';
+import Profile from './pages/finance/Profile';
 
 export default function App() {
   return (
@@ -41,9 +44,10 @@ export default function App() {
 
           {/* Protected finance routes */}
           <Route element={<ProtectedRoute />}>
-            <Route element={<FinanceLayout />}>
+          <Route element={<FinanceLayout />}>
               <Route path="/finance" element={<Dashboard />} />
               <Route path="/finance/accounts" element={<ChartOfAccounts />} />
+              <Route path="/finance/add-bank-account" element={<AddBankAccount />} />
               <Route path="/finance/journal" element={<JournalEntries />} />
               <Route path="/finance/ledger" element={<LedgerView />} />
               <Route path="/finance/add-transaction" element={<AddTransaction />} />
@@ -60,6 +64,8 @@ export default function App() {
               <Route path="/finance/cash-advance" element={<CashAdvanceToEmployee />} />
               <Route path="/finance/cash-reimburse" element={<CashReimbursement />} />
               <Route path="/finance/grn-matching" element={<GRNMatching />} />
+              <Route path="/finance/settings" element={<Settings />} />
+              <Route path="/finance/profile" element={<Profile />} />
               <Route path="*" element={<Navigate to="/finance" />} />
             </Route>
           </Route>

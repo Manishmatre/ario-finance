@@ -56,7 +56,7 @@ export default function EditTransaction() {
           <label className="block mb-1">Cost Code</label>
           <input className="border rounded px-2 py-1 w-full" {...register("costCode")} />
         </div>
-        <div>
+    <div>
           <label className="block mb-1">Narration</label>
           <input className="border rounded px-2 py-1 w-full" {...register("narration")} />
         </div>

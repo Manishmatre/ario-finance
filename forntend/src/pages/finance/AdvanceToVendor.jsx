@@ -33,7 +33,7 @@ export default function AdvanceToVendor() {
           <input type="number" step="0.01" className="border rounded px-2 py-1 w-full" {...register("amount", { required: true })} />
           {errors.amount && <span className="text-red-500 text-sm">Required</span>}
         </div>
-        <div>
+    <div>
           <label className="block mb-1">Date</label>
           <input type="date" className="border rounded px-2 py-1 w-full" {...register("date", { required: true })} />
           {errors.date && <span className="text-red-500 text-sm">Required</span>}

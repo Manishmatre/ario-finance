@@ -28,7 +28,7 @@ export default function VendorPayments() {
       {loading && <Loader />}
       {success && <div className="text-green-600 mb-4">Payment successful!</div>}
       <form onSubmit={handlePay} className="space-y-4 bg-white p-6 rounded shadow">
-        <div>
+    <div>
           <label className="block mb-1">Select Unpaid Bill</label>
           <select className="border rounded px-2 py-1 w-full" value={selectedBill} onChange={e => setSelectedBill(e.target.value)} required>
             <option value="">Select a bill</option>

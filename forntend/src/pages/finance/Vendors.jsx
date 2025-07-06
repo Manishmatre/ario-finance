@@ -55,7 +55,7 @@ export default function Vendors() {
                 <input className="border rounded px-2 py-1 w-full" {...register('gstNo', { required: true })} />
                 {errors.gstNo && <span className="text-red-500 text-sm">Required</span>}
               </div>
-              <div>
+    <div>
                 <label className="block mb-1">Phone</label>
                 <input className="border rounded px-2 py-1 w-full" {...register('phone', { required: true })} />
                 {errors.phone && <span className="text-red-500 text-sm">Required</span>}

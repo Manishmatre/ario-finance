@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../utils/axios';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ArrowUpIcon, ArrowDownIcon, CurrencyRupeeIcon, BanknotesIcon, CreditCardIcon, ScaleIcon } from '@heroicons/react/24/outline';
+import PageHeading from "../../components/ui/PageHeading";
 
 // Mock data
 const monthlyData = [
@@ -114,10 +115,14 @@ export default function FinanceDashboard() {
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
-      <div className="pt-2">
-        <h1 className="text-2xl font-bold text-gray-800">Finance Dashboard</h1>
-        <p className="text-sm text-gray-500">Overview of your financial performance</p>
-      </div>
+      <PageHeading
+        title="Finance Dashboard"
+        subtitle="Overview of your financial performance"
+        breadcrumbs={[
+          { label: "Finance", to: "/finance" },
+          { label: "Dashboard" }
+        ]}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -154,7 +159,7 @@ export default function FinanceDashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Income vs Expense Chart */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 lg:col-span-2">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 lg:col-span-2 focus:outline-none outline-none" tabIndex={-1}>
           <h3 className="text-lg font-medium text-gray-800 mb-4">Income vs Expenses</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -170,7 +175,7 @@ export default function FinanceDashboard() {
           </div>
         </div>
         {/* Expense Breakdown Pie */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center lg:col-span-1">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center lg:col-span-1 focus:outline-none outline-none" tabIndex={-1}>
           <h3 className="text-lg font-medium text-gray-800 mb-4">Expense Breakdown</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -199,7 +204,7 @@ export default function FinanceDashboard() {
           </div>
         </div>
         {/* Account Balances */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between lg:col-span-1">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between lg:col-span-1 focus:outline-none outline-none" tabIndex={-1}>
           <h3 className="text-lg font-medium text-gray-800 mb-4">Account Balances</h3>
           <div className="space-y-4">
             {accountBalances.map((account) => (

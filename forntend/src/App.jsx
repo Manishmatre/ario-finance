@@ -17,7 +17,6 @@ import VendorLedger from './pages/finance/VendorLedger';
 import AdvanceToVendor from './pages/finance/AdvanceToVendor';
 import VendorPayments from './pages/finance/VendorPayments';
 import Cashbook from './pages/finance/Cashbook';
-import BankAccounts from './pages/loans/BankAccounts';
 import Loans from './pages/loans/Loans';
 import LoanApplication from './pages/loans/LoanApplication';
 import LoanDetails from './pages/loans/LoanDetails';
@@ -52,6 +51,7 @@ import AddPurchaseBill from './pages/finance/AddPurchaseBill';
 import BillDetails from './pages/finance/BillDetails';
 import LenderDetails from './pages/loans/LenderDetails';
 import AddAdvanceToVendor from './pages/finance/AddAdvanceToVendor';
+import Bankbook from './pages/finance/Bankbook';
 
 export default function App() {
   return (
@@ -105,7 +105,6 @@ export default function App() {
               <Route path="/finance/advance-vendor/edit/:id" element={<AddAdvanceToVendor />} />
               <Route path="/finance/vendor-payments" element={<VendorPayments />} />
               <Route path="/finance/cashbook" element={<Cashbook />} />
-              <Route path="/finance/bank-accounts" element={<BankAccounts />} />
               <Route path="/finance/petty-cash" element={<PettyCashRegister />} />
               <Route path="/finance/cash-advance" element={<CashAdvanceToEmployee />} />
               <Route path="/finance/cash-reimburse" element={<CashReimbursement />} />
@@ -126,6 +125,7 @@ export default function App() {
               <Route path="/finance/lenders" element={<Lenders />} />
               <Route path="/finance/lenders/add/:id?" element={<AddLender />} />
               <Route path="/finance/lenders/:id" element={<LenderDetails />} />
+              <Route path="/finance/bankbook" element={<Bankbook />} />
               <Route path="*" element={<Navigate to="/finance" />} />
             </Route>
           </Route>

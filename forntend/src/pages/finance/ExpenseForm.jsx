@@ -12,41 +12,13 @@ import TextArea from '../../components/ui/TextArea';
 import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 
-// Mock data for categories
-const mockCategories = [
-  { _id: '1', name: 'Supplies' },
-  { _id: '2', name: 'Travel' },
-  { _id: '3', name: 'Entertainment' },
-  { _id: '4', name: 'Meals' },
-  { _id: '5', name: 'Office Rent' },
-  { _id: '6', name: 'Utilities' },
-  { _id: '7', name: 'Internet' },
-  { _id: '8', name: 'Telephone' },
-  { _id: '9', name: 'Stationery' },
-  { _id: '10', name: 'Marketing' },
-  { _id: '11', name: 'Training' },
-  { _id: '12', name: 'Insurance' },
-  { _id: '13', name: 'Repairs & Maintenance' },
-  { _id: '14', name: 'Subscriptions' },
-  { _id: '15', name: 'Bank Charges' },
-  { _id: '16', name: 'Legal Fees' },
-  { _id: '17', name: 'Consulting' },
-  { _id: '18', name: 'Salaries' },
-  { _id: '19', name: 'Bonuses' },
-  { _id: '20', name: 'Taxes' },
-  { _id: '21', name: 'Fuel' },
-  { _id: '22', name: 'Courier' },
-  { _id: '23', name: 'Gifts' },
-  { _id: '24', name: 'Medical' },
-  { _id: '25', name: 'Other' },
-];
-
 export default function ExpenseForm() {
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState(mockCategories);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [receiptPreview, setReceiptPreview] = useState(null);
   const [file, setFile] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -64,6 +36,22 @@ export default function ExpenseForm() {
       status: 'pending'
     }
   });
+
+  // Fetch real categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      try {
+        const response = await axiosInstance.get('/api/finance/expenses/categories');
+        setCategories(response.data || []);
+      } catch (err) {
+        setCategories([]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Fetch expense data if in edit mode
   useEffect(() => {
@@ -263,11 +251,10 @@ export default function ExpenseForm() {
                     }))}
                     {...register('category', { required: 'Category is required' })}
                     error={errors.category?.message}
-                    disabled={loading || categories.length === 0}
-                    placeholder={categories.length === 0 ? 'No categories available' : 'Select a category'}
+                    disabled={loading || categoriesLoading || categories.length === 0}
+                    placeholder={categoriesLoading ? 'Loading categories...' : (categories.length === 0 ? 'No categories available' : 'Select a category')}
                     onChange={e => {
                       setSelectedCategory(categories.find(cat => cat._id === e.target.value)?.name || '');
-                      // Call react-hook-form's onChange if present
                       if (typeof register('category').onChange === 'function') {
                         register('category').onChange(e);
                       }

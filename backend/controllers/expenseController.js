@@ -232,13 +232,15 @@ exports.getExpenseReports = async (req, res) => {
 
     // By Category
     const byCategory = expenses.reduce((acc, expense) => {
-      const categoryIndex = acc.findIndex(item => item._id.toString() === expense.category.toString());
+      // Use the category _id for grouping, not the whole object
+      const catId = expense.category?._id ? expense.category._id.toString() : expense.category?.toString() || 'Unknown';
+      const categoryIndex = acc.findIndex(item => item._id === catId);
       if (categoryIndex !== -1) {
         acc[categoryIndex].totalAmount += expense.amount;
         acc[categoryIndex].count += 1;
       } else {
         acc.push({
-          _id: expense.category,
+          _id: catId,
           totalAmount: expense.amount,
           count: 1,
           categoryName: expense.category?.name || 'Unknown'

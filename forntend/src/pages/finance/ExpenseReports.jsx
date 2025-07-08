@@ -25,6 +25,7 @@ export default function ExpenseReports() {
     endDate: format(new Date(), 'yyyy-MM-dd'),
     groupBy: 'category', // 'category' or 'month'
   });
+  const [categories, setCategories] = useState([]);
   
   const fetchReportData = async () => {
     try {
@@ -47,6 +48,19 @@ export default function ExpenseReports() {
   useEffect(() => {
     fetchReportData();
   }, [filters.startDate, filters.endDate, filters.groupBy]);
+
+  // Fetch categories for lookup
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('/api/finance/expenses/categories');
+        setCategories(response.data || []);
+      } catch (err) {
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -92,6 +106,13 @@ export default function ExpenseReports() {
       startDate: format(start, 'yyyy-MM-dd'),
       endDate: format(end, 'yyyy-MM-dd')
     }));
+  };
+
+  // Helper to get category name from ID
+  const getCategoryName = (catId, fallback) => {
+    if (!catId) return fallback || '-';
+    const found = categories.find(c => c._id === catId);
+    return found ? found.name : (fallback || catId);
   };
 
   return (
@@ -233,8 +254,15 @@ export default function ExpenseReports() {
                             <tr key={item._id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {filters.groupBy === 'category' ? item.categoryName || 'Unknown' : 
-                                   `${item._id.year}-${item._id.month.toString().padStart(2, '0')}`}
+                                  {filters.groupBy === 'category' ? (
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {item.categoryName || getCategoryName(item._id, 'Unknown')}
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {`${item._id.year}-${item._id.month.toString().padStart(2, '0')}`}
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">

@@ -215,7 +215,7 @@ export default function ExpenseCategories() {
         )}
       </Card>
       {/* Modal for Add/Edit Category */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingCategory ? 'Edit Category' : 'Add Category'}>
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingCategory ? 'Edit Category' : 'Add Category'}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
             label="Category Name"
@@ -239,7 +239,7 @@ export default function ExpenseCategories() {
         </form>
       </Modal>
       {/* Confirm Delete Modal */}
-      <Modal isOpen={!!categoryToDelete} onClose={() => setCategoryToDelete(null)} title="Delete Category?">
+      <Modal open={!!categoryToDelete} onClose={() => setCategoryToDelete(null)} title="Delete Category?">
         <div className="space-y-4">
           <p>Are you sure you want to delete the category <b>{categoryToDelete?.name}</b>?</p>
           <div className="flex justify-end gap-2">

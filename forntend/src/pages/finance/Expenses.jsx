@@ -22,8 +22,21 @@ export default function Expenses() {
   });
   const [loading, setLoading] = useState(false);
   const [expenses, setExpenses] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get('/api/finance/expenses/categories');
+        setCategories(response.data || []);
+      } catch (err) {
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const fetchExpenses = async () => {
     try {
@@ -85,11 +98,20 @@ export default function Expenses() {
     { title: 'Rejected', value: `₹${expenses?.length > 0 ? expenses.filter(e => e.status === 'rejected').reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`, icon: <FiFilter className="h-6 w-6 text-gray-500" /> },
   ];
 
+  // Helper to get category name from ID
+  const getCategoryName = (cat) => {
+    if (!cat) return '-';
+    if (typeof cat === 'object' && cat.name) return cat.name;
+    // If cat is an ID, look up in categories
+    const found = categories.find(c => c._id === cat);
+    return found ? found.name : cat;
+  };
+
   // Table columns
   const columns = [
     { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? format(new Date(value), 'dd MMM yyyy') : '-' },
     { Header: 'Description', accessor: 'description' },
-    { Header: 'Category', accessor: 'category', Cell: ({ value }) => value?.name || '-' },
+    { Header: 'Category', accessor: 'category', Cell: ({ value }) => getCategoryName(value) },
     { Header: 'Amount', accessor: 'amount', Cell: ({ value }) => `₹${value?.toLocaleString()}` },
     { Header: 'Status', accessor: 'status', Cell: ({ value }) => (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${

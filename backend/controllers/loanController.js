@@ -1,5 +1,5 @@
 const Loan = require('../models/loan');
-const { calculateEMI } = require('../utils/loanCalculations');
+const { calculateEMI, calculateRiskRating, calculateLoanSchedule, updateRiskRating } = require('../utils/loanCalculations');
 
 // Create new loan application
 exports.createLoan = async (req, res) => {

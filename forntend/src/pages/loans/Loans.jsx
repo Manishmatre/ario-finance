@@ -228,47 +228,47 @@ const Loans = () => {
       {/* Filters and Actions Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
         <div className="flex flex-wrap gap-2 items-center">
-          <select
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
             className="border rounded px-2 py-2 text-sm"
-          >
-            <option value="">All Statuses</option>
-            <option value="APPLIED">Applied</option>
-            <option value="APPROVED">Approved</option>
-            <option value="DISBURSED">Disbursed</option>
-            <option value="REPAYING">Repaying</option>
-            <option value="CLOSED">Closed</option>
+            >
+              <option value="">All Statuses</option>
+              <option value="APPLIED">Applied</option>
+              <option value="APPROVED">Approved</option>
+              <option value="DISBURSED">Disbursed</option>
+              <option value="REPAYING">Repaying</option>
+              <option value="CLOSED">Closed</option>
             <option value="REJECTED">Rejected</option>
-          </select>
-          <select
-            name="loanType"
-            value={filters.loanType}
-            onChange={handleFilterChange}
+            </select>
+            <select
+              name="loanType"
+              value={filters.loanType}
+              onChange={handleFilterChange}
             className="border rounded px-2 py-2 text-sm"
-          >
+            >
             <option value="">All Types</option>
             <option value="Term Loan">Term Loan</option>
             <option value="Working Capital">Working Capital</option>
             <option value="Equipment">Equipment</option>
             <option value="Vehicle">Vehicle</option>
             <option value="Other">Other</option>
-          </select>
-          <input
-            type="text"
-            name="search"
-            value={filters.search}
-            onChange={handleFilterChange}
+            </select>
+              <input
+                type="text"
+                name="search"
+                value={filters.search}
+                onChange={handleFilterChange}
             className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-            placeholder="Search loans..."
-          />
+                placeholder="Search loans..."
+              />
           <Button variant="outline" onClick={handleReset}><FiRefreshCw className="mr-2" />Reset</Button>
         </div>
         <div className="flex gap-2 mt-2 md:mt-0">
           <Button onClick={() => navigate('/finance/loans/new')} className="bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2" />Add Loan</Button>
-        </div>
-      </div>
+            </div>
+          </div>
 
       {/* Table Section */}
       <Card>
@@ -285,7 +285,7 @@ const Loans = () => {
         {paginatedLoans.length > 0 && (
           <div className="p-4 border-t border-gray-100">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
+        </div>
         )}
       </Card>
     </div>

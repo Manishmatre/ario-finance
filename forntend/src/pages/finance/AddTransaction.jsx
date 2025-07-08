@@ -119,16 +119,16 @@ export default function AddTransaction() {
                   <span className="text-red-500 text-sm">Debit account is required</span>
                 )}
               </div>
-              <div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Credit Account *</label>
-                <Select
+          <Select
                   options={accounts.map((a) => ({ 
                     value: a._id, 
                     label: `${a.name} (${a.code}) - ${a.type}` 
                   }))}
-                  {...register("creditAccount", { required: true })}
+            {...register("creditAccount", { required: true })}
                   placeholder="Select credit account"
-                />
+          />
                 {errors.creditAccount && (
                   <span className="text-red-500 text-sm">Credit account is required</span>
                 )}
@@ -163,17 +163,17 @@ export default function AddTransaction() {
                   <span className="text-red-500 text-sm">Transaction date is required</span>
                 )}
               </div>
-            </div>
+        </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cost Code</label>
                 <input 
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                   placeholder="e.g., CC001, PROJECT-A"
                   {...register("costCode")} 
                 />
-              </div>
-              <div>
+        </div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Reference Number</label>
                 <input 
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -181,8 +181,8 @@ export default function AddTransaction() {
                   {...register("reference")} 
                 />
               </div>
-            </div>
-            <div>
+        </div>
+        <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Narration/Description</label>
               <textarea 
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 

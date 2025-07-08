@@ -151,51 +151,51 @@ export default function Expenses() {
       {/* Filters and Actions Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
         <div className="flex flex-wrap gap-2 items-center">
-          <input
-            type="date"
-            value={filters.startDate}
-            onChange={e => setFilters(f => ({ ...f, startDate: e.target.value }))}
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={e => setFilters(f => ({ ...f, startDate: e.target.value }))}
             className="border rounded px-3 py-2 w-36 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-            placeholder="Start Date"
-          />
-          <input
-            type="date"
-            value={filters.endDate}
-            onChange={e => setFilters(f => ({ ...f, endDate: e.target.value }))}
+              placeholder="Start Date"
+            />
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={e => setFilters(f => ({ ...f, endDate: e.target.value }))}
             className="border rounded px-3 py-2 w-36 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-            placeholder="End Date"
-          />
-          <select
-            value={filters.category}
-            onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
+              placeholder="End Date"
+            />
+            <select
+              value={filters.category}
+              onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
             className="border rounded px-2 py-2 text-sm"
-          >
-            <option value="">All Categories</option>
-            <option value="salary">Salary</option>
-            <option value="rent">Rent</option>
-            <option value="utilities">Utilities</option>
-            <option value="supplies">Supplies</option>
-            <option value="travel">Travel</option>
-            <option value="other">Other</option>
-          </select>
-          <select
-            value={filters.status}
-            onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
+            >
+              <option value="">All Categories</option>
+              <option value="salary">Salary</option>
+              <option value="rent">Rent</option>
+              <option value="utilities">Utilities</option>
+              <option value="supplies">Supplies</option>
+              <option value="travel">Travel</option>
+              <option value="other">Other</option>
+            </select>
+            <select
+              value={filters.status}
+              onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
             className="border rounded px-2 py-2 text-sm"
-          >
-            <option value="">All Statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          <input
-            type="text"
-            value={filters.search}
-            onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
+            >
+              <option value="">All Statuses</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
+            </select>
+              <input
+                type="text"
+                value={filters.search}
+                onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
             className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-            placeholder="Search expenses..."
-          />
-        </div>
+                placeholder="Search expenses..."
+              />
+            </div>
         <div className="flex gap-2 mt-2 md:mt-0">
           <Button onClick={() => navigate('/finance/expenses/new')} className="bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2" />Add Expense</Button>
           <Button key="export-csv" variant="outline" className="ml-2" onClick={() => alert('Export (mock)')}><FiDownload className="mr-2" />Export CSV</Button>

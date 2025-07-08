@@ -242,7 +242,7 @@ export default function CashReimbursement() {
             key={index}
             title={summary.title}
             value={summary.title.includes('Amount') || summary.title.includes('Reimbursements')
-              ? `₹${summary.value.toLocaleString()}`
+              ? `₹${summary.value.toLocaleString()}` 
               : summary.value.toString()}
             icon={summary.icon}
           />
@@ -259,12 +259,12 @@ export default function CashReimbursement() {
             placeholder="Search reimbursements..."
           />
         </div>
-        <div className="flex justify-between items-center">
-          <Button onClick={() => setModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-            + Submit Reimbursement
-          </Button>
-        </div>
+      <div className="flex justify-between items-center">
+        <Button onClick={() => setModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+          + Submit Reimbursement
+        </Button>
       </div>
+        </div>
       {/* Table Section */}
       <Card>
         {loading ? <Loader /> : paginatedReimbursements.length === 0 ? <EmptyState message="No reimbursements found." /> : (
@@ -280,7 +280,7 @@ export default function CashReimbursement() {
         {paginatedReimbursements.length > 0 && (
           <div className="p-4 border-t border-gray-100">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
+      </div>
         )}
       </Card>
 

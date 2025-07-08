@@ -197,7 +197,7 @@ export default function ExpenseCategories() {
             className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
             placeholder="Search categories..."
           />
-        </div>
+            </div>
         <div className="flex gap-2 mt-2 md:mt-0">
           <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2" />Add Category</Button>
         </div>

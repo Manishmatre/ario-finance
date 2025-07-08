@@ -5,17 +5,24 @@ import Loader from '../../components/ui/Loader';
 import EmptyState from '../../components/ui/EmptyState';
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
-import { FiUsers, FiDollarSign, FiMapPin, FiPhone, FiEdit2, FiEye, FiTrash2 } from "react-icons/fi";
+import { FiUsers, FiDollarSign, FiMapPin, FiPhone, FiPlus } from "react-icons/fi";
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 
-const vendorSummary = [
-  { title: 'Total Vendors', value: 6, icon: <FiUsers className="h-6 w-6 text-blue-500" /> },
-  { title: 'Total Outstanding', value: 720000, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
-  { title: 'Active Vendors', value: 6, icon: <FiMapPin className="h-6 w-6 text-green-500" /> },
-  { title: 'Categories', value: 6, icon: <FiPhone className="h-6 w-6 text-purple-500" /> },
-];
+// Compute real summary stats from vendors
+const getVendorsSummary = (vendors) => {
+  const totalVendors = vendors.length;
+  const totalOutstanding = vendors.reduce((sum, v) => sum + (v.outstanding || 0), 0);
+  const activeVendors = vendors.filter(v => v.isActive !== false).length;
+  const categories = new Set(vendors.map(v => v.category || '-')).size;
+  return [
+    { title: 'Total Vendors', value: totalVendors, icon: <FiUsers className="h-6 w-6 text-blue-500" /> },
+    { title: 'Total Outstanding', value: totalOutstanding, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
+    { title: 'Active Vendors', value: activeVendors, icon: <FiMapPin className="h-6 w-6 text-green-500" /> },
+    { title: 'Categories', value: categories, icon: <FiPhone className="h-6 w-6 text-purple-500" /> },
+  ];
+};
 
 export default function Vendors() {
   const [vendors, setVendors] = useState([]);
@@ -23,7 +30,7 @@ export default function Vendors() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const navigate = useNavigate();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -56,20 +63,13 @@ export default function Vendors() {
     }
   };
 
-  // Search and pagination logic
-  const filteredVendors = vendors.filter(v =>
-    v.name?.toLowerCase().includes(search.toLowerCase()) ||
-    v.gstNo?.toLowerCase().includes(search.toLowerCase()) ||
-    v.phone?.toLowerCase().includes(search.toLowerCase())
-  );
-  const totalPages = Math.max(1, Math.ceil(filteredVendors.length / rowsPerPage));
-  const paginatedVendors = filteredVendors.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-
+  // Table columns
   const columns = [
     { Header: 'Vendor Name', accessor: 'name', Cell: ({ value }) => (<div className="font-medium">{value}</div>) },
     { Header: 'GST No', accessor: 'gstNo', Cell: ({ value }) => <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{value}</span> },
     { Header: 'Contact', accessor: 'phone', Cell: ({ value }) => (<div className="font-medium">{value}</div>) },
     { Header: 'Address', accessor: 'address', Cell: ({ value }) => (<div className="max-w-xs truncate" title={value}>{value}</div>) },
+    { Header: 'Outstanding', accessor: 'outstanding', Cell: ({ value }) => <div className="font-medium text-red-600">9{value?.toLocaleString()}</div> },
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
         <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/vendors/${row.original._id || row.original.id}`)}>View</Button>
@@ -79,6 +79,15 @@ export default function Vendors() {
     ) }
   ];
 
+  // Filtering logic
+  const filteredVendors = vendors.filter(v =>
+    v.name?.toLowerCase().includes(search.toLowerCase()) ||
+    v.gstNo?.toLowerCase().includes(search.toLowerCase()) ||
+    v.phone?.toLowerCase().includes(search.toLowerCase())
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredVendors.length / rowsPerPage));
+  const paginatedVendors = filteredVendors.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500 p-4">{error}</div>;
 
@@ -87,33 +96,43 @@ export default function Vendors() {
       <PageHeading
         title="Vendors"
         subtitle="Manage vendor information and track outstanding balances"
+        breadcrumbs={[
+          { label: 'Finance', to: '/finance' },
+          { label: 'Vendors' }
+        ]}
         actions={[
-          <Button key="add-vendor" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate('/finance/vendors/add')}>Add Vendor</Button>
+          <Button key="add-vendor" className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2" onClick={() => navigate('/finance/vendors/add')}>
+            <FiPlus className="w-4 h-4" /> Add Vendor
+          </Button>
         ]}
       />
-      {/* Search and Pagination Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
-        <input
-          type="text"
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search by name, GST, or phone..."
-          className="border rounded px-3 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-        />
-        <div className="flex gap-2 justify-end mt-2 md:mt-0">
-          <button
-            className="px-3 py-1 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-l-md"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >Previous</button>
-          <span className="px-4 py-1 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-700">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            className="px-3 py-1 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-r-md"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >Next</button>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {getVendorsSummary(vendors).map((item, idx) => (
+          <Card key={item.title} className="flex items-center gap-4 p-4">
+            <div>{item.icon}</div>
+            <div>
+              <div className="text-sm text-gray-500">{item.title}</div>
+              <div className="text-xl font-bold">{item.title === 'Total Outstanding' ? `9${item.value?.toLocaleString()}` : item.value}</div>
+            </div>
+          </Card>
+        ))}
+      </div>
+      {/* Search and Add Vendor Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="text"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by name, GST, or phone..."
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+          />
+        </div>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button key="add-vendor" className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2" onClick={() => navigate('/finance/vendors/add')}>
+            <FiPlus className="w-4 h-4" /> Add Vendor
+          </Button>
         </div>
       </div>
       {/* Vendors Table */}

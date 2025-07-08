@@ -213,9 +213,9 @@ export default function JournalEntries() {
         )}
         {/* Pagination */}
         {paginatedEntries.length > 0 && (
-          <div className="p-4 border-t border-gray-100">
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
+            <div className="p-4 border-t border-gray-100">
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
         )}
       </Card>
     </div>

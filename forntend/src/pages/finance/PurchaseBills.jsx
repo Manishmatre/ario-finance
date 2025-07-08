@@ -23,7 +23,7 @@ const getBillsSummary = (bills) => {
     { title: 'Pending Amount', value: pendingAmount, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
     { title: 'Paid Amount', value: paidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
     { title: 'Overdue Bills', value: overdueBills, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
-  ];
+];
 };
 
 export default function PurchaseBills() {
@@ -99,7 +99,7 @@ export default function PurchaseBills() {
 
   const columns = [
     { 
-      Header: 'Vendor',
+      Header: 'Vendor', 
       accessor: 'vendorName',
       Cell: ({ row }) => <div className="font-medium">{row.original.vendorName}</div>
     },

@@ -15,5 +15,6 @@ router.post('/advances', advanceVendorController.createAdvance);
 router.get('/advances/:id', advanceVendorController.getAdvance);
 router.put('/advances/:id', advanceVendorController.updateAdvance);
 router.delete('/advances/:id', advanceVendorController.deleteAdvance);
+router.get('/summary', vendorController.getVendorSummary);
 
 module.exports = router;

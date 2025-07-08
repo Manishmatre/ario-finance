@@ -75,28 +75,28 @@ export default function ExpenseDetails() {
       </div>
       {/* Actions Bar */}
       <div className="flex gap-2 justify-end mb-4">
-        <Button
-          key="edit"
-          variant="outline"
-          onClick={() => navigate(`/finance/expenses/${id}/edit`)}
-        >
-          <FiEdit className="mr-2" /> Edit
+          <Button
+            key="edit"
+            variant="outline"
+            onClick={() => navigate(`/finance/expenses/${id}/edit`)}
+          >
+            <FiEdit className="mr-2" /> Edit
         </Button>
-        <Button
-          key="delete"
-          variant="outline"
-          color="red"
-          onClick={() => setDeleteModalOpen(true)}
-        >
-          <FiTrash2 className="mr-2" /> Delete
+          <Button
+            key="delete"
+            variant="outline"
+            color="red"
+            onClick={() => setDeleteModalOpen(true)}
+          >
+            <FiTrash2 className="mr-2" /> Delete
         </Button>
-        <Button
-          key="export"
-          variant="outline"
-          onClick={() => toast.info('Export feature coming soon!')}
-        >
-          <FiDownload className="mr-2" /> Export
-        </Button>
+          <Button
+            key="export"
+            variant="outline"
+            onClick={() => toast.info('Export feature coming soon!')}
+          >
+            <FiDownload className="mr-2" /> Export
+          </Button>
       </div>
       {/* Main Info Card */}
       <Card>
@@ -214,10 +214,10 @@ export default function ExpenseDetails() {
               <h4 className="font-medium">Created At</h4>
               <p className="text-sm">{expense.createdAt ? format(new Date(expense.createdAt), 'dd MMM yyyy, hh:mm a') : 'N/A'}</p>
             </div>
-            <div>
+              <div>
               <h4 className="font-medium">Last Updated</h4>
               <p className="text-sm">{expense.updatedAt ? format(new Date(expense.updatedAt), 'dd MMM yyyy, hh:mm a') : 'N/A'}</p>
-            </div>
+              </div>
           </div>
         </div>
       </Card>

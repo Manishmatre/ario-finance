@@ -131,15 +131,15 @@ const Lenders = () => {
       {/* Filters and Actions Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
         <div className="flex flex-1 items-center gap-2">
-          <input
-            type="text"
-            placeholder="Search lenders..."
-            value={filters.search}
-            onChange={handleInputChange}
-            name="search"
-            className="w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+              <input
+                type="text"
+                placeholder="Search lenders..."
+                value={filters.search}
+                onChange={handleInputChange}
+                name="search"
+                className="w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
         <div className="flex gap-2 mt-2 md:mt-0">
           <Button
             onClick={() => navigate('/finance/lenders/add')}
@@ -153,21 +153,21 @@ const Lenders = () => {
       {/* Table Section */}
       <Card>
         {loading ? <Loader /> : paginatedLenders.length === 0 ? (
-          <EmptyState
-            title="No Lenders Found"
-            description="You haven't added any lenders yet. Click the button below to add a new lender."
-            icon={<FiDatabase className="h-12 w-12 text-gray-400" />}
-            action={
-              <Button
-                onClick={() => navigate('/finance/lenders/add')}
-                icon={<FiPlus />}
+        <EmptyState
+          title="No Lenders Found"
+          description="You haven't added any lenders yet. Click the button below to add a new lender."
+          icon={<FiDatabase className="h-12 w-12 text-gray-400" />}
+          action={
+            <Button
+              onClick={() => navigate('/finance/lenders/add')}
+              icon={<FiPlus />}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Add New Lender
-              </Button>
-            }
-          />
-        ) : (
+            >
+              Add New Lender
+            </Button>
+          }
+        />
+      ) : (
           <Table
             data={paginatedLenders}
             columns={[
@@ -251,8 +251,8 @@ const Lenders = () => {
         {paginatedLenders.length > 0 && (
           <div className="p-4 border-t border-gray-100">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        </div>
+      )}
       </Card>
     </div>
   );

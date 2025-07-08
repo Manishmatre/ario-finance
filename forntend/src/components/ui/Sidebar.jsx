@@ -68,13 +68,15 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const isTransactionsActive = transactionsMenu.some(link => location.pathname.startsWith(link.to));
   const isAccountsActive = accountsMenu.some(link => location.pathname.startsWith(link.to));
   const isLoansActive = loansMenu.some(link => location.pathname.startsWith(link.to)) || location.pathname.startsWith('/finance/lenders');
+  const isVendorActive = isPayablesActive;
+  const isPurchaseActive = isPayablesActive;
 
   // Dropdown open state: always open if active, else controlled by click
   const [payablesOpen, setPayablesOpen] = useState(isPayablesActive);
+  const [loansOpen, setLoansOpen] = useState(isLoansActive);
   const [expensesOpen, setExpensesOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(isTransactionsActive);
   const [accountsOpen, setAccountsOpen] = useState(isAccountsActive);
-  const [loansOpen, setLoansOpen] = useState(isLoansActive);
 
   useEffect(() => { setPayablesOpen(isPayablesActive); }, [isPayablesActive]);
   useEffect(() => { setExpensesOpen(isExpensesActive); }, [isExpensesActive]);
@@ -83,31 +85,42 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   useEffect(() => { setLoansOpen(isLoansActive); }, [isLoansActive]);
 
   // Helper to close all dropdowns except the one being opened
-  const handleDropdown = (type) => {
-    switch (type) {
+  const handleDropdown = (menu) => {
+    switch (menu) {
       case 'loans':
         setLoansOpen(!loansOpen);
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
+        setPayablesOpen(false);
         break;
       case 'expenses':
         setExpensesOpen(!expensesOpen);
         setLoansOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
+        setPayablesOpen(false);
         break;
       case 'transactions':
         setTransactionsOpen(!transactionsOpen);
         setLoansOpen(false);
         setExpensesOpen(false);
         setAccountsOpen(false);
+        setPayablesOpen(false);
         break;
       case 'accounts':
         setAccountsOpen(!accountsOpen);
         setLoansOpen(false);
         setExpensesOpen(false);
         setTransactionsOpen(false);
+        setPayablesOpen(false);
+        break;
+      case 'payables':
+        setPayablesOpen(!payablesOpen);
+        setLoansOpen(false);
+        setExpensesOpen(false);
+        setTransactionsOpen(false);
+        setAccountsOpen(false);
         break;
       default:
         break;

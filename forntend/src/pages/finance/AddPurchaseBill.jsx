@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
@@ -7,20 +7,29 @@ import Card from '../../components/ui/Card';
 import { FiCheckCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
+import Select from '../../components/ui/Select';
 
 export default function AddPurchaseBill() {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [vendors, setVendors] = useState([]);
   const navigate = useNavigate();
+
+  // Fetch vendors for dropdown
+  useEffect(() => {
+    axiosInstance.get('/api/finance/vendors')
+      .then(res => setVendors(res.data))
+      .catch(() => setVendors([]));
+  }, []);
 
   const onSubmit = async data => {
     setLoading(true);
     setError(null);
     try {
       const formData = new FormData();
-      formData.append('vendor', data.vendor);
+      formData.append('vendorId', data.vendor);
       formData.append('billNo', data.billNo);
       formData.append('billDate', data.billDate);
       formData.append('amount', data.amount);
@@ -72,7 +81,11 @@ export default function AddPurchaseBill() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Vendor *</label>
-                <Input {...register('vendor', { required: true })} placeholder="Enter vendor name" />
+                <Select
+                  options={vendors.map(v => ({ value: v._id, label: v.name }))}
+                  {...register('vendor', { required: true })}
+                  placeholder="Select vendor"
+                />
                 {errors.vendor && <span className="text-red-500 text-sm">Vendor is required</span>}
               </div>
               <div>

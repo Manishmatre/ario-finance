@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiFilter, FiDownload, FiBarChart2, FiPieChart, FiDollarSign, FiCheck } from 'react-icons/fi';
+import { FiFilter, FiDownload, FiBarChart2, FiPieChart, FiDollarSign, FiCheck, FiClock, FiX } from 'react-icons/fi';
 import axios from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
@@ -10,39 +10,6 @@ import PageHeading from '../../components/ui/PageHeading';
 import Loader from '../../components/ui/Loader';
 import EmptyState from '../../components/ui/EmptyState';
 
-// Mock data for reports
-const mockReportData = {
-  summary: {
-    totalAmount: 6900,
-    approvedAmount: 1200,
-    averageMonthly: 2300,
-    count: 3,
-  },
-  byCategory: [
-    { _id: 'Supplies', totalAmount: 1200, count: 1 },
-    { _id: 'Travel', totalAmount: 3500, count: 1 },
-    { _id: 'Entertainment', totalAmount: 2200, count: 1 },
-  ],
-  byMonth: [
-    { _id: { year: 2025, month: 7 }, totalAmount: 6900, count: 3 },
-  ],
-};
-
-// Mock data for summary cards
-const summary = [
-  { title: 'Total Expenses', value: 6900, icon: <FiBarChart2 className="h-6 w-6 text-blue-500" /> },
-  { title: 'Approved', value: 1200, icon: <FiBarChart2 className="h-6 w-6 text-green-500" /> },
-  { title: 'Pending', value: 3500, icon: <FiBarChart2 className="h-6 w-6 text-yellow-500" /> },
-  { title: 'Rejected', value: 2200, icon: <FiBarChart2 className="h-6 w-6 text-gray-500" /> },
-];
-
-// Mock data for pie chart
-const expenseCategories = [
-  { name: 'Supplies', value: 1200, color: '#3b82f6' },
-  { name: 'Travel', value: 3500, color: '#10b981' },
-  { name: 'Entertainment', value: 2200, color: '#f59e0b' },
-];
-
 // Safe default for reportData
 const safeReportData = data => ({
   summary: data?.summary || { totalAmount: 0, approvedAmount: 0, averageMonthly: 0, count: 0 },
@@ -51,8 +18,7 @@ const safeReportData = data => ({
 });
 
 export default function ExpenseReports() {
-  const [reportDataRaw, setReportDataRaw] = useState(mockReportData);
-  const reportData = safeReportData(reportDataRaw);
+  const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     startDate: format(subMonths(new Date(), 6), 'yyyy-MM-dd'),
@@ -69,7 +35,7 @@ export default function ExpenseReports() {
       });
       
       const response = await axios.get(`/api/finance/expenses/reports?${params.toString()}`);
-      setReportDataRaw(response.data);
+      setReportData(safeReportData(response.data));
     } catch (err) {
       console.error('Error fetching report data:', err);
       toast.error('Failed to load expense report');
@@ -80,7 +46,7 @@ export default function ExpenseReports() {
 
   useEffect(() => {
     fetchReportData();
-  }, [filters.startDate, filters.endDate]);
+  }, [filters.startDate, filters.endDate, filters.groupBy]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -140,9 +106,34 @@ export default function ExpenseReports() {
       />
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {summary.map((item, idx) => (
-          <Card key={idx} title={item.title} value={`₹${item.value.toLocaleString()}`} icon={item.icon} />
-        ))}
+        {reportData?.summary ? (
+          <>
+            <Card 
+              title="Total Expenses" 
+              value={`₹${(reportData.summary.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`} 
+              icon={<FiDollarSign className="h-6 w-6 text-blue-500" />} 
+            />
+            <Card 
+              title="Approved" 
+              value={`₹${(reportData.summary.approvedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`} 
+              icon={<FiCheck className="h-6 w-6 text-green-500" />} 
+            />
+            <Card 
+              title="Pending" 
+              value={`₹${(reportData.summary.pendingAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`} 
+              icon={<FiClock className="h-6 w-6 text-yellow-500" />} 
+            />
+            <Card 
+              title="Rejected" 
+              value={`₹${(reportData.summary.rejectedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`} 
+              icon={<FiX className="h-6 w-6 text-red-500" />} 
+            />
+          </>
+        ) : (
+          <div className="col-span-4 flex justify-center items-center h-32">
+            <Loader />
+          </div>
+        )}
       </div>
       <Card>
         <div className="p-4 border-b border-gray-200">
@@ -210,65 +201,87 @@ export default function ExpenseReports() {
             </div>
           ) : (
             <>
-              {/* Category-wise Breakdown */}
+              {/* Expense Breakdown */}
               <Card>
                 <div className="p-4 border-b border-gray-200">
                   <h3 className="text-lg font-medium text-gray-900">
-                    Category-wise Breakdown
+                    {filters.groupBy === 'category' ? 'Category-wise' : 'Monthly'} Breakdown
                   </h3>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          % of Total
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {reportData.byCategory?.length > 0 ? (
-                        reportData.byCategory.map((item) => (
-                          <tr key={item._id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{item._id}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                              ₹{item.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                              {((item.totalAmount / reportData.summary.totalAmount) * 100).toFixed(1)}%
-                            </td>
+                <div className="p-4">
+                  {(reportData && ((filters.groupBy === 'category' && reportData.byCategory?.length > 0) || (filters.groupBy === 'month' && reportData.byMonth?.length > 0))) ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              {filters.groupBy === 'category' ? 'Category' : 'Month'}
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Amount
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Count
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              % of Total
+                            </th>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500">
-                            No category data available for the selected period
-                          </td>
-                        </tr>
-                      )}
-                      {reportData.summary.totalAmount > 0 && (
-                        <tr className="bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            Total
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                            ₹{reportData.summary.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                            100%
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {reportData[filters.groupBy === 'category' ? 'byCategory' : 'byMonth']?.map((item) => (
+                            <tr key={item._id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {filters.groupBy === 'category' ? item.categoryName || 'Unknown' : 
+                                   `${item._id.year}-${item._id.month.toString().padStart(2, '0')}`}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                                ₹{(item.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                                {item.count}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                                {((item.totalAmount / (reportData.summary.totalAmount || 1)) * 100).toFixed(1)}%
+                              </td>
+                            </tr>
+                          ))}
+                          {reportData.summary.totalAmount > 0 && (
+                            <tr className="bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                Total
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                                ₹{(reportData.summary.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                                {reportData.summary.count}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                                100%
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="text-gray-400 mb-4">
+                        <FiDollarSign className="w-12 h-12" />
+                      </div>
+                      <h3 className="text-xl font-medium text-gray-500 mb-2">
+                        No Expense Data Available
+                      </h3>
+                      <p className="text-gray-400 text-center">
+                        {filters.groupBy === 'category' 
+                          ? 'No expenses found in the selected categories'
+                          : 'No expenses found in the selected time period'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </Card>
             </>

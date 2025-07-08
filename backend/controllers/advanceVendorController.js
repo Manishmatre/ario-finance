@@ -2,9 +2,12 @@ const AdvanceVendor = require('../models/AdvanceVendor');
 
 exports.listAdvances = async (req, res) => {
   try {
+    console.log('DEBUG: req.tenantId:', req.tenantId);
+    console.log('DEBUG: req.user:', req.user);
     const advances = await AdvanceVendor.find({ tenantId: req.tenantId });
     res.json(advances);
   } catch (err) {
+    console.error('DEBUG: listAdvances error:', err);
     res.status(500).json({ error: err.message });
   }
 };

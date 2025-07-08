@@ -130,7 +130,8 @@ exports.updateExpense = async (req, res) => {
 // Delete expense
 exports.deleteExpense = async (req, res) => {
   try {
-    const expense = await Expense.findOneAndDelete({
+    // First check if the expense exists
+    const expense = await Expense.findOne({
       _id: req.params.id,
       tenantId: req.tenantId
     });
@@ -138,10 +139,36 @@ exports.deleteExpense = async (req, res) => {
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' });
     }
-    
-    res.json({ message: 'Expense deleted successfully' });
+
+    // Delete the expense
+    await Expense.deleteOne({
+      _id: req.params.id,
+      tenantId: req.tenantId
+    });
+
+    // If the expense had a receipt, delete it from storage
+    if (expense.receipt) {
+      try {
+        await axiosInstance.delete(`/api/storage/${expense.receipt}`);
+      } catch (storageErr) {
+        console.error('Error deleting receipt:', storageErr);
+      }
+    }
+
+    res.json({ 
+      message: 'Expense deleted successfully',
+      deletedExpense: {
+        id: expense._id,
+        amount: expense.amount,
+        description: expense.description
+      }
+    });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error deleting expense:', err);
+    res.status(400).json({ 
+      error: err.message,
+      details: err.errors || err
+    });
   }
 };
 
@@ -188,67 +215,64 @@ exports.getExpenseReports = async (req, res) => {
       date: { $gte: new Date(startDate), $lte: new Date(endDate) }
     };
 
-    // Summary
-    const summaryAgg = await Expense.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: "$amount" },
-          approvedAmount: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "approved"] }, "$amount", 0]
-            }
-          },
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-    const summary = summaryAgg[0] || { totalAmount: 0, approvedAmount: 0, count: 0 };
+    // Get all expenses first to ensure we have all data
+    const expenses = await Expense.find(match)
+      .sort({ date: -1 })
+      .populate('category', 'name');
+    
+    // Calculate summary from the found expenses
+    const summary = {
+      totalAmount: expenses.reduce((sum, expense) => sum + expense.amount, 0),
+      approvedAmount: expenses.filter(e => e.status === 'approved').reduce((sum, e) => sum + e.amount, 0),
+      pendingAmount: expenses.filter(e => e.status === 'pending').reduce((sum, e) => sum + e.amount, 0),
+      rejectedAmount: expenses.filter(e => e.status === 'rejected').reduce((sum, e) => sum + e.amount, 0),
+      count: expenses.length
+    };
+
 
     // By Category
-    const byCategory = await Expense.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: "$category",
-          totalAmount: { $sum: "$amount" },
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $lookup: {
-          from: "expensecategories",
-          localField: "_id",
-          foreignField: "_id",
-          as: "category"
-        }
-      },
-      {
-        $unwind: { path: "$category", preserveNullAndEmptyArrays: true }
-      },
-      {
-        $project: {
-          _id: 1,
-          totalAmount: 1,
+    const byCategory = expenses.reduce((acc, expense) => {
+      const categoryIndex = acc.findIndex(item => item._id.toString() === expense.category.toString());
+      if (categoryIndex !== -1) {
+        acc[categoryIndex].totalAmount += expense.amount;
+        acc[categoryIndex].count += 1;
+      } else {
+        acc.push({
+          _id: expense.category,
+          totalAmount: expense.amount,
           count: 1,
-          categoryName: "$category.name"
-        }
+          categoryName: expense.category?.name || 'Unknown'
+        });
       }
-    ]);
+      return acc;
+    }, []);
 
     // By Month
-    const byMonth = await Expense.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: { year: { $year: "$date" }, month: { $month: "$date" } },
-          totalAmount: { $sum: "$amount" },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { "_id.year": 1, "_id.month": 1 } }
-    ]);
+    const byMonth = expenses.reduce((acc, expense) => {
+      const date = new Date(expense.date);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      
+      const monthIndex = acc.findIndex(item => item._id.year === year && item._id.month === month);
+      if (monthIndex !== -1) {
+        acc[monthIndex].totalAmount += expense.amount;
+        acc[monthIndex].count += 1;
+      } else {
+        acc.push({
+          _id: { year, month },
+          totalAmount: expense.amount,
+          count: 1
+        });
+      }
+      return acc;
+    }, []);
+    
+    // Sort by month
+    byMonth.sort((a, b) => {
+      const aDate = new Date(a._id.year, a._id.month - 1);
+      const bDate = new Date(b._id.year, b._id.month - 1);
+      return aDate - bDate;
+    });
 
     // Average monthly
     let averageMonthly = 0;
@@ -256,6 +280,9 @@ exports.getExpenseReports = async (req, res) => {
       averageMonthly = byMonth.reduce((sum, m) => sum + m.totalAmount, 0) / byMonth.length;
     }
     summary.averageMonthly = averageMonthly;
+
+    // Calculate average monthly
+    summary.averageMonthly = byMonth.length > 0 ? byMonth.reduce((sum, m) => sum + m.totalAmount, 0) / byMonth.length : 0;
 
     res.json({ summary, byCategory, byMonth });
   } catch (err) {

@@ -21,7 +21,7 @@ const VendorLedger = () => {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    axiosInstance.get('/vendors').then(res => setVendors(res.data));
+    axiosInstance.get('/api/finance/vendors').then(res => setVendors(res.data));
   }, []);
 
   useEffect(() => {

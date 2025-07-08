@@ -58,20 +58,18 @@ export default function Expenses() {
         }
       });
       
-      // Handle different response structures
-      if (response.data && Array.isArray(response.data)) {
-        setExpenses(response.data);
-        setTotal(response.data.length);
-      } else if (response.data && response.data.data) {
-        setExpenses(response.data.data);
-        setTotal(response.data.total || response.data.data.length);
+      if (response.data) {
+        // Handle different response structures
+        const data = Array.isArray(response.data) ? response.data : response.data.data || [];
+        setExpenses(data);
+        setTotal(response.data.total || data.length);
       } else {
         setExpenses([]);
         setTotal(0);
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
-      toast.error('Failed to fetch expenses');
+      toast.error(error.response?.data?.error || 'Failed to fetch expenses');
       setExpenses([]);
       setTotal(0);
     } finally {
@@ -83,8 +81,20 @@ export default function Expenses() {
     fetchExpenses();
   }, [filters, currentPage, sortState]);
 
-  const handleDelete = (id) => {
-    // implement delete logic here
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this expense?')) {
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.delete(`/api/finance/expenses/${id}`);
+      toast.success('Expense deleted successfully');
+      // Refresh the list after deletion
+      fetchExpenses();
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      toast.error(error.response?.data?.error || 'Failed to delete expense');
+    }
   };
 
   return (

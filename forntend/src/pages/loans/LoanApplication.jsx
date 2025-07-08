@@ -65,7 +65,8 @@ const LoanApplication = () => {
   const fetchLenders = async () => {
     try {
       const response = await axiosInstance.get('/api/finance/lenders');
-      setLenders(response.data.map(lender => ({
+      // Access lenders array from response.data.lenders
+      setLenders(response.data.lenders.map(lender => ({
         key: lender._id,
         value: lender._id,
         label: `${lender.name} - ${lender.type}`
@@ -258,81 +259,26 @@ const LoanApplication = () => {
                 </div>
               </div>
 
-              <div>
-                <div className="mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Loan Purpose</h3>
-                  <Select
-                    name="loanPurpose"
-                    value={formData.loanPurpose}
-                    onChange={handleInputChange}
-                    options={[
-                      { value: '', label: 'Select purpose' },
-                      { value: 'BUSINESS_EXPANSION', label: 'Business Expansion' },
-                      { value: 'ASSET_PURCHASE', label: 'Asset Purchase' },
-                      { value: 'WORKING_CAPITAL', label: 'Working Capital' },
-                      { value: 'PERSONAL_USE', label: 'Personal Use' },
-                      { value: 'OTHER', label: 'Other' }
-                    ]}
-                    required
-                  />
+              {formData.lender && (
+                <div>
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Lender Details</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Name</span>
+                        <span className="text-sm font-medium">{lenders.find(l => l.value === formData.lender)?.label.split(' - ')[0]}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Type</span>
+                        <span className="text-sm font-medium">{lenders.find(l => l.value === formData.lender)?.label.split(' - ')[1]}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Collateral Type</h3>
-                  <Select
-                    name="collateralType"
-                    value={formData.collateralType}
-                    onChange={handleInputChange}
-                    options={[
-                      { value: '', label: 'Select collateral type' },
-                      { value: 'PROPERTY', label: 'Property' },
-                      { value: 'VEHICLE', label: 'Vehicle' },
-                      { value: 'JEWELRY', label: 'Jewelry' },
-                      { value: 'DEPOSIT', label: 'Bank Deposit' },
-                      { value: 'NONE', label: 'No Collateral' }
-                    ]}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Collateral Value</h3>
-                  <MoneyInput
-                    value={formData.collateralValue}
-                    onChange={handleInputChange}
-                    prefix="₹"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Loan Type</h3>
-                  <Select
-                    name="loanType"
-                    value={formData.loanType}
-                    onChange={handleInputChange}
-                    options={[
-                      { value: '', label: 'Select loan type' },
-                      { value: 'PERSONAL', label: 'Personal Loan' },
-                      { value: 'BUSINESS', label: 'Business Loan' },
-                      { value: 'MORTGAGE', label: 'Mortgage Loan' },
-                      { value: 'EDUCATION', label: 'Education Loan' },
-                      { value: 'VEHICLE', label: 'Vehicle Loan' }
-                    ]}
-                    required
-                  />
-                </div>
-              </div>
-
               <div>
                 <div className="mb-2">
                   <h3 className="text-sm font-medium text-gray-700">Loan Amount</h3>
@@ -343,9 +289,7 @@ const LoanApplication = () => {
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="mb-2">
                   <h3 className="text-sm font-medium text-gray-700">Interest Rate</h3>
@@ -359,7 +303,9 @@ const LoanApplication = () => {
                   />
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="mb-2">
                   <h3 className="text-sm font-medium text-gray-700">Loan Tenure</h3>
@@ -384,6 +330,17 @@ const LoanApplication = () => {
                       { value: '120', label: '120 months (10 years)' }
                     ]}
                     required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-2">
+                  <h3 className="text-sm font-medium text-gray-700">Monthly Installment</h3>
+                  <MoneyInput
+                    value={formData.monthlyInstallment}
+                    onChange={handleInputChange}
+                    prefix="₹"
                   />
                 </div>
               </div>

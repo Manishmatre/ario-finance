@@ -10,7 +10,8 @@ exports.uploadBill = async (req, res) => {
       vendorId, billNo, billDate, amount, projectId,
       fileUrl, tenantId: req.tenantId, createdBy: req.user?.id
     });
-    res.status(201).json(bill);
+    const populatedBill = await PurchaseBill.findById(bill._id).populate('vendorId', 'name');
+    res.status(201).json(populatedBill);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -21,7 +22,7 @@ exports.payBill = async (req, res) => {
     const bill = await PurchaseBill.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.tenantId },
       { isPaid: true }, { new: true }
-    );
+    ).populate('vendorId', 'name');
     if (!bill) return res.status(404).json({ error: 'Not found' });
     res.json(bill);
   } catch (err) {
@@ -31,7 +32,7 @@ exports.payBill = async (req, res) => {
 
 exports.listBills = async (req, res) => {
   try {
-    const bills = await PurchaseBill.find({ tenantId: req.tenantId });
+    const bills = await PurchaseBill.find({ tenantId: req.tenantId }).populate('vendorId', 'name');
     res.json(bills);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -40,7 +41,7 @@ exports.listBills = async (req, res) => {
 
 exports.getBill = async (req, res) => {
   try {
-    const bill = await PurchaseBill.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    const bill = await PurchaseBill.findOne({ _id: req.params.id, tenantId: req.tenantId }).populate('vendorId', 'name');
     if (!bill) return res.status(404).json({ error: 'Not found' });
     res.json(bill);
   } catch (err) {
@@ -54,7 +55,7 @@ exports.updateBill = async (req, res) => {
       { _id: req.params.id, tenantId: req.tenantId },
       req.body,
       { new: true }
-    );
+    ).populate('vendorId', 'name');
     if (!bill) return res.status(404).json({ error: 'Not found' });
     res.json(bill);
   } catch (err) {

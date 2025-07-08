@@ -5,71 +5,11 @@ import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
-import { FiClock, FiCheckCircle, FiXCircle, FiDollarSign } from "react-icons/fi";
-
-// Mock data
-const pendingTransactionsData = [
-  { 
-    id: 1, 
-    date: '2025-01-15', 
-    amount: 25000, 
-    narration: 'Office supplies purchase - Stationery and printer cartridges',
-    submittedBy: 'Rajesh Kumar',
-    department: 'Admin',
-    category: 'Office Supplies',
-    reference: 'TXN-2025-001',
-    isApproved: false,
-    priority: 'High'
-  },
-  { 
-    id: 2, 
-    date: '2025-01-15', 
-    amount: 15000, 
-    narration: 'Team lunch expenses for project milestone celebration',
-    submittedBy: 'Priya Sharma',
-    department: 'HR',
-    category: 'Food & Entertainment',
-    reference: 'TXN-2025-002',
-    isApproved: false,
-    priority: 'Medium'
-  },
-  { 
-    id: 3, 
-    date: '2025-01-14', 
-    amount: 8000, 
-    narration: 'Transportation expenses for client meeting',
-    submittedBy: 'Amit Patel',
-    department: 'Sales',
-    category: 'Travel',
-    reference: 'TXN-2025-003',
-    isApproved: false,
-    priority: 'Medium'
-  },
-  { 
-    id: 4, 
-    date: '2025-01-14', 
-    amount: 35000, 
-    narration: 'Software license renewal for development tools',
-    submittedBy: 'Lakshmi Devi',
-    department: 'IT',
-    category: 'Software',
-    reference: 'TXN-2025-004',
-    isApproved: false,
-    priority: 'High'
-  },
-  { 
-    id: 5, 
-    date: '2025-01-13', 
-    amount: 12000, 
-    narration: 'Marketing materials and promotional items',
-    submittedBy: 'Suresh Reddy',
-    department: 'Marketing',
-    category: 'Marketing',
-    reference: 'TXN-2025-005',
-    isApproved: false,
-    priority: 'Low'
-  },
-];
+import Select from "../../components/ui/Select";
+import Input from "../../components/ui/Input";
+import { Modal } from "../../components/ui/Modal";
+import { FiClock, FiCheckCircle, FiXCircle, FiDollarSign, FiPlus, FiPaperclip, FiEye } from "react-icons/fi";
+import axiosInstance from '../../utils/axiosInstance';
 
 const approvalSummary = [
   { title: 'Pending Approval', value: 5, icon: <FiClock className="h-6 w-6 text-yellow-500" /> },
@@ -80,155 +20,130 @@ const approvalSummary = [
 
 export default function TransactionApproval() {
   const [loading, setLoading] = useState(true);
-  const [pending, setPending] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [filter, setFilter] = useState({ project: '', type: '', status: '', search: '' });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
+  // Fetch all data (simulate for now)
   useEffect(() => {
-    // Simulate API call
+    setLoading(true);
+    // TODO: Replace with real API calls
     setTimeout(() => {
-      setPending(pendingTransactionsData);
+      setTransactions([]); // TODO: Fill with real data
+      setProjects([
+        { value: '', label: 'All Projects' },
+        { value: 'proj1', label: 'Tower A' },
+        { value: 'proj2', label: 'Tower B' },
+      ]);
+      setVendors([
+        { value: '', label: 'All Vendors' },
+        { value: 'vendor1', label: 'ABC Cement' },
+        { value: 'vendor2', label: 'XYZ Steel' },
+      ]);
+      setEmployees([
+        { value: '', label: 'All Employees' },
+        { value: 'emp1', label: 'John Doe' },
+        { value: 'emp2', label: 'Jane Smith' },
+      ]);
       setLoading(false);
-    }, 1000);
+    }, 500);
   }, []);
 
-  const handleApprove = id => {
-    setPending(pending.map(txn => 
-      txn.id === id ? { ...txn, isApproved: true } : txn
-    ));
-  };
-
-  const handleReject = id => {
-    setPending(pending.filter(txn => txn.id !== id));
-  };
+  // Filtered transactions (placeholder logic)
+  const filtered = transactions.filter(txn => {
+    if (filter.project && txn.project !== filter.project) return false;
+    if (filter.type && txn.type !== filter.type) return false;
+    if (filter.status && txn.status !== filter.status) return false;
+    if (filter.search && !(
+      txn.reference?.toLowerCase().includes(filter.search.toLowerCase()) ||
+      txn.narration?.toLowerCase().includes(filter.search.toLowerCase())
+    )) return false;
+    return true;
+  });
 
   const columns = [
-    { 
-      Header: 'Date', 
-      accessor: 'date',
-      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
-    },
-    { 
-      Header: 'Reference', 
-      accessor: 'reference',
-      Cell: ({ value }) => (
-        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Amount', 
-      accessor: 'amount',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
-    { 
-      Header: 'Submitted By', 
-      accessor: 'submittedBy',
-      Cell: ({ value, row }) => (
-        <div>
-          <div className="font-medium">{value}</div>
-          <div className="text-sm text-gray-500">{row.original.department}</div>
-        </div>
-      )
-    },
-    { 
-      Header: 'Category', 
-      accessor: 'category',
-      Cell: ({ value }) => (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Priority', 
-      accessor: 'priority',
-      Cell: ({ value }) => {
-        const colors = {
-          'High': 'bg-red-100 text-red-800',
-          'Medium': 'bg-yellow-100 text-yellow-800',
-          'Low': 'bg-green-100 text-green-800'
-        };
-  return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[value]}`}>
-            {value}
-          </span>
-        );
-      }
-    },
-    { 
-      Header: 'Narration', 
-      accessor: 'narration',
-      Cell: ({ value }) => (
-        <div className="max-w-xs truncate" title={value}>
-          {value}
-        </div>
-      )
-    },
-    { 
-      Header: 'Actions', 
-      accessor: 'actions',
-      Cell: ({ row }) => (
-              <div className="flex gap-2">
-          <Button 
-            size="sm"
-            onClick={() => handleApprove(row.original.id)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Approve
-          </Button>
-          <Button 
-            size="sm"
-            variant="danger" 
-            onClick={() => handleReject(row.original.id)}
-          >
-            Reject
-          </Button>
-              </div>
-            )
-    },
+    { Header: 'Date', accessor: 'date' },
+    { Header: 'Reference', accessor: 'reference' },
+    { Header: 'Type', accessor: 'type' },
+    { Header: 'Project', accessor: 'projectName' },
+    { Header: 'Cost Code', accessor: 'costCode' },
+    { Header: 'Vendor/Client/Employee', accessor: 'partyName' },
+    { Header: 'Debit Account', accessor: 'debitAccount' },
+    { Header: 'Credit Account', accessor: 'creditAccount' },
+    { Header: 'Amount', accessor: 'amount' },
+    { Header: 'Status', accessor: 'status' },
+    { Header: 'Attachment', accessor: 'attachment', Cell: ({ value }) => value ? <FiPaperclip /> : null },
+    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
+      <Button size="sm" icon={<FiEye />} onClick={() => { setSelectedTransaction(row.original); setShowDetailsModal(true); }}>Details</Button>
+    ) },
   ];
-
-  if (loading) {
-    return <Loader />;
-  }
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Transaction Approval"
-        subtitle="Review and approve pending financial transactions"
+        title="Transactions"
+        subtitle="All project-related financial transactions"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
-          { label: "Transactions", to: "/finance/transactions" },
-          { label: "Transaction Approval" }
+          { label: "Transactions" }
         ]}
       />
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {approvalSummary.map((summary, index) => (
-          <Card
-            key={index}
-            title={summary.title}
-            value={summary.title.includes('Amount') 
-              ? `₹${summary.value.toLocaleString()}` 
-              : summary.value.toString()}
-            icon={summary.icon}
-        />
-        ))}
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 flex flex-wrap gap-4 items-end">
+        <div className="w-48">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Project</label>
+          <Select options={projects} value={filter.project} onChange={e => setFilter(f => ({ ...f, project: e.target.value }))} />
+        </div>
+        <div className="w-48">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+          <Select options={[
+            { value: '', label: 'All Types' },
+            { value: 'Payment', label: 'Payment' },
+            { value: 'Receipt', label: 'Receipt' },
+            { value: 'Transfer', label: 'Transfer' },
+            { value: 'Journal', label: 'Journal' },
+          ]} value={filter.type} onChange={e => setFilter(f => ({ ...f, type: e.target.value }))} />
+        </div>
+        <div className="w-48">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+          <Select options={[
+            { value: '', label: 'All Statuses' },
+            { value: 'Pending', label: 'Pending' },
+            { value: 'Approved', label: 'Approved' },
+            { value: 'Rejected', label: 'Rejected' },
+            { value: 'Settled', label: 'Settled' },
+          ]} value={filter.status} onChange={e => setFilter(f => ({ ...f, status: e.target.value }))} />
+        </div>
+        <div className="w-64">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+          <Input value={filter.search} onChange={e => setFilter(f => ({ ...f, search: e.target.value }))} placeholder="Reference, narration..." />
+        </div>
+        <div className="flex-1 text-right">
+          <Button icon={<FiPlus />} onClick={() => setShowAddModal(true)}>Add Transaction</Button>
+        </div>
       </div>
-
-      {/* Pending Transactions Table */}
+      {/* Transactions Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Pending Transactions</h3>
+          <h3 className="text-lg font-medium text-gray-800">All Transactions</h3>
         </div>
-        {pending.length === 0 ? (
-          <EmptyState message="No pending transactions to approve." />
-        ) : (
-          <Table columns={columns} data={pending} />
+        {loading ? <Loader /> : filtered.length === 0 ? <EmptyState message="No transactions found." /> : (
+          <Table columns={columns} data={filtered} />
         )}
       </div>
+      {/* Add Transaction Modal (placeholder) */}
+      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Transaction">
+        <div className="p-4">Add Transaction Form (to be implemented)</div>
+      </Modal>
+      {/* Transaction Details Modal (placeholder) */}
+      <Modal open={showDetailsModal} onClose={() => setShowDetailsModal(false)} title="Transaction Details">
+        <div className="p-4">Transaction Details (to be implemented)</div>
+      </Modal>
     </div>
   );
 }

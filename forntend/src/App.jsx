@@ -49,6 +49,7 @@ import AddVendor from './pages/finance/AddVendor';
 import EditVendor from './pages/finance/EditVendor';
 import ViewVendor from './pages/finance/ViewVendor';
 import AddPurchaseBill from './pages/finance/AddPurchaseBill';
+import BillDetails from './pages/finance/BillDetails';
 
 export default function App() {
   return (
@@ -94,6 +95,7 @@ export default function App() {
               <Route path="/finance/transaction-approval" element={<TransactionApproval />} />
               <Route path="/finance/bills" element={<PurchaseBills />} />
               <Route path="/finance/bills/add" element={<AddPurchaseBill />} />
+              <Route path="/finance/bills/:id" element={<BillDetails />} />
               <Route path="/finance/vendors" element={<Vendors />} />
               <Route path="/finance/vendor-ledger" element={<VendorLedger />} />
               <Route path="/finance/advance-vendor" element={<AdvanceToVendor />} />

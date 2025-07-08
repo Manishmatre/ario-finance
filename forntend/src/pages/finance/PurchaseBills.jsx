@@ -20,14 +20,13 @@ const billsSummary = [
 
 export default function PurchaseBills() {
   const [bills, setBills] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [success, setSuccess] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingBill, setEditingBill] = useState(null);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [viewingBill, setViewingBill] = useState(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -36,9 +35,23 @@ export default function PurchaseBills() {
 
   useEffect(() => {
     setLoading(true);
-    axiosInstance.get('/api/finance/bills')
-      .then(res => {
-        setBills(res.data);
+    Promise.all([
+      axiosInstance.get('/api/finance/bills'),
+      axiosInstance.get('/api/finance/vendors')
+    ])
+      .then(([billsRes, vendorsRes]) => {
+        const vendorMap = {};
+        vendorsRes.data.forEach(v => { vendorMap[v._id] = v.name; });
+        // Map vendorId to name if not populated
+        const mappedBills = billsRes.data.map(bill => {
+          let vendorName = bill.vendorId?.name || bill.vendorId || bill.vendor || '-';
+          if (typeof bill.vendorId === 'string' && vendorMap[bill.vendorId]) {
+            vendorName = vendorMap[bill.vendorId];
+          }
+          return { ...bill, vendorName };
+        });
+        setBills(mappedBills);
+        setVendors(vendorsRes.data);
         setLoading(false);
       })
       .catch(err => {
@@ -83,11 +96,6 @@ export default function PurchaseBills() {
     }
   };
 
-  const handleViewBill = (bill) => {
-    setViewingBill(bill);
-    setViewModalOpen(true);
-  };
-
   const handlePayBill = async (bill) => {
     try {
       setLoading(true);
@@ -102,9 +110,9 @@ export default function PurchaseBills() {
 
   const columns = [
     { 
-      Header: 'Vendor', 
-      accessor: 'vendor',
-      Cell: ({ value }) => <div className="font-medium">{value}</div>
+      Header: 'Vendor',
+      accessor: 'vendorName',
+      Cell: ({ row }) => <div className="font-medium">{row.original.vendorName}</div>
     },
     { 
       Header: 'Bill No', 
@@ -135,7 +143,7 @@ export default function PurchaseBills() {
       accessor: 'actions',
       Cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={() => handleViewBill(row.original)}>View</Button>
+          <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/bills/${row.original._id || row.original.id}`)}>View</Button>
           <Button size="sm" variant="primary" onClick={() => handleEditBill(row.original)}>Edit</Button>
           {!row.original.isPaid && (
             <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handlePayBill(row.original)}>Pay</Button>
@@ -186,15 +194,15 @@ export default function PurchaseBills() {
 
   // Search and pagination logic
   const filteredBills = bills.filter(b =>
-    b.vendor?.toLowerCase().includes(search.toLowerCase()) ||
-    b.billNo?.toLowerCase().includes(search.toLowerCase())
+    (b.vendorName?.toLowerCase().includes(search.toLowerCase()) ||
+      b.billNo?.toLowerCase().includes(search.toLowerCase()))
   );
   const totalPages = Math.max(1, Math.ceil(filteredBills.length / rowsPerPage));
   const paginatedBills = filteredBills.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   const handleExportCSV = () => {
     const exportData = filteredBills.map(bill => ({
-      Vendor: bill.vendor,
+      Vendor: bill.vendorName,
       'Bill No': bill.billNo,
       'Bill Date': bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '',
       Amount: bill.amount,
@@ -340,25 +348,6 @@ export default function PurchaseBills() {
                 <Button type="button" variant="secondary" onClick={() => { setEditModalOpen(false); setEditingBill(null); reset(); }} className="flex-1">Cancel</Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* View Bill Modal */}
-      {viewModalOpen && viewingBill && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 min-w-[400px] shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Bill Details</h3>
-            <div className="space-y-2">
-              <div><strong>Vendor:</strong> {viewingBill.vendor}</div>
-              <div><strong>Bill No:</strong> {viewingBill.billNo}</div>
-              <div><strong>Bill Date:</strong> {viewingBill.billDate ? new Date(viewingBill.billDate).toLocaleDateString('en-IN') : ''}</div>
-              <div><strong>Amount:</strong> ₹{viewingBill.amount?.toLocaleString()}</div>
-              <div><strong>Status:</strong> {viewingBill.isPaid ? 'Paid' : 'Pending'}</div>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button type="button" variant="outline" onClick={() => { setViewModalOpen(false); setViewingBill(null); }}>Close</Button>
-            </div>
           </div>
         </div>
       )}

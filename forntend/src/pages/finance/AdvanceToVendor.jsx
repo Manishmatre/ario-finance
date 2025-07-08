@@ -1,110 +1,74 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import Button from "../../components/ui/Button";
-import Loader from "../../components/ui/Loader";
-import Table from "../../components/ui/Table";
-import EmptyState from "../../components/ui/EmptyState";
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import axiosInstance from '../../utils/axiosInstance';
+import Loader from '../../components/ui/Loader';
+import EmptyState from '../../components/ui/EmptyState';
+import Table from '../../components/ui/Table';
+import Button from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
+import Pagination from '../../components/ui/Pagination';
+import { FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiDollarSign, FiUsers, FiCalendar, FiTrendingUp } from "react-icons/fi";
 import Select from "../../components/ui/Select";
 
-// Mock data
-const vendors = [
-  { id: '1', name: 'ABC Steels Pvt Ltd' },
-  { id: '2', name: 'XYZ Electronics' },
-  { id: '3', name: 'DEF Construction Materials' },
-  { id: '4', name: 'GHI Office Supplies' },
-  { id: '5', name: 'JKL Software Solutions' },
-  { id: '6', name: 'MNO Logistics' },
-];
+const PAGE_SIZE = 10;
 
-const advanceHistoryData = [
-  { 
-    id: 1, 
-    vendor: 'ABC Steels Pvt Ltd', 
-    amount: 100000, 
-    date: '2025-01-15',
-    purpose: 'Advance for steel supplies',
-    status: 'Pending',
-    reference: 'ADV-2025-001',
-    expectedReturn: '2025-02-15'
-  },
-  { 
-    id: 2, 
-    vendor: 'XYZ Electronics', 
-    amount: 75000, 
-    date: '2025-01-14',
-    purpose: 'Advance for electronics equipment',
-    status: 'Settled',
-    reference: 'ADV-2025-002',
-    expectedReturn: '2025-02-14'
-  },
-  { 
-    id: 3, 
-    vendor: 'DEF Construction Materials', 
-    amount: 150000, 
-    date: '2025-01-13',
-    purpose: 'Advance for construction materials',
-    status: 'Pending',
-    reference: 'ADV-2025-003',
-    expectedReturn: '2025-02-13'
-  },
-  { 
-    id: 4, 
-    vendor: 'GHI Office Supplies', 
-    amount: 25000, 
-    date: '2025-01-12',
-    purpose: 'Advance for office supplies',
-    status: 'Settled',
-    reference: 'ADV-2025-004',
-    expectedReturn: '2025-02-12'
-  },
-];
-
-const advanceSummary = [
-  { title: 'Total Advances', value: 350000, icon: <FiDollarSign className="h-6 w-6 text-blue-500" /> },
-  { title: 'Pending Amount', value: 250000, icon: <FiTrendingUp className="h-6 w-6 text-red-500" /> },
-  { title: 'Settled Amount', value: 100000, icon: <FiCalendar className="h-6 w-6 text-green-500" /> },
-  { title: 'Vendors', value: 4, icon: <FiUsers className="h-6 w-6 text-purple-500" /> },
-];
-
-export default function AdvanceToVendor() {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+const AdvanceToVendor = () => {
+  const [advances, setAdvances] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState(false);
-  const [advanceHistory, setAdvanceHistory] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editAdvance, setEditAdvance] = useState(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const { register, handleSubmit, reset, setValue } = useForm();
+
+  const fetchAdvances = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get('/api/finance/vendors/advances');
+      setAdvances(res.data);
+      setTotal(res.data.length);
+    } catch (e) {
+      setAdvances([]);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setAdvanceHistory(advanceHistoryData);
-      setLoading(false);
-    }, 1000);
+    fetchAdvances();
   }, []);
 
-  const onSubmit = data => {
-    setLoading(true);
-    setTimeout(() => {
-      const newAdvance = {
-        id: advanceHistory.length + 1,
-        vendor: vendors.find(v => v.id === data.vendor)?.name || data.vendor,
-        amount: parseFloat(data.amount),
-        date: data.date,
-        purpose: data.purpose,
-        status: 'Pending',
-        reference: `ADV-2025-${String(advanceHistory.length + 1).padStart(3, '0')}`,
-        expectedReturn: data.expectedReturn
-      };
-      setAdvanceHistory([newAdvance, ...advanceHistory]);
-      setLoading(false);
-      setSuccess(true);
+  const onSubmit = async (data) => {
+    try {
+      if (editAdvance) {
+        await axiosInstance.put(`/api/finance/vendors/advances/${editAdvance._id}`, data);
+      } else {
+        await axiosInstance.post('/api/finance/vendors/advances', data);
+      }
       setModalOpen(false);
+      setEditAdvance(null);
       reset();
-      setTimeout(() => setSuccess(false), 3000);
-    }, 1000);
+      fetchAdvances();
+    } catch {}
   };
+
+  const handleEdit = (advance) => {
+    setEditAdvance(advance);
+    setValue('vendorId', advance.vendorId);
+    setValue('amount', advance.amount);
+    setValue('date', advance.date?.slice(0, 10));
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this advance?')) return;
+    await axiosInstance.delete(`/api/finance/vendors/advances/${id}`);
+    fetchAdvances();
+  };
+
+  const paginated = advances.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const columns = [
     { 
@@ -160,10 +124,6 @@ export default function AdvanceToVendor() {
     },
   ];
 
-  if (loading) {
-    return <Loader />;
-  }
-
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
@@ -176,25 +136,9 @@ export default function AdvanceToVendor() {
         ]}
       />
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {advanceSummary.map((summary, index) => (
-          <Card
-            key={index}
-            title={summary.title}
-            value={summary.title.includes('Amount') 
-              ? `₹${summary.value.toLocaleString()}` 
-              : summary.value.toString()}
-            icon={summary.icon}
-          />
-        ))}
-      </div>
-
       {/* Add Advance Button */}
       <div className="flex justify-between items-center">
-        <Button onClick={() => setModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-          + Record Advance
-        </Button>
+        <Button onClick={() => { setModalOpen(true); setEditAdvance(null); reset(); }} icon={<FiPlus />}>Add Advance</Button>
       </div>
 
       {/* Advance History Table */}
@@ -202,90 +146,54 @@ export default function AdvanceToVendor() {
         <div className="p-4 border-b border-gray-100">
           <h3 className="text-lg font-medium text-gray-800">Advance History</h3>
         </div>
-        {advanceHistory.length === 0 ? (
-          <EmptyState message="No advance records found." />
-        ) : (
-          <Table columns={columns} data={advanceHistory} />
+        {loading ? <Loader /> : advances.length === 0 ? <EmptyState text="No advances found." /> : (
+          <>
+            <Table
+              columns={[{ label: 'Vendor ID', key: 'vendorId' }, { label: 'Amount', key: 'amount' }, { label: 'Date', key: 'date' }, { label: 'Cleared', key: 'cleared' }, { label: 'Actions', key: 'actions' }]}
+              data={paginated.map(a => ({
+                ...a,
+                date: a.date ? a.date.slice(0, 10) : '',
+                actions: (
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(a)} icon={<FiEdit />} />
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(a._id)} icon={<FiTrash2 />} />
+                  </div>
+                )
+              }))}
+            />
+            <Pagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={total}
+              onPageChange={setPage}
+            />
+          </>
         )}
       </div>
 
       {/* Add Advance Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 min-w-[500px] shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Record Vendor Advance</h3>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-                <Select
-                  options={vendors.map((v) => ({ value: v.id, label: v.name }))}
-                  {...register("vendor", { required: true })}
-                />
-                {errors.vendor && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  {...register("amount", { required: true })} 
-                />
-                {errors.amount && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-                <input 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  {...register("purpose", { required: true })} 
-                />
-                {errors.purpose && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Advance Date</label>
-                  <input 
-                    type="date" 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                    {...register("date", { required: true })} 
-                  />
-                  {errors.date && <span className="text-red-500 text-sm">Required</span>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expected Return Date</label>
-                  <input 
-                    type="date" 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                    {...register("expectedReturn", { required: true })} 
-                  />
-                  {errors.expectedReturn && <span className="text-red-500 text-sm">Required</span>}
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <Button type="submit" className="flex-1" disabled={loading}>
-                  {loading ? 'Recording...' : 'Record Advance'}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="secondary" 
-                  onClick={() => setModalOpen(false)}
-                  className="flex-1"
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setEditAdvance(null); reset(); }} title={editAdvance ? 'Edit Advance' : 'Add Advance'}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label className="block mb-1">Vendor ID</label>
+            <input className="input" {...register('vendorId', { required: true })} />
           </div>
-        </div>
-      )}
-
-      {/* Success Message */}
-      {success && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          Advance recorded successfully!
-        </div>
-      )}
+          <div>
+            <label className="block mb-1">Amount</label>
+            <input className="input" type="number" step="0.01" {...register('amount', { required: true })} />
+          </div>
+          <div>
+            <label className="block mb-1">Date</label>
+            <input className="input" type="date" {...register('date', { required: true })} />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => { setModalOpen(false); setEditAdvance(null); reset(); }}>Cancel</Button>
+            <Button type="submit">{editAdvance ? 'Update' : 'Add'}</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
-}
+};
+
+export default AdvanceToVendor;

@@ -1,314 +1,133 @@
-import React, { useState, useEffect } from "react";
-import Table from "../../components/ui/Table";
-import Button from "../../components/ui/Button";
-import Loader from "../../components/ui/Loader";
-import EmptyState from "../../components/ui/EmptyState";
-import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
-import { FiDollarSign, FiFileText, FiCalendar, FiCheckCircle } from "react-icons/fi";
+import React, { useEffect, useState } from 'react';
+import axiosInstance from '../../utils/axiosInstance';
+import Loader from '../../components/ui/Loader';
+import EmptyState from '../../components/ui/EmptyState';
+import Table from '../../components/ui/Table';
+import Pagination from '../../components/ui/Pagination';
+import Select from '../../components/ui/Select';
+import { Modal } from '../../components/ui/Modal';
+import Button from '../../components/ui/Button';
+import { useForm } from 'react-hook-form';
+import { FiPlus } from 'react-icons/fi';
 
-// Mock data
-const unpaidBillsData = [
-  { 
-    id: 1, 
-    billNo: "INV-2025-001", 
-    vendor: "ABC Steels Pvt Ltd", 
-    amount: 295000,
-    dueDate: '2025-02-15',
-    billDate: '2025-01-15',
-    category: 'Steel Supplies',
-    daysOverdue: 0,
-    status: 'Pending'
-  },
-  { 
-    id: 2, 
-    billNo: "INV-2025-002", 
-    vendor: "XYZ Electronics", 
-    amount: 177000,
-    dueDate: '2025-02-14',
-    billDate: '2025-01-14',
-    category: 'Electronics',
-    daysOverdue: 0,
-    status: 'Pending'
-  },
-  { 
-    id: 3, 
-    billNo: "INV-2025-003", 
-    vendor: "DEF Construction Materials", 
-    amount: 590000,
-    dueDate: '2025-02-13',
-    billDate: '2025-01-13',
-    category: 'Construction',
-    daysOverdue: 0,
-    status: 'Pending'
-  },
-  { 
-    id: 4, 
-    billNo: "INV-2025-004", 
-    vendor: "JKL Software Solutions", 
-    amount: 212400,
-    dueDate: '2025-02-11',
-    billDate: '2025-01-11',
-    category: 'Software',
-    daysOverdue: 0,
-    status: 'Pending'
-  },
-  { 
-    id: 5, 
-    billNo: "INV-2025-005", 
-    vendor: "GHI Office Supplies", 
-    amount: 53100,
-    dueDate: '2025-01-25',
-    billDate: '2025-01-12',
-    category: 'Office Supplies',
-    daysOverdue: 5,
-    status: 'Overdue'
-  },
-  { 
-    id: 6, 
-    billNo: "INV-2025-006", 
-    vendor: "MNO Logistics", 
-    amount: 112100,
-    dueDate: '2025-01-28',
-    billDate: '2025-01-10',
-    category: 'Logistics',
-    daysOverdue: 2,
-    status: 'Overdue'
-  },
-];
+const PAGE_SIZE = 10;
 
-const paymentSummary = [
-  { title: 'Total Pending', value: 1440600, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
-  { title: 'Overdue Amount', value: 165200, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
-  { title: 'Total Bills', value: 6, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
-  { title: 'Vendors', value: 6, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
-];
-
-export default function VendorPayments() {
-  const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState(false);
-  const [selectedBills, setSelectedBills] = useState([]);
-  const [bills, setBills] = useState([]);
+const VendorPayments = () => {
+  const [vendors, setVendors] = useState([]);
+  const [selectedVendor, setSelectedVendor] = useState('');
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const { register, handleSubmit, reset } = useForm();
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setBills(unpaidBillsData);
-      setLoading(false);
-    }, 1000);
+    axiosInstance.get('/api/finance/vendors').then(res => setVendors(res.data));
   }, []);
 
-  const handlePaySelected = () => {
-    if (selectedBills.length === 0) return;
-    
+  useEffect(() => {
+    if (!selectedVendor) return;
     setLoading(true);
-    setTimeout(() => {
-      setBills(bills.filter(bill => !selectedBills.includes(bill.id)));
-      setSelectedBills([]);
+    axiosInstance.get(`/transactions?accountId=${selectedVendor}`).then(res => {
+      // Filter only payment transactions (credit to vendor)
+      setPayments(res.data.filter(t => t.amount < 0 || t.creditAccount === selectedVendor));
+      setTotal(res.data.length);
       setLoading(false);
-      setSuccess(true);
+    }).catch(() => {
+      setPayments([]);
+      setTotal(0);
+      setLoading(false);
+    });
+  }, [selectedVendor]);
+
+  const onSubmit = async (data) => {
+    try {
+      await axiosInstance.post('/transactions', {
+        date: data.date,
+        debitAccount: data.debitAccount,
+        creditAccount: selectedVendor,
+        amount: data.amount,
+        narration: data.narration,
+      });
       setModalOpen(false);
-      setTimeout(() => setSuccess(false), 3000);
-    }, 1000);
+      reset();
+      setTimeout(() => {
+        // refetch
+        axiosInstance.get(`/transactions?accountId=${selectedVendor}`).then(res => {
+          setPayments(res.data.filter(t => t.amount < 0 || t.creditAccount === selectedVendor));
+          setTotal(res.data.length);
+        });
+      }, 500);
+    } catch {}
   };
 
-  const handleSelectBill = (billId) => {
-    setSelectedBills(prev => 
-      prev.includes(billId) 
-        ? prev.filter(id => id !== billId)
-        : [...prev, billId]
-    );
-  };
-
-  const columns = [
-    { 
-      Header: 'Select', 
-      accessor: 'select',
-      Cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={selectedBills.includes(row.original.id)}
-          onChange={() => handleSelectBill(row.original.id)}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-      )
-    },
-    { 
-      Header: 'Bill Details', 
-      accessor: 'billNo',
-      Cell: ({ value, row }) => (
-        <div>
-          <div className="font-medium">{value}</div>
-          <div className="text-sm text-gray-500">{row.original.vendor}</div>
-        </div>
-      )
-    },
-    { 
-      Header: 'Category', 
-      accessor: 'category',
-      Cell: ({ value }) => (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Amount', 
-      accessor: 'amount',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
-    { 
-      Header: 'Due Date', 
-      accessor: 'dueDate',
-      Cell: ({ value, row }) => {
-        const dueDate = new Date(value);
-        const isOverdue = row.original.daysOverdue > 0;
-        return (
-          <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
-            {dueDate.toLocaleDateString('en-IN')}
-            {isOverdue && <div className="text-xs text-red-500">{row.original.daysOverdue} days overdue</div>}
-          </span>
-        );
-      }
-    },
-    { 
-      Header: 'Status', 
-      accessor: 'status',
-      Cell: ({ value }) => {
-        const colors = {
-          'Pending': 'bg-yellow-100 text-yellow-800',
-          'Overdue': 'bg-red-100 text-red-800'
-        };
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[value]}`}>
-            {value}
-          </span>
-        );
-      }
-    },
-  ];
-
-  if (loading) {
-    return <Loader />;
-  }
-
-  const totalSelectedAmount = bills
-    .filter(bill => selectedBills.includes(bill.id))
-    .reduce((sum, bill) => sum + bill.amount, 0);
+  const paginated = payments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="space-y-4 px-2 sm:px-4">
-      <PageHeading
-        title="Vendor Payments"
-        subtitle="Process payments for outstanding vendor bills"
-        breadcrumbs={[
-          { label: "Finance", to: "/finance" },
-          { label: "Payables", to: "/finance/payables" },
-          { label: "Vendor Payments" }
-        ]}
-      />
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {paymentSummary.map((summary, index) => (
-          <Card
-            key={index}
-            title={summary.title}
-            value={summary.title.includes('Amount') 
-              ? `₹${summary.value.toLocaleString()}` 
-              : summary.value.toString()}
-            icon={summary.icon}
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Vendor Payments</h1>
+        <Button icon={<FiPlus />} onClick={() => setModalOpen(true)} disabled={!selectedVendor}>Add Payment</Button>
+      </div>
+      <div className="mb-4">
+        <Select
+          options={vendors.map(v => ({ value: v._id, label: v.name }))}
+          value={selectedVendor}
+          onChange={e => { setSelectedVendor(e.target.value); setPage(1); }}
+          placeholder="Select Vendor"
+          className="w-64"
+        />
+      </div>
+      {loading ? <Loader /> : !selectedVendor ? <EmptyState text="Select a vendor to view payments." /> : payments.length === 0 ? <EmptyState text="No payments found." /> : (
+        <>
+          <Table
+            columns={[
+              { label: 'Date', key: 'date' },
+              { label: 'Debit Account', key: 'debitAccount' },
+              { label: 'Credit Account', key: 'creditAccount' },
+              { label: 'Amount', key: 'amount' },
+              { label: 'Narration', key: 'narration' },
+            ]}
+            data={paginated.map(p => ({
+              ...p,
+              date: p.date ? p.date.slice(0, 10) : '',
+            }))}
           />
-        ))}
-      </div>
-
-      {/* Payment Actions */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            {selectedBills.length} bills selected
-          </span>
-          {selectedBills.length > 0 && (
-            <span className="text-sm font-medium text-gray-800">
-              Total: ₹{totalSelectedAmount.toLocaleString()}
-            </span>
-          )}
-        </div>
-        {selectedBills.length > 0 && (
-          <Button 
-            onClick={() => setModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Pay Selected Bills
-          </Button>
-        )}
-      </div>
-
-      {/* Unpaid Bills Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Unpaid Bills</h3>
-        </div>
-        {bills.length === 0 ? (
-          <EmptyState message="No unpaid bills found." />
-        ) : (
-          <Table columns={columns} data={bills} />
-        )}
-      </div>
-
-      {/* Payment Confirmation Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 min-w-[400px] shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Confirm Payment</h3>
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600 mb-2">Selected Bills:</div>
-                {bills
-                  .filter(bill => selectedBills.includes(bill.id))
-                  .map(bill => (
-                    <div key={bill.id} className="flex justify-between text-sm">
-                      <span>{bill.billNo} - {bill.vendor}</span>
-                      <span className="font-medium">₹{bill.amount.toLocaleString()}</span>
-                    </div>
-                  ))
-                }
-                <div className="border-t pt-2 mt-2">
-                  <div className="flex justify-between font-medium">
-                    <span>Total Amount:</span>
-                    <span>₹{totalSelectedAmount.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button 
-                  onClick={handlePaySelected}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                  disabled={loading}
-                >
-                  {loading ? 'Processing...' : 'Confirm Payment'}
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  onClick={() => setModalOpen(false)}
-                  className="flex-1"
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
+      )}
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); reset(); }} title="Add Vendor Payment">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label className="block mb-1">Date</label>
+            <input className="input" type="date" {...register('date', { required: true })} />
           </div>
-        </div>
-      )}
-
-      {/* Success Message */}
-      {success && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          Payment processed successfully!
-        </div>
-      )}
+          <div>
+            <label className="block mb-1">Debit Account</label>
+            <input className="input" {...register('debitAccount', { required: true })} />
+          </div>
+          <div>
+            <label className="block mb-1">Amount</label>
+            <input className="input" type="number" step="0.01" {...register('amount', { required: true })} />
+          </div>
+          <div>
+            <label className="block mb-1">Narration</label>
+            <input className="input" {...register('narration')} />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => { setModalOpen(false); reset(); }}>Cancel</Button>
+            <Button type="submit">Add Payment</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
-}
+};
+
+export default VendorPayments;

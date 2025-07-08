@@ -6,6 +6,7 @@ module.exports = function withTenant(req, res, next) {
     if (!token) return res.status(401).json({ error: 'No token' });
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.tenantId = decoded.tenantId;
+    req.user = decoded;
     // Optionally, check body/params for tenantId mismatch
     if (req.body.tenantId && req.body.tenantId !== req.tenantId)
       return res.status(403).json({ error: 'Tenant mismatch' });

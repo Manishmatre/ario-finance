@@ -5,7 +5,7 @@ import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import Pagination from "../../components/ui/Pagination";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiBook, FiTrendingUp, FiTrendingDown, FiDollarSign } from "react-icons/fi";
 
 // Mock data
@@ -49,7 +49,7 @@ export default function LedgerView() {
   useEffect(() => {
     setTimeout(() => {
       setAccounts(mockAccounts);
-      setLoading(false);
+        setLoading(false);
     }, 1000);
   }, []);
 
@@ -63,7 +63,7 @@ export default function LedgerView() {
     setLoading(true);
     setTimeout(() => {
       setEntries(mockLedgerEntries[selectedAccount] || []);
-      setLoading(false);
+        setLoading(false);
     }, 500);
   }, [selectedAccount]);
 
@@ -131,11 +131,11 @@ export default function LedgerView() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
         <div className="max-w-md">
           <label className="block text-sm font-medium text-gray-700 mb-2">Select Account</label>
-          <Select
-            options={accounts.map((a) => ({ value: a._id, label: `${a.name} (${a.code})` }))}
-            value={selectedAccount}
-            onChange={(e) => setSelectedAccount(e.target.value)}
-          />
+        <Select
+          options={accounts.map((a) => ({ value: a._id, label: `${a.name} (${a.code})` }))}
+          value={selectedAccount}
+          onChange={(e) => setSelectedAccount(e.target.value)}
+        />
         </div>
       </div>
 
@@ -165,16 +165,16 @@ export default function LedgerView() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-100">
           <div className="p-4 border-b border-gray-100">
             <h3 className="text-lg font-medium text-gray-800">Ledger Entries</h3>
-          </div>
-          {loading ? (
-            <Loader />
-          ) : entries.length === 0 ? (
+      </div>
+      {loading ? (
+        <Loader />
+      ) : entries.length === 0 ? (
             <EmptyState message="No ledger entries found for this account." />
-          ) : (
+      ) : (
             <>
               <Table columns={columns} data={entries} />
               <div className="p-4 border-t border-gray-100">
-                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
             </>
           )}

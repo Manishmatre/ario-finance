@@ -7,10 +7,13 @@ const bankAccountsRouter = require('./routes/bankAccounts');
 const transactionsRouter = require('./routes/transactions');
 const vendorsRouter = require('./routes/vendors');
 const billsRouter = require('./routes/bills');
+const expensesRouter = require('./routes/expenses');
 const dashboardRouter = require('./routes/dashboard');
 const cashRouter = require('./routes/cash');
 const pettyCashRouter = require('./routes/pettyCash');
 const grnRouter = require('./routes/grn');
+const purchaseOrderRouter = require('./routes/purchaseOrder');
+const productRouter = require('./routes/product');
 
 // Ensure required environment variables are set
 if (!process.env.JWT_SECRET) {
@@ -48,13 +51,17 @@ app.use((req, res, next) => {
 
 app.use('/api/finance/accounts', accountsRouter);
 app.use('/api/finance/bank-accounts', bankAccountsRouter);
+app.use('/api/finance/lenders', require('./routes/lenderRoutes'));
 app.use('/api/finance/transactions', transactionsRouter);
 app.use('/api/finance/vendors', vendorsRouter);
 app.use('/api/finance/bills', billsRouter);
+app.use('/api/finance/expenses', expensesRouter);
 app.use('/api/finance/dashboard', dashboardRouter);
 app.use('/api/finance/cash', cashRouter);
-app.use('/api/finance/pettycash', pettyCashRouter);
-app.use('/api/finance/grn', grnRouter);
+app.use('/api/finance/petty-cash', pettyCashRouter);
+app.use('/api/finance/products', productRouter);
+app.use('/api/finance/purchase-orders', purchaseOrderRouter);
+app.use('/api/finance/grns', grnRouter);
 app.use('/api/auth', require('./routes/auth'));
 
 const PORT = process.env.PORT || 4000;

@@ -4,7 +4,7 @@ import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import Pagination from "../../components/ui/Pagination";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiBriefcase, FiPackage, FiAlertCircle, FiRefreshCw } from "react-icons/fi";
 
@@ -295,8 +295,8 @@ export default function Cashbook() {
           <h3 className="text-lg font-medium text-gray-800">Cash Transaction History</h3>
         </div>
         {cashbook.length === 0 ? (
-          <EmptyState message="No cashbook entries found." />
-        ) : (
+        <EmptyState message="No cashbook entries found." />
+      ) : (
           <>
             <Table columns={columns} data={cashbook} />
             <div className="p-4 border-t border-gray-100">

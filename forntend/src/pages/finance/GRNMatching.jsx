@@ -4,7 +4,7 @@ import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import Button from "../../components/ui/Button";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiPackage, FiCheckCircle, FiClock, FiAlertCircle } from "react-icons/fi";
 
 // Mock data
@@ -249,7 +249,7 @@ export default function GRNMatching() {
         </div>
         {grnMatches.length === 0 ? (
           <EmptyState message="No GRN records found." />
-        ) : (
+      ) : (
           <Table columns={columns} data={grnMatches} />
         )}
       </div>

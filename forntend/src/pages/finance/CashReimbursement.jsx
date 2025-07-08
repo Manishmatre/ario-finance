@@ -5,7 +5,7 @@ import Loader from "../../components/ui/Loader";
 import Table from "../../components/ui/Table";
 import EmptyState from "../../components/ui/EmptyState";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiDollarSign, FiUsers, FiCalendar, FiCheckCircle } from "react-icons/fi";
 import Select from "../../components/ui/Select";
 
@@ -256,15 +256,15 @@ export default function CashReimbursement() {
           <div className="bg-white rounded-lg p-6 min-w-[500px] shadow-lg">
             <h3 className="text-lg font-bold mb-4">Submit Reimbursement Request</h3>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
                 <Select
                   options={employees.map((e) => ({ value: e.id, label: `${e.name} (${e.department})` }))}
                   {...register("employee", { required: true })}
                 />
-                {errors.employee && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div>
+          {errors.employee && <span className="text-red-500 text-sm">Required</span>}
+        </div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
                 <input 
                   type="number" 
@@ -272,9 +272,9 @@ export default function CashReimbursement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                   {...register("amount", { required: true })} 
                 />
-                {errors.amount && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div>
+          {errors.amount && <span className="text-red-500 text-sm">Required</span>}
+        </div>
+    <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <select 
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -306,7 +306,7 @@ export default function CashReimbursement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                   {...register("date", { required: true })} 
                 />
-                {errors.date && <span className="text-red-500 text-sm">Required</span>}
+          {errors.date && <span className="text-red-500 text-sm">Required</span>}
               </div>
               <div className="flex gap-3 mt-6">
                 <Button type="submit" className="flex-1" disabled={loading}>

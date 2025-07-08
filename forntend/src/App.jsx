@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
+import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './contexts/AuthContext';
 import FinanceLayout from './layouts/FinanceLayout';
 import Dashboard from './pages/finance/FinanceDashboard';
@@ -17,11 +17,20 @@ import VendorLedger from './pages/finance/VendorLedger';
 import AdvanceToVendor from './pages/finance/AdvanceToVendor';
 import VendorPayments from './pages/finance/VendorPayments';
 import Cashbook from './pages/finance/Cashbook';
-import Bankbook from './pages/finance/Bankbook';
+import BankAccounts from './pages/loans/BankAccounts';
+import Loans from './pages/loans/Loans';
+import LoanApplication from './pages/loans/LoanApplication';
+import LoanDetails from './pages/loans/LoanDetails';
+import LoanAnalysis from './pages/loans/LoanAnalysis';
+import LoanDocuments from './pages/loans/LoanDocuments';
+import Lenders from './pages/loans/Lenders';
+import AddLender from './pages/loans/AddLender';
 import PettyCashRegister from './pages/finance/PettyCashRegister';
 import CashAdvanceToEmployee from './pages/finance/CashAdvanceToEmployee';
 import CashReimbursement from './pages/finance/CashReimbursement';
-import GRNMatching from './pages/finance/GRNMatching';
+import GRNList from './pages/finance/GRNList';
+import GRNForm from './pages/finance/GRNForm';
+import GRNMatchBill from './pages/finance/GRNMatchBill';
 import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -30,11 +39,33 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AddBankAccount from './pages/finance/AddBankAccount';
 import Settings from './pages/finance/Settings';
 import Profile from './pages/finance/Profile';
+// Expense Management
+import Expenses from './pages/finance/Expenses';
+import ExpenseForm from './pages/finance/ExpenseForm';
+import ExpenseDetails from './pages/finance/ExpenseDetails';
+import ExpenseCategories from './pages/finance/ExpenseCategories';
+import ExpenseReports from './pages/finance/ExpenseReports';
+import AddVendor from './pages/finance/AddVendor';
+import EditVendor from './pages/finance/EditVendor';
+import ViewVendor from './pages/finance/ViewVendor';
+import AddPurchaseBill from './pages/finance/AddPurchaseBill';
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
         <Routes>
           {/* Auth routes */}
           <Route path="/auth/login" element={<Login />} />
@@ -48,24 +79,46 @@ export default function App() {
               <Route path="/finance" element={<Dashboard />} />
               <Route path="/finance/accounts" element={<ChartOfAccounts />} />
               <Route path="/finance/add-bank-account" element={<AddBankAccount />} />
+              
+              {/* Expense Management Routes */}
+              <Route path="/finance/expenses" element={<Expenses />} />
+              <Route path="/finance/expenses/new" element={<ExpenseForm />} />
+              <Route path="/finance/expenses/:id" element={<ExpenseDetails />} />
+              <Route path="/finance/expenses/:id/edit" element={<ExpenseForm />} />
+              <Route path="/finance/expenses/categories" element={<ExpenseCategories />} />
+              <Route path="/finance/expenses/reports" element={<ExpenseReports />} />
               <Route path="/finance/journal" element={<JournalEntries />} />
               <Route path="/finance/ledger" element={<LedgerView />} />
               <Route path="/finance/add-transaction" element={<AddTransaction />} />
               <Route path="/finance/edit-transaction" element={<EditTransaction />} />
               <Route path="/finance/transaction-approval" element={<TransactionApproval />} />
               <Route path="/finance/bills" element={<PurchaseBills />} />
+              <Route path="/finance/bills/add" element={<AddPurchaseBill />} />
               <Route path="/finance/vendors" element={<Vendors />} />
               <Route path="/finance/vendor-ledger" element={<VendorLedger />} />
               <Route path="/finance/advance-vendor" element={<AdvanceToVendor />} />
               <Route path="/finance/vendor-payments" element={<VendorPayments />} />
               <Route path="/finance/cashbook" element={<Cashbook />} />
-              <Route path="/finance/bankbook" element={<Bankbook />} />
+              <Route path="/finance/bank-accounts" element={<BankAccounts />} />
               <Route path="/finance/petty-cash" element={<PettyCashRegister />} />
               <Route path="/finance/cash-advance" element={<CashAdvanceToEmployee />} />
               <Route path="/finance/cash-reimburse" element={<CashReimbursement />} />
-              <Route path="/finance/grn-matching" element={<GRNMatching />} />
+              <Route path="/finance/grns" element={<GRNList />} />
+              <Route path="/finance/grns/new" element={<GRNForm />} />
+              <Route path="/finance/grns/:id" element={<GRNForm />} />
+              <Route path="/finance/grns/:id/match" element={<GRNMatchBill />} />
               <Route path="/finance/settings" element={<Settings />} />
               <Route path="/finance/profile" element={<Profile />} />
+              <Route path="/finance/vendors/add" element={<AddVendor />} />
+              <Route path="/finance/vendors/edit" element={<EditVendor />} />
+              <Route path="/finance/vendors/view" element={<ViewVendor />} />
+              {/* Loan Management Routes */}
+              <Route path="/finance/loans" element={<Loans />} />
+              <Route path="/finance/loans/apply" element={<LoanApplication />} />
+              <Route path="/finance/loans/:id/documents" element={<LoanDocuments />} />
+              <Route path="/finance/loans/:id/analysis" element={<LoanAnalysis />} />
+              <Route path="/finance/lenders" element={<Lenders />} />
+              <Route path="/finance/lenders/add/:id?" element={<AddLender />} />
               <Route path="*" element={<Navigate to="/finance" />} />
             </Route>
           </Route>

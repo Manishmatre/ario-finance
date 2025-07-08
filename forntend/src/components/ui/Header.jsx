@@ -229,7 +229,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                       `block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition rounded-t ${isActive ? 'bg-blue-50 text-blue-700' : ''}`
                     }
                     onClick={() => setDropdownOpen(false)}
-                  >
+                      >
                     <span className="inline-flex items-center gap-2"><FiUser /> Profile</span>
                   </NavLink>
                   <NavLink
@@ -238,19 +238,19 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                       `block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition ${isActive ? 'bg-blue-50 text-blue-700' : ''}`
                     }
                     onClick={() => setDropdownOpen(false)}
-                  >
+                      >
                     <span className="inline-flex items-center gap-2"><FiSettings /> Settings</span>
                   </NavLink>
-                  <button
+                      <button
                     className="block w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 transition rounded-b"
-                    onClick={() => {
+                        onClick={() => {
                       setDropdownOpen(false);
-                      handleLogout();
-                    }}
-                  >
+                          handleLogout();
+                        }}
+                      >
                     <span className="inline-flex items-center gap-2"><FiLogOut /> Logout</span>
-                  </button>
-                </div>
+                      </button>
+                    </div>
               </div>
             </>
           ) : (

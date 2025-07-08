@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { MoneyInput } from "../../components/ui/MoneyInput";
 import Select from "../../components/ui/Select";
 import { FiDollarSign, FiCalendar, FiFileText, FiCheckCircle, FiArrowLeft } from "react-icons/fi";
@@ -277,7 +277,7 @@ export default function EditTransaction() {
                 />
               </div>
               
-              <div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Reference Number</label>
                 <input 
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -285,9 +285,9 @@ export default function EditTransaction() {
                   {...register("reference")} 
                 />
               </div>
-            </div>
+        </div>
 
-            <div>
+        <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Narration/Description</label>
               <textarea 
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -295,21 +295,21 @@ export default function EditTransaction() {
                 placeholder="Enter transaction description or narration..."
                 {...register("narration")} 
               />
-            </div>
+        </div>
 
             {/* Transaction Info */}
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Transaction Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
+        <div>
                   <span className="text-gray-500">Created by:</span>
                   <p className="text-gray-900">{transaction.createdBy}</p>
-                </div>
-                <div>
+        </div>
+        <div>
                   <span className="text-gray-500">Created on:</span>
                   <p className="text-gray-900">{new Date(transaction.createdAt).toLocaleString('en-IN')}</p>
-                </div>
-                <div>
+        </div>
+    <div>
                   <span className="text-gray-500">Last updated:</span>
                   <p className="text-gray-900">{new Date(transaction.updatedAt).toLocaleString('en-IN')}</p>
                 </div>

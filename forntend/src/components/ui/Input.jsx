@@ -7,6 +7,7 @@ const Input = forwardRef(function Input({
   className = "",
   icon: Icon,
   showPasswordToggle = false,
+  leftAddon,
   ...props
 }, ref) {
   const [show, setShow] = useState(false);
@@ -15,10 +16,13 @@ const Input = forwardRef(function Input({
     <div className={"w-full " + className}>
       {label && <label className="block mb-1 font-medium">{label}</label>}
       <div className="relative">
+        {leftAddon && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{leftAddon}</span>
+        )}
         <input
           ref={ref}
           type={inputType}
-          className={`border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? "border-red-500" : "border-gray-300"}`}
+          className={`border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? "border-red-500" : "border-gray-300"} ${leftAddon ? 'pl-8' : ''}`}
           {...props}
         />
         {Icon && (

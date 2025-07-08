@@ -11,7 +11,7 @@ import PageHeading from '../../components/ui/PageHeading';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import { MoneyInput } from '../../components/ui/MoneyInput';
-import { Card } from '../../components/ui/Card';
+import Card from '../../components/ui/Card';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiDollarSign, FiCreditCard, FiPackage, FiTrendingUp, FiTrendingDown, FiEye, FiEdit, FiTrash2, FiMoreVertical, FiDownload, FiRefreshCw, FiX } from 'react-icons/fi';
 
@@ -219,12 +219,12 @@ export default function ChartOfAccounts() {
       };
       
       setAccounts([...bankAccounts, cashAccount]);
-      setLoading(false);
+        setLoading(false);
     } catch (err) {
       console.error('Error fetching bank accounts:', err);
       setAccounts(mockAccounts);
       setError("Showing mock data. Backend unavailable.");
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -660,11 +660,11 @@ export default function ChartOfAccounts() {
             </div>
             
             <div className="grid grid-cols-2 gap-6 mb-6">
-              <div>
+          <div>
                 <label className="block text-sm font-medium text-gray-700">Current Balance</label>
                 <p className="text-3xl font-bold text-green-600">₹{selectedAccount.currentBalance?.toLocaleString()}</p>
-              </div>
-              <div>
+          </div>
+          <div>
                 <label className="block text-sm font-medium text-gray-700">Account Status</label>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                   selectedAccount.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -914,7 +914,7 @@ export default function ChartOfAccounts() {
                 </div>
               </div>
 
-              <div>
+          <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
                 <textarea 
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -973,11 +973,11 @@ export default function ChartOfAccounts() {
           disabled={actionLoading}
         >
           Cancel
-        </Button>
+          </Button>
       </div>
     </div>
   </div>
 )}
-  </div>
-); 
+    </div>
+  );
 }

@@ -1,126 +1,51 @@
-import React, { useState, useEffect } from "react";
-import Table from "../../components/ui/Table";
-import Loader from "../../components/ui/Loader";
-import EmptyState from "../../components/ui/EmptyState";
-import Pagination from "../../components/ui/Pagination";
+import React, { useEffect, useState } from 'react';
+import axiosInstance from '../../utils/axiosInstance';
+import Loader from '../../components/ui/Loader';
+import EmptyState from '../../components/ui/EmptyState';
+import Table from '../../components/ui/Table';
+import Pagination from '../../components/ui/Pagination';
+import Select from '../../components/ui/Select';
+import { FiFileText } from 'react-icons/fi';
+import Card from "../../components/ui/Card";
+import { FiUsers, FiDollarSign, FiCalendar } from "react-icons/fi";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
-import { FiUsers, FiDollarSign, FiFileText, FiCalendar } from "react-icons/fi";
-import Select from "../../components/ui/Select";
 
-// Mock data
-const vendors = [
-  { id: '1', name: 'ABC Steels Pvt Ltd' },
-  { id: '2', name: 'XYZ Electronics' },
-  { id: '3', name: 'DEF Construction Materials' },
-  { id: '4', name: 'GHI Office Supplies' },
-  { id: '5', name: 'JKL Software Solutions' },
-  { id: '6', name: 'MNO Logistics' },
-];
+const PAGE_SIZE = 10;
 
-const vendorLedgerData = {
-  '1': [ // ABC Steels
-    { id: 1, date: '2025-01-15', billNo: 'INV-2025-001', amount: 295000, type: 'Bill', narration: 'Steel supplies for Project Alpha', balance: 295000 },
-    { id: 2, date: '2025-01-10', billNo: 'PAY-2025-001', amount: 150000, type: 'Payment', narration: 'Partial payment made', balance: 145000 },
-    { id: 3, date: '2025-01-05', billNo: 'INV-2025-002', amount: 180000, type: 'Bill', narration: 'Additional steel supplies', balance: 325000 },
-  ],
-  '2': [ // XYZ Electronics
-    { id: 1, date: '2025-01-14', billNo: 'INV-2025-003', amount: 177000, type: 'Bill', narration: 'Electronics equipment', balance: 177000 },
-    { id: 2, date: '2025-01-08', billNo: 'PAY-2025-002', amount: 177000, type: 'Payment', narration: 'Full payment made', balance: 0 },
-  ],
-  '3': [ // DEF Construction
-    { id: 1, date: '2025-01-13', billNo: 'INV-2025-004', amount: 590000, type: 'Bill', narration: 'Construction materials', balance: 590000 },
-    { id: 2, date: '2025-01-12', billNo: 'INV-2025-005', amount: 250000, type: 'Bill', narration: 'Cement and aggregates', balance: 840000 },
-  ],
-};
-
-const vendorSummary = [
-  { title: 'Total Vendors', value: 6, icon: <FiUsers className="h-6 w-6 text-blue-500" /> },
-  { title: 'Total Outstanding', value: 1735000, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
-  { title: 'Total Bills', value: 8, icon: <FiFileText className="h-6 w-6 text-green-500" /> },
-  { title: 'Overdue Amount', value: 450000, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
-];
-
-export default function VendorLedger() {
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [selectedVendor, setSelectedVendor] = useState("");
+const VendorLedger = () => {
+  const [vendors, setVendors] = useState([]);
+  const [selectedVendor, setSelectedVendor] = useState('');
   const [ledger, setLedger] = useState([]);
-  const totalPages = 2;
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    axiosInstance.get('/vendors').then(res => setVendors(res.data));
   }, []);
 
   useEffect(() => {
-    if (selectedVendor) {
-      setLedger(vendorLedgerData[selectedVendor] || []);
-    } else {
+    if (!selectedVendor) return;
+    setLoading(true);
+    axiosInstance.get(`/transactions?accountId=${selectedVendor}`).then(res => {
+      setLedger(res.data);
+      setTotal(res.data.length);
+      setLoading(false);
+    }).catch(() => {
       setLedger([]);
-    }
+      setTotal(0);
+      setLoading(false);
+    });
   }, [selectedVendor]);
 
-  const columns = [
-    { 
-      Header: 'Date', 
-      accessor: 'date',
-      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
-    },
-    { 
-      Header: 'Reference', 
-      accessor: 'billNo',
-      Cell: ({ value }) => (
-        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Type', 
-      accessor: 'type',
-      Cell: ({ value }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'Bill' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-        }`}>
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Amount', 
-      accessor: 'amount',
-      Cell: ({ value, row }) => (
-        <span className={`font-medium ${row.original.type === 'Bill' ? 'text-red-600' : 'text-green-600'}`}>
-          {row.original.type === 'Bill' ? '+' : '-'}₹{value.toLocaleString()}
-        </span>
-      )
-    },
-    { 
-      Header: 'Narration', 
-      accessor: 'narration',
-      Cell: ({ value }) => (
-        <div className="max-w-xs truncate" title={value}>
-          {value}
-        </div>
-      )
-    },
-    { 
-      Header: 'Balance', 
-      accessor: 'balance',
-      Cell: ({ value }) => (
-        <span className={`font-medium ${value > 0 ? 'text-red-600' : 'text-green-600'}`}>
-          ₹{value.toLocaleString()}
-        </span>
-      )
-    },
-  ];
+  const paginated = ledger.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  if (loading) {
-    return <Loader />;
-  }
+  const vendorSummary = [
+    { title: 'Total Vendors', value: vendors.length, icon: <FiUsers className="h-6 w-6 text-blue-500" /> },
+    { title: 'Total Outstanding', value: 1735000, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
+    { title: 'Total Bills', value: 8, icon: <FiFileText className="h-6 w-6 text-green-500" /> },
+    { title: 'Overdue Amount', value: 450000, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
+  ];
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
@@ -153,33 +78,43 @@ export default function VendorLedger() {
         <div className="max-w-md">
           <label className="block text-sm font-medium text-gray-700 mb-2">Select Vendor</label>
           <Select
-            options={vendors.map((v) => ({ value: v.id, label: v.name }))}
+            options={vendors.map(v => ({ value: v._id, label: v.name }))}
             value={selectedVendor}
-            onChange={(e) => setSelectedVendor(e.target.value)}
+            onChange={e => { setSelectedVendor(e.target.value); setPage(1); }}
+            placeholder="Select Vendor"
+            className="w-64"
           />
         </div>
       </div>
 
       {/* Vendor Ledger Table */}
-      {selectedVendor && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-          <div className="p-4 border-b border-gray-100">
-            <h3 className="text-lg font-medium text-gray-800">
-              Ledger for {vendors.find(v => v.id === selectedVendor)?.name}
-            </h3>
-          </div>
-          {ledger.length === 0 ? (
-            <EmptyState message="No ledger entries found for this vendor." />
-          ) : (
-            <>
-              <Table columns={columns} data={ledger} />
-              <div className="p-4 border-t border-gray-100">
-                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-              </div>
-            </>
-          )}
-        </div>
+      {loading ? <Loader /> : !selectedVendor ? <EmptyState text="Select a vendor to view ledger." /> : ledger.length === 0 ? <EmptyState text="No ledger entries found." /> : (
+        <>
+          <Table
+            columns={[
+              { label: 'Date', key: 'date' },
+              { label: 'Debit Account', key: 'debitAccount' },
+              { label: 'Credit Account', key: 'creditAccount' },
+              { label: 'Amount', key: 'amount' },
+              { label: 'Narration', key: 'narration' },
+            ]}
+            data={paginated.map(l => ({
+              ...l,
+              date: l.date ? l.date.slice(0, 10) : '',
+              debitAccount: l.debitAccount,
+              creditAccount: l.creditAccount,
+            }))}
+          />
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </div>
   );
-}
+};
+
+export default VendorLedger;

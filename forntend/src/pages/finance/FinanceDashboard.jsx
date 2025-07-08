@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card } from '../../components/ui/Card';
+import Card from '../../components/ui/Card';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../utils/axios';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';

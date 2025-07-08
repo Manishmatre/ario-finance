@@ -4,7 +4,7 @@ import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import Pagination from "../../components/ui/Pagination";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiDollarSign, FiMapPin, FiUsers, FiCalendar } from "react-icons/fi";
 
 // Mock data
@@ -187,12 +187,12 @@ export default function PettyCashRegister() {
           <h3 className="text-lg font-medium text-gray-800">Site-wise Petty Cash Summary</h3>
         </div>
         {pettyCash.length === 0 ? (
-          <EmptyState message="No petty cash entries found." />
-        ) : (
+        <EmptyState message="No petty cash entries found." />
+      ) : (
           <>
             <Table columns={columns} data={pettyCash} />
             <div className="p-4 border-t border-gray-100">
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </>
         )}

@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiDollarSign, FiCalendar, FiFileText, FiCheckCircle } from "react-icons/fi";
 
 // Mock accounts data
@@ -59,19 +59,19 @@ export default function AddTransaction() {
       }, 500);
     } else {
       // Use real API
-      axios
-        .get("/api/finance/accounts", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          setAccounts(res.data.accounts || []);
-          setLoading(false);
-        })
-        .catch(() => {
-          setLoading(false);
+    axios
+      .get("/api/finance/accounts", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setAccounts(res.data.accounts || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
           // Fallback to mock data if API fails
           setAccounts(mockAccounts);
-        });
+      });
     }
   }, [token, useMockData]);
 
@@ -87,17 +87,17 @@ export default function AddTransaction() {
         setTimeout(() => setSuccess(false), 3000);
       } else {
         // Real API call
-        await axios.post(
-          "/api/finance/transactions",
-          {
-            ...data,
-            amount: Number(data.amount),
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        toast.success("Transaction added successfully");
-        reset();
-        setSuccess(true);
+      await axios.post(
+        "/api/finance/transactions",
+        {
+          ...data,
+          amount: Number(data.amount),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Transaction added successfully");
+      reset();
+      setSuccess(true);
       }
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to add transaction");
@@ -183,16 +183,16 @@ export default function AddTransaction() {
                 )}
               </div>
               
-              <div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Credit Account *</label>
-                <Select
+          <Select
                   options={accounts.map((a) => ({ 
                     value: a._id, 
                     label: `${a.name} (${a.code}) - ${a.type}` 
                   }))}
-                  {...register("creditAccount", { required: true })}
+            {...register("creditAccount", { required: true })}
                   placeholder="Select credit account"
-                />
+          />
                 {errors.creditAccount && (
                   <span className="text-red-500 text-sm">Credit account is required</span>
                 )}
@@ -228,19 +228,19 @@ export default function AddTransaction() {
                   <span className="text-red-500 text-sm">Transaction date is required</span>
                 )}
               </div>
-            </div>
+        </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cost Code</label>
                 <input 
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                   placeholder="e.g., CC001, PROJECT-A"
                   {...register("costCode")} 
                 />
-              </div>
+        </div>
               
-              <div>
+        <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Reference Number</label>
                 <input 
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -248,9 +248,9 @@ export default function AddTransaction() {
                   {...register("reference")} 
                 />
               </div>
-            </div>
+        </div>
 
-            <div>
+        <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Narration/Description</label>
               <textarea 
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -281,7 +281,7 @@ export default function AddTransaction() {
       {/* Mock Data Toggle */}
       <div className="bg-gray-50 rounded-lg p-4">
         <div className="flex items-center justify-between">
-          <div>
+        <div>
             <h4 className="text-sm font-medium text-gray-900">Data Source</h4>
             <p className="text-sm text-gray-500">Toggle between mock data and API</p>
           </div>

@@ -4,7 +4,7 @@ import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import PageHeading from "../../components/ui/PageHeading";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiClock, FiCheckCircle, FiXCircle, FiDollarSign } from "react-icons/fi";
 
 // Mock data
@@ -148,7 +148,7 @@ export default function TransactionApproval() {
           'Medium': 'bg-yellow-100 text-yellow-800',
           'Low': 'bg-green-100 text-green-800'
         };
-        return (
+  return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[value]}`}>
             {value}
           </span>
@@ -168,7 +168,7 @@ export default function TransactionApproval() {
       Header: 'Actions', 
       accessor: 'actions',
       Cell: ({ row }) => (
-        <div className="flex gap-2">
+              <div className="flex gap-2">
           <Button 
             size="sm"
             onClick={() => handleApprove(row.original.id)}
@@ -183,8 +183,8 @@ export default function TransactionApproval() {
           >
             Reject
           </Button>
-        </div>
-      )
+              </div>
+            )
     },
   ];
 
@@ -214,7 +214,7 @@ export default function TransactionApproval() {
               ? `₹${summary.value.toLocaleString()}` 
               : summary.value.toString()}
             icon={summary.icon}
-          />
+        />
         ))}
       </div>
 

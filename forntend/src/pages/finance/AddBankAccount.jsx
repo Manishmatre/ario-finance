@@ -6,7 +6,7 @@ import Button from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import PageHeading from "../../components/ui/PageHeading";
 import { MoneyInput } from "../../components/ui/MoneyInput";
-import { Card } from "../../components/ui/Card";
+import Card from "../../components/ui/Card";
 import { FiCheckCircle } from "react-icons/fi";
 import api from "../../utils/axios";
 

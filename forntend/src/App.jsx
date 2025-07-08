@@ -51,6 +51,7 @@ import VendorDetails from './pages/finance/VendorDetails';
 import AddPurchaseBill from './pages/finance/AddPurchaseBill';
 import BillDetails from './pages/finance/BillDetails';
 import LenderDetails from './pages/loans/LenderDetails';
+import AddAdvanceToVendor from './pages/finance/AddAdvanceToVendor';
 
 export default function App() {
   return (
@@ -100,6 +101,7 @@ export default function App() {
               <Route path="/finance/vendors" element={<Vendors />} />
               <Route path="/finance/vendor-ledger" element={<VendorLedger />} />
               <Route path="/finance/advance-vendor" element={<AdvanceToVendor />} />
+              <Route path="/finance/advance-vendor/add" element={<AddAdvanceToVendor />} />
               <Route path="/finance/vendor-payments" element={<VendorPayments />} />
               <Route path="/finance/cashbook" element={<Cashbook />} />
               <Route path="/finance/bank-accounts" element={<BankAccounts />} />

@@ -1,36 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Loader from '../../components/ui/Loader';
 import Button from '../../components/ui/Button';
 import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import axiosInstance from '../../utils/axiosInstance';
-import { FiFileText, FiDollarSign, FiCalendar, FiCheckCircle, FiArrowLeft, FiPlus } from 'react-icons/fi';
+import { FiFileText, FiDollarSign, FiTrendingUp, FiCheckCircle, FiArrowLeft, FiPlus, FiLayers } from 'react-icons/fi';
+
+const TABS = [
+  { key: 'bills', label: 'Bills', icon: <FiFileText /> },
+  { key: 'advances', label: 'Advances', icon: <FiTrendingUp /> },
+  { key: 'ledger', label: 'Ledger', icon: <FiLayers /> },
+];
 
 export default function VendorDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [vendor, setVendor] = useState(null);
   const [bills, setBills] = useState([]);
+  const [advances, setAdvances] = useState([]);
+  const [ledger, setLedger] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState('bills');
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     Promise.all([
       axiosInstance.get(`/api/finance/vendors/${id}`),
-      axiosInstance.get('/api/finance/bills')
+      axiosInstance.get(`/api/finance/vendors/${id}/bills`),
+      axiosInstance.get(`/api/finance/vendors/${id}/advances`),
+      axiosInstance.get(`/api/finance/vendors/${id}/ledger`)
     ])
-      .then(([vendorRes, billsRes]) => {
+      .then(([vendorRes, billsRes, advancesRes, ledgerRes]) => {
         setVendor(vendorRes.data);
-        // Filter bills for this vendor
-        const vendorBills = billsRes.data.filter(b => {
-          if (b.vendorId?._id) return b.vendorId._id === id;
-          if (typeof b.vendorId === 'string') return b.vendorId === id;
-          return false;
-        });
-        setBills(vendorBills);
+        setBills(billsRes.data);
+        setAdvances(advancesRes.data);
+        setLedger(ledgerRes.data);
         setLoading(false);
       })
       .catch(err => {
@@ -39,18 +47,20 @@ export default function VendorDetails() {
       });
   }, [id]);
 
-  // Compute summary stats
-  const now = new Date();
+  // Summary stats
   const totalBills = bills.length;
-  const pendingAmount = bills.filter(b => !b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
+  const totalAdvances = advances.length;
+  const totalBillAmount = bills.reduce((sum, b) => sum + (b.amount || 0), 0);
+  const totalAdvanceAmount = advances.reduce((sum, a) => sum + (a.amount || 0), 0);
   const paidAmount = bills.filter(b => b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
-  const lastBillDate = bills.length > 0 ? new Date(Math.max(...bills.map(b => new Date(b.billDate || 0)))).toLocaleDateString('en-IN') : '-';
+  const pendingAmount = bills.filter(b => !b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
+  const outstanding = totalBillAmount - totalAdvanceAmount - paidAmount;
 
   const summaryCards = [
     { title: 'Total Bills', value: totalBills, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
-    { title: 'Pending Amount', value: pendingAmount, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
+    { title: 'Total Advances', value: totalAdvances, icon: <FiTrendingUp className="h-6 w-6 text-purple-500" /> },
+    { title: 'Outstanding', value: outstanding, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
     { title: 'Paid Amount', value: paidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
-    { title: 'Last Bill Date', value: lastBillDate, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
   ];
 
   const billColumns = [
@@ -65,6 +75,22 @@ export default function VendorDetails() {
     ) }
   ];
 
+  const advanceColumns = [
+    { Header: 'Amount', accessor: 'amount', Cell: ({ value }) => <span>₹{value?.toLocaleString()}</span> },
+    { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
+    { Header: 'Cleared', accessor: 'cleared', Cell: ({ value }) => value ? <span className="text-green-600 font-semibold">Yes</span> : <span className="text-yellow-600 font-semibold">No</span> },
+    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => null }
+  ];
+
+  const ledgerColumns = [
+    { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
+    { Header: 'Type', accessor: 'type' },
+    { Header: 'Note', accessor: 'note' },
+    { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+    { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+    { Header: 'Ref', accessor: 'ref' },
+  ];
+
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500 p-4">{error}</div>;
   if (!vendor) return null;
@@ -73,19 +99,16 @@ export default function VendorDetails() {
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
         title={`Vendor Details: ${vendor.name}`}
-        subtitle="View all information and bills for this vendor"
+        subtitle="View all information, bills, advances, and ledger for this vendor"
         breadcrumbs={[
           { label: 'Vendors', to: '/finance/vendors' },
           { label: 'Vendor Details' }
         ]}
-        actions={[
-          <Button key="add-bill" as={Link} to="/finance/bills/add" icon={<FiPlus />} className="bg-blue-600 hover:bg-blue-700 text-white">Add Bill</Button>
-        ]}
       />
-      {/* Vendor Info Cards */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
-          <Card key={idx} title={card.title} value={card.title.includes('Amount') ? `₹${card.value.toLocaleString()}` : card.value} icon={card.icon} />
+          <Card key={idx} title={card.title} value={card.title.includes('Amount') || card.title === 'Outstanding' ? `₹${card.value?.toLocaleString()}` : card.value} icon={card.icon} />
         ))}
       </div>
       {/* Vendor Info */}
@@ -101,16 +124,32 @@ export default function VendorDetails() {
           {vendor.updatedAt && <div><strong>Updated At:</strong> {new Date(vendor.updatedAt).toLocaleString()}</div>}
         </div>
       </div>
-      {/* Vendor Bills Table */}
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        {TABS.map(t => (
+          <Button key={t.key} variant={tab === t.key ? 'primary' : 'outline'} onClick={() => setTab(t.key)} icon={t.icon}>{t.label}</Button>
+        ))}
+      </div>
+      {/* Tab Content */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-800">Bills for {vendor.name}</h3>
+          <h3 className="text-lg font-medium text-gray-800">
+            {tab === 'bills' && `Bills for ${vendor.name}`}
+            {tab === 'advances' && `Advances for ${vendor.name}`}
+            {tab === 'ledger' && `Ledger for ${vendor.name}`}
+          </h3>
         </div>
-        {bills.length === 0 ? (
-          <div className="p-6 text-gray-500">No bills found for this vendor.</div>
-        ) : (
-          <Table columns={billColumns} data={bills} />
-        )}
+        <div className="p-2">
+          {tab === 'bills' && (
+            <Table columns={billColumns} data={bills} />
+          )}
+          {tab === 'advances' && (
+            <Table columns={advanceColumns} data={advances} />
+          )}
+          {tab === 'ledger' && (
+            <Table columns={ledgerColumns} data={ledger} />
+          )}
+        </div>
       </div>
       <div className="flex gap-2 mt-8">
         <Button variant="secondary" icon={<FiArrowLeft />} onClick={() => navigate('/finance/vendors')}>Back</Button>

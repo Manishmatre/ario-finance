@@ -87,3 +87,70 @@ exports.getVendorSummary = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getVendorBills = async (req, res) => {
+  try {
+    const bills = await require('../models/PurchaseBill').find({ tenantId: req.tenantId, vendorId: req.params.id });
+    res.json(bills);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getVendorPayments = async (req, res) => {
+  try {
+    // Placeholder: implement actual payments model if available
+    res.json([]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getVendorLedger = async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const vendorId = req.params.id;
+    const PurchaseBill = require('../models/PurchaseBill');
+    const AdvanceVendor = require('../models/AdvanceVendor');
+    // Placeholder for payments, if you have a model
+    // const Payment = require('../models/Payment');
+
+    // Fetch all bills and advances for this vendor
+    const [bills, advances] = await Promise.all([
+      PurchaseBill.find({ tenantId, vendorId }),
+      AdvanceVendor.find({ tenantId, vendorId })
+    ]);
+
+    // Format as ledger entries
+    const ledgerEntries = [
+      ...bills.map(bill => ({
+        _id: bill._id,
+        type: 'Bill',
+        date: bill.billDate || bill.createdAt,
+        amount: bill.amount,
+        debit: bill.amount,
+        credit: 0,
+        ref: bill.billNo || '',
+        note: 'Purchase Bill',
+      })),
+      ...advances.map(adv => ({
+        _id: adv._id,
+        type: 'Advance',
+        date: adv.date || adv.createdAt,
+        amount: adv.amount,
+        debit: 0,
+        credit: adv.amount,
+        ref: '',
+        note: adv.cleared ? 'Advance (Cleared)' : 'Advance',
+      })),
+      // ...payments.map(payment => ({ ... }))
+    ];
+
+    // Sort by date ascending
+    ledgerEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.json(ledgerEntries);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

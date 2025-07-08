@@ -26,6 +26,7 @@ const getVendorsSummary = (vendors) => {
 
 export default function Vendors() {
   const [vendors, setVendors] = useState([]);
+  const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
@@ -36,16 +37,28 @@ export default function Vendors() {
 
   useEffect(() => {
     setLoading(true);
-    axiosInstance.get('/api/finance/vendors')
-      .then(res => {
-        setVendors(res.data);
+    Promise.all([
+      axiosInstance.get('/api/finance/vendors'),
+      axiosInstance.get('/api/finance/bills')
+    ])
+      .then(([vendorsRes, billsRes]) => {
+        setVendors(vendorsRes.data);
+        setBills(billsRes.data);
         setLoading(false);
       })
       .catch(err => {
-        setError(err.message || 'Failed to fetch vendors');
+        setError(err.message || 'Failed to fetch vendors or bills');
         setLoading(false);
       });
   }, []);
+
+  // Compute outstanding for each vendor
+  const vendorsWithOutstanding = vendors.map(vendor => {
+    const outstanding = bills
+      .filter(bill => (bill.vendorId?._id || bill.vendorId) === vendor._id && !bill.isPaid)
+      .reduce((sum, bill) => sum + (bill.amount || 0), 0);
+    return { ...vendor, outstanding };
+  });
 
   // Delete Vendor
   const handleDelete = id => {
@@ -69,7 +82,7 @@ export default function Vendors() {
     { Header: 'GST No', accessor: 'gstNo', Cell: ({ value }) => <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{value}</span> },
     { Header: 'Contact', accessor: 'phone', Cell: ({ value }) => (<div className="font-medium">{value}</div>) },
     { Header: 'Address', accessor: 'address', Cell: ({ value }) => (<div className="max-w-xs truncate" title={value}>{value}</div>) },
-    { Header: 'Outstanding', accessor: 'outstanding', Cell: ({ value }) => <div className="font-medium text-red-600">9{value?.toLocaleString()}</div> },
+    { Header: 'Outstanding', accessor: 'outstanding', Cell: ({ value }) => <div className="font-medium text-red-600">{value ? `₹${value.toLocaleString()}` : '-'}</div> },
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
         <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/vendors/${row.original._id || row.original.id}`)}>View</Button>
@@ -80,7 +93,7 @@ export default function Vendors() {
   ];
 
   // Filtering logic
-  const filteredVendors = vendors.filter(v =>
+  const filteredVendors = vendorsWithOutstanding.filter(v =>
     v.name?.toLowerCase().includes(search.toLowerCase()) ||
     v.gstNo?.toLowerCase().includes(search.toLowerCase()) ||
     v.phone?.toLowerCase().includes(search.toLowerCase())
@@ -100,20 +113,15 @@ export default function Vendors() {
           { label: 'Finance', to: '/finance' },
           { label: 'Vendors' }
         ]}
-        actions={[
-          <Button key="add-vendor" className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2" onClick={() => navigate('/finance/vendors/add')}>
-            <FiPlus className="w-4 h-4" /> Add Vendor
-          </Button>
-        ]}
       />
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {getVendorsSummary(vendors).map((item, idx) => (
+        {getVendorsSummary(vendorsWithOutstanding).map((item, idx) => (
           <Card key={item.title} className="flex items-center gap-4 p-4">
             <div>{item.icon}</div>
             <div>
               <div className="text-sm text-gray-500">{item.title}</div>
-              <div className="text-xl font-bold">{item.title === 'Total Outstanding' ? `9${item.value?.toLocaleString()}` : item.value}</div>
+              <div className="text-xl font-bold">{item.title === 'Total Outstanding' ? `₹${item.value?.toLocaleString()}` : item.value}</div>
             </div>
           </Card>
         ))}

@@ -1,128 +1,100 @@
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 import Loader from '../../components/ui/Loader';
 import EmptyState from '../../components/ui/EmptyState';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
-import { Modal } from '../../components/ui/Modal';
 import Pagination from '../../components/ui/Pagination';
-import { FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
-import { FiDollarSign, FiUsers, FiCalendar, FiTrendingUp } from "react-icons/fi";
-import Select from "../../components/ui/Select";
+import { FiDollarSign, FiUsers, FiTrendingUp, FiCheckCircle, FiPlus, FiTrash2 } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
 
-const AdvanceToVendor = () => {
-  const [advances, setAdvances] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editAdvance, setEditAdvance] = useState(null);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const { register, handleSubmit, reset, setValue } = useForm();
+function getAdvancesSummary(advances, vendors) {
+  const totalAdvances = advances.length;
+  const totalAmount = advances.reduce((sum, a) => sum + (a.amount || 0), 0);
+  const cleared = advances.filter(a => a.cleared).length;
+  const uncleared = totalAdvances - cleared;
+  const vendorCount = new Set(advances.map(a => a.vendorId)).size;
+  return [
+    { title: 'Total Advances', value: totalAdvances, icon: <FiTrendingUp className="h-6 w-6 text-blue-500" /> },
+    { title: 'Total Amount', value: `₹${totalAmount.toLocaleString()}`, icon: <FiDollarSign className="h-6 w-6 text-green-500" /> },
+    { title: 'Cleared', value: cleared, icon: <FiCheckCircle className="h-6 w-6 text-green-600" /> },
+    { title: 'Vendors', value: vendorCount, icon: <FiUsers className="h-6 w-6 text-purple-500" /> },
+  ];
+}
 
-  const fetchAdvances = async () => {
+export default function AdvanceToVendor() {
+  const [advances, setAdvances] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [vendorMap, setVendorMap] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      axiosInstance.get('/api/finance/vendors/advances'),
+      axiosInstance.get('/api/finance/vendors')
+    ])
+      .then(([advRes, venRes]) => {
+        setAdvances(advRes.data);
+        setVendors(venRes.data);
+        const map = {};
+        venRes.data.forEach(v => { map[v._id] = v.name; });
+        setVendorMap(map);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message || 'Failed to fetch advances or vendors');
+        setLoading(false);
+      });
+  }, []);
+
+  // Filtering logic
+  const filteredAdvances = useMemo(() =>
+    advances.filter(a =>
+      (vendorMap[a.vendorId] || '').toLowerCase().includes(search.toLowerCase())
+    ), [advances, vendorMap, search]
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredAdvances.length / PAGE_SIZE));
+  const paginated = filteredAdvances.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Delete Advance
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this advance?')) return;
     setLoading(true);
     try {
-      const res = await axiosInstance.get('/api/finance/vendors/advances');
-      setAdvances(res.data);
-      setTotal(res.data.length);
+      await axiosInstance.delete(`/api/finance/vendors/advances/${id}`);
+      setAdvances(advances.filter(a => a._id !== id));
     } catch (e) {
-      setAdvances([]);
+      setError('Failed to delete advance');
     }
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchAdvances();
-  }, []);
-
-  const onSubmit = async (data) => {
-    try {
-      if (editAdvance) {
-        await axiosInstance.put(`/api/finance/vendors/advances/${editAdvance._id}`, data);
-      } else {
-        await axiosInstance.post('/api/finance/vendors/advances', data);
-      }
-      setModalOpen(false);
-      setEditAdvance(null);
-      reset();
-      fetchAdvances();
-    } catch {}
-  };
-
-  const handleEdit = (advance) => {
-    setEditAdvance(advance);
-    setValue('vendorId', advance.vendorId);
-    setValue('amount', advance.amount);
-    setValue('date', advance.date?.slice(0, 10));
-    setModalOpen(true);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this advance?')) return;
-    await axiosInstance.delete(`/api/finance/vendors/advances/${id}`);
-    fetchAdvances();
-  };
-
-  const paginated = advances.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
+  // Table columns
   const columns = [
-    { 
-      Header: 'Reference', 
-      accessor: 'reference',
-      Cell: ({ value }) => (
-        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Vendor', 
-      accessor: 'vendor',
-      Cell: ({ value }) => (
-        <div className="font-medium">{value}</div>
-      )
-    },
-    { 
-      Header: 'Amount', 
-      accessor: 'amount',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
-    { 
-      Header: 'Date', 
-      accessor: 'date',
-      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
-    },
-    { 
-      Header: 'Purpose', 
-      accessor: 'purpose',
-      Cell: ({ value }) => (
-        <div className="max-w-xs truncate" title={value}>
-          {value}
-        </div>
-      )
-    },
-    { 
-      Header: 'Expected Return', 
-      accessor: 'expectedReturn',
-      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
-    },
-    { 
-      Header: 'Status', 
-      accessor: 'status',
-      Cell: ({ value }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'Settled' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-        }`}>
-          {value}
-        </span>
-      )
-    },
+    { Header: 'Vendor', accessor: 'vendorId', Cell: ({ value }) => <div className="font-medium">{vendorMap[value] || value}</div> },
+    { Header: 'Amount', accessor: 'amount', Cell: ({ value }) => `₹${value.toLocaleString()}` },
+    { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '' },
+    { Header: 'Cleared', accessor: 'cleared', Cell: ({ value }) => value ? <span className="text-green-600 font-semibold">Yes</span> : <span className="text-yellow-600 font-semibold">No</span> },
+    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
+      <div className="flex gap-2">
+        {/* <Button size="sm" variant="outline" onClick={() => handleEdit(row.original)} icon={<FiEdit />} /> */}
+        <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id)} icon={<FiTrash2 />} />
+      </div>
+    ) }
   ];
+
+  if (loading) return <Loader />;
+  if (error) return <div className="text-red-500 p-4">{error}</div>;
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
@@ -131,69 +103,53 @@ const AdvanceToVendor = () => {
         subtitle="Manage vendor advances and track settlements"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
-          { label: "Payables", to: "/finance/payables" },
+          { label: "Vendor and Purchase", to: "/finance/vendors" },
           { label: "Advance To Vendor" }
         ]}
       />
-
-      {/* Add Advance Button */}
-      <div className="flex justify-between items-center">
-        <Button onClick={() => { setModalOpen(true); setEditAdvance(null); reset(); }} icon={<FiPlus />}>Add Advance</Button>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {getAdvancesSummary(filteredAdvances, vendors).map(item => (
+          <Card key={item.title} className="flex items-center gap-4 p-4">
+            <div>{item.icon}</div>
+            <div>
+              <div className="text-sm text-gray-500">{item.title}</div>
+              <div className="text-xl font-bold">{item.value}</div>
+            </div>
+          </Card>
+        ))}
       </div>
-
-      {/* Advance History Table */}
+      {/* Search and Add Advance Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="text"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by vendor name..."
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+          />
+        </div>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2" onClick={() => navigate('/finance/advance-vendor/add')}>
+            <FiPlus className="w-4 h-4" /> Add Advance
+          </Button>
+        </div>
+      </div>
+      {/* Advances Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Advance History</h3>
+          <h3 className="text-lg font-medium text-gray-800">Advance Payments</h3>
         </div>
-        {loading ? <Loader /> : advances.length === 0 ? <EmptyState text="No advances found." /> : (
+        {paginated.length === 0 ? (
+          <EmptyState message="No advances found." />
+        ) : (
           <>
-            <Table
-              columns={[{ label: 'Vendor ID', key: 'vendorId' }, { label: 'Amount', key: 'amount' }, { label: 'Date', key: 'date' }, { label: 'Cleared', key: 'cleared' }, { label: 'Actions', key: 'actions' }]}
-              data={paginated.map(a => ({
-                ...a,
-                date: a.date ? a.date.slice(0, 10) : '',
-                actions: (
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(a)} icon={<FiEdit />} />
-                    <Button size="sm" variant="danger" onClick={() => handleDelete(a._id)} icon={<FiTrash2 />} />
-                  </div>
-                )
-              }))}
-            />
-            <Pagination
-              page={page}
-              pageSize={PAGE_SIZE}
-              total={total}
-              onPageChange={setPage}
-            />
+            <Table columns={columns} data={paginated} />
+            <Pagination page={page} pageSize={PAGE_SIZE} total={filteredAdvances.length} onPageChange={setPage} />
           </>
         )}
       </div>
-
-      {/* Add Advance Modal */}
-      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setEditAdvance(null); reset(); }} title={editAdvance ? 'Edit Advance' : 'Add Advance'}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block mb-1">Vendor ID</label>
-            <input className="input" {...register('vendorId', { required: true })} />
-          </div>
-          <div>
-            <label className="block mb-1">Amount</label>
-            <input className="input" type="number" step="0.01" {...register('amount', { required: true })} />
-          </div>
-          <div>
-            <label className="block mb-1">Date</label>
-            <input className="input" type="date" {...register('date', { required: true })} />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => { setModalOpen(false); setEditAdvance(null); reset(); }}>Cancel</Button>
-            <Button type="submit">{editAdvance ? 'Update' : 'Add'}</Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
-};
-
-export default AdvanceToVendor;
+}

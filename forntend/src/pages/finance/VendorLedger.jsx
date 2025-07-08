@@ -97,6 +97,15 @@ const downloadPDF = (rows, vendor) => {
   doc.save('vendor_ledger.pdf');
 };
 
+// Calculate running balance in frontend if not present
+const addRunningBalance = (rows) => {
+  let balance = 0;
+  return rows.map(row => {
+    balance += (row.debit || 0) - (row.credit || 0);
+    return { ...row, balance };
+  });
+};
+
 const VendorLedger = () => {
   const [vendors, setVendors] = useState([]);
   const [vendorsLoading, setVendorsLoading] = useState(true);
@@ -149,7 +158,8 @@ const VendorLedger = () => {
       });
   }, [selectedVendor]);
 
-  const paginated = ledger.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const ledgerWithBalance = addRunningBalance(ledger);
+  const paginated = ledgerWithBalance.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Summary for selected vendor
   const totalBills = ledger.filter(e => e.type === 'Bill').length;
@@ -214,15 +224,15 @@ const VendorLedger = () => {
       </div>
 
       {/* Download Buttons */}
-      {selectedVendor && ledger.length > 0 && (
+      {selectedVendor && ledgerWithBalance.length > 0 && (
         <div className="flex justify-end mb-2 gap-2">
-          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadCSV(ledger)}>
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadCSV(ledgerWithBalance)}>
             Download CSV
           </Button>
-          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadExcel(ledger, vendor)}>
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadExcel(ledgerWithBalance, vendor)}>
             Download Excel
           </Button>
-          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadPDF(ledger, vendor)}>
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadPDF(ledgerWithBalance, vendor)}>
             Download PDF
           </Button>
         </div>
@@ -241,6 +251,7 @@ const VendorLedger = () => {
               { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
               { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
               { Header: 'Ref', accessor: 'ref' },
+              { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => <span className={value < 0 ? 'text-red-600 font-bold' : 'text-green-700 font-bold'}>{`₹${value?.toLocaleString()}`}</span> },
             ]}
             data={paginated.map((row, i) => ({ ...row, _id: row._id || `${row.type}-${row.date}-${i}` }))}
           />

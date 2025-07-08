@@ -8,7 +8,13 @@ import Select from '../../components/ui/Select';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { useForm } from 'react-hook-form';
-import { FiPlus } from 'react-icons/fi';
+import PageHeading from '../../components/ui/PageHeading';
+import Card from '../../components/ui/Card';
+import { FiDollarSign, FiCalendar, FiPlus, FiDownload, FiEdit, FiTrash2 } from 'react-icons/fi';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const PAGE_SIZE = 10;
 
@@ -64,44 +70,155 @@ const VendorPayments = () => {
 
   const paginated = payments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const getSummary = (payments) => {
+    const totalPayments = payments.length;
+    const totalAmount = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const lastDate = payments.length > 0 ? new Date(Math.max(...payments.map(p => new Date(p.date || 0)))).toLocaleDateString('en-IN') : '-';
+    return [
+      { title: 'Total Payments', value: totalPayments, icon: <FiPlus className="h-6 w-6 text-blue-500" /> },
+      { title: 'Total Amount', value: `₹${totalAmount.toLocaleString()}`, icon: <FiDollarSign className="h-6 w-6 text-green-500" /> },
+      { title: 'Last Payment', value: lastDate, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
+    ];
+  };
+
+  const downloadCSV = (rows) => {
+    if (!rows || !rows.length) return;
+    const headers = ['Date', 'Debit Account', 'Credit Account', 'Amount', 'Narration'];
+    const csvRows = [headers.join(',')];
+    rows.forEach(row => {
+      csvRows.push([
+        row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
+        row.debitAccount || '',
+        row.creditAccount || '',
+        row.amount || '',
+        row.narration || ''
+      ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+    });
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vendor_payments.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadExcel = (rows, vendor) => {
+    if (!rows || !rows.length) return;
+    const wsData = [
+      [vendor ? `Vendor: ${vendor.label}` : 'All Vendors'],
+      [],
+      ['Date', 'Debit Account', 'Credit Account', 'Amount', 'Narration']
+    ];
+    rows.forEach(row => {
+      wsData.push([
+        row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
+        row.debitAccount || '',
+        row.creditAccount || '',
+        row.amount || '',
+        row.narration || ''
+      ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Payments');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'vendor_payments.xlsx');
+  };
+
+  const downloadPDF = (rows, vendor) => {
+    if (!rows || !rows.length) return;
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(vendor ? `Vendor: ${vendor.label}` : 'All Vendors', 10, 10);
+    doc.setFontSize(10);
+    doc.text('Payments:', 10, 18);
+    const tableData = rows.map(row => [
+      row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
+      row.debitAccount || '',
+      row.creditAccount || '',
+      row.amount || '',
+      row.narration || ''
+    ]);
+    autoTable(doc, {
+      head: [['Date', 'Debit Account', 'Credit Account', 'Amount', 'Narration']],
+      body: tableData,
+      startY: 22,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [41, 128, 185] }
+    });
+    doc.save('vendor_payments.pdf');
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Vendor Payments</h1>
-        <Button icon={<FiPlus />} onClick={() => setModalOpen(true)} disabled={!selectedVendor}>Add Payment</Button>
+    <div className="space-y-4 px-2 sm:px-4">
+      <PageHeading
+        title="Vendor Payments"
+        subtitle="Manage and track payments made to vendors"
+        breadcrumbs={[
+          { label: 'Finance', to: '/finance' },
+          { label: 'Vendor Payments' }
+        ]}
+      />
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+        {getSummary(payments).map((item, idx) => (
+          <Card key={item.title} className="flex items-center gap-4 p-4">
+            <div>{item.icon}</div>
+            <div>
+              <div className="text-sm text-gray-500">{item.title}</div>
+              <div className="text-xl font-bold">{item.value}</div>
+            </div>
+          </Card>
+        ))}
       </div>
-      <div className="mb-4">
-        <Select
-          options={vendors.map(v => ({ value: v._id, label: v.name }))}
-          value={selectedVendor}
-          onChange={e => { setSelectedVendor(e.target.value); setPage(1); }}
-          placeholder="Select Vendor"
-          className="w-64"
-        />
+      {/* Vendor Filter and Export */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-wrap gap-2 items-center">
+          <Select
+            options={vendors.map(v => ({ value: v._id, label: v.name }))}
+            value={selectedVendor}
+            onChange={e => { setSelectedVendor(e.target.value); setPage(1); }}
+            placeholder="Select Vendor"
+            className="w-64"
+          />
+        </div>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadCSV(payments)}>Download CSV</Button>
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadExcel(payments, vendors.find(v => v._id === selectedVendor))}>Download Excel</Button>
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadPDF(payments, vendors.find(v => v._id === selectedVendor))}>Download PDF</Button>
+        </div>
       </div>
-      {loading ? <Loader /> : !selectedVendor ? <EmptyState text="Select a vendor to view payments." /> : payments.length === 0 ? <EmptyState text="No payments found." /> : (
-        <>
-          <Table
-            columns={[
-              { label: 'Date', key: 'date' },
-              { label: 'Debit Account', key: 'debitAccount' },
-              { label: 'Credit Account', key: 'creditAccount' },
-              { label: 'Amount', key: 'amount' },
-              { label: 'Narration', key: 'narration' },
-            ]}
-            data={paginated.map(p => ({
-              ...p,
-              date: p.date ? p.date.slice(0, 10) : '',
-            }))}
-          />
-          <Pagination
-            page={page}
-            pageSize={PAGE_SIZE}
-            total={total}
-            onPageChange={setPage}
-          />
-        </>
-      )}
+      {/* Payments Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="p-4 border-b border-gray-100">
+          <h3 className="text-lg font-medium text-gray-800">Payments</h3>
+        </div>
+        {loading ? <Loader /> : !selectedVendor ? <EmptyState text="Select a vendor to view payments." /> : payments.length === 0 ? <EmptyState text="No payments found." /> : (
+          <>
+            <Table
+              columns={[
+                { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
+                { Header: 'Debit Account', accessor: 'debitAccount' },
+                { Header: 'Credit Account', accessor: 'creditAccount' },
+                { Header: 'Amount', accessor: 'amount', Cell: ({ value }) => value ? `₹${Number(value).toLocaleString()}` : '-' },
+                { Header: 'Narration', accessor: 'narration' },
+              ]}
+              data={paginated.map((p, i) => ({ ...p, _id: p._id || i }))}
+            />
+            <Pagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={total}
+              onPageChange={setPage}
+            />
+          </>
+        )}
+      </div>
+      {/* Add Payment Modal */}
       <Modal open={modalOpen} onClose={() => { setModalOpen(false); reset(); }} title="Add Vendor Payment">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>

@@ -102,6 +102,7 @@ export default function App() {
               <Route path="/finance/vendor-ledger" element={<VendorLedger />} />
               <Route path="/finance/advance-vendor" element={<AdvanceToVendor />} />
               <Route path="/finance/advance-vendor/add" element={<AddAdvanceToVendor />} />
+              <Route path="/finance/advance-vendor/edit/:id" element={<AddAdvanceToVendor />} />
               <Route path="/finance/vendor-payments" element={<VendorPayments />} />
               <Route path="/finance/cashbook" element={<Cashbook />} />
               <Route path="/finance/bank-accounts" element={<BankAccounts />} />

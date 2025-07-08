@@ -122,7 +122,7 @@ exports.getVendorLedger = async (req, res) => {
     ]);
 
     // Format as ledger entries
-    const ledgerEntries = [
+    let ledgerEntries = [
       ...bills.map(bill => ({
         _id: bill._id,
         type: 'Bill',
@@ -148,6 +148,13 @@ exports.getVendorLedger = async (req, res) => {
 
     // Sort by date ascending
     ledgerEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculate running balance
+    let balance = 0;
+    ledgerEntries = ledgerEntries.map(entry => {
+      balance += (entry.debit || 0) - (entry.credit || 0);
+      return { ...entry, balance };
+    });
 
     res.json(ledgerEntries);
   } catch (err) {

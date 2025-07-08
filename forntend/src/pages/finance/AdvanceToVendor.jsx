@@ -8,7 +8,7 @@ import Button from '../../components/ui/Button';
 import Pagination from '../../components/ui/Pagination';
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
-import { FiDollarSign, FiUsers, FiTrendingUp, FiCheckCircle, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiDollarSign, FiUsers, FiTrendingUp, FiCheckCircle, FiPlus, FiTrash2, FiEdit } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
 
@@ -87,7 +87,7 @@ export default function AdvanceToVendor() {
     { Header: 'Cleared', accessor: 'cleared', Cell: ({ value }) => value ? <span className="text-green-600 font-semibold">Yes</span> : <span className="text-yellow-600 font-semibold">No</span> },
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
-        {/* <Button size="sm" variant="outline" onClick={() => handleEdit(row.original)} icon={<FiEdit />} /> */}
+        <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/advance-vendor/edit/${row.original._id}`)} icon={<FiEdit />} />
         <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id)} icon={<FiTrash2 />} />
       </div>
     ) }

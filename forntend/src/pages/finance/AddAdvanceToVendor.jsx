@@ -5,16 +5,18 @@ import Button from '../../components/ui/Button';
 import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import { FiCheckCircle } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 import Select from '../../components/ui/Select';
 
 export default function AddAdvanceToVendor() {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { id } = useParams();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [vendors, setVendors] = useState([]);
+  const [isEdit, setIsEdit] = useState(!!id);
   const navigate = useNavigate();
 
   // Fetch vendors for dropdown
@@ -24,18 +26,39 @@ export default function AddAdvanceToVendor() {
       .catch(() => setVendors([]));
   }, []);
 
+  // If editing, fetch advance and prefill
+  useEffect(() => {
+    if (id) {
+      setIsEdit(true);
+      setLoading(true);
+      axiosInstance.get(`/api/finance/vendors/advances/${id}`)
+        .then(res => {
+          const adv = res.data;
+          setValue('vendorId', adv.vendorId);
+          setValue('amount', adv.amount);
+          setValue('date', adv.date ? adv.date.slice(0, 10) : '');
+        })
+        .catch(() => setError('Failed to fetch advance'))
+        .finally(() => setLoading(false));
+    }
+  }, [id, setValue]);
+
   const onSubmit = async data => {
     setLoading(true);
     setError(null);
     try {
-      await axiosInstance.post('/api/finance/vendors/advances', data);
+      if (isEdit) {
+        await axiosInstance.put(`/api/finance/vendors/advances/${id}`, data);
+      } else {
+        await axiosInstance.post('/api/finance/vendors/advances', data);
+      }
       setSuccess(true);
       setTimeout(() => {
         navigate('/finance/advance-vendor');
       }, 1200);
       reset();
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to add advance');
+      setError(err.response?.data?.error || err.message || 'Failed to save advance');
     } finally {
       setLoading(false);
     }
@@ -44,12 +67,12 @@ export default function AddAdvanceToVendor() {
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Add Advance To Vendor"
-        subtitle="Record a new advance payment to a vendor"
+        title={isEdit ? 'Edit Advance To Vendor' : 'Add Advance To Vendor'}
+        subtitle={isEdit ? 'Update advance payment details' : 'Record a new advance payment to a vendor'}
         breadcrumbs={[
           { label: 'Payables', to: '/finance/payables' },
           { label: 'Advance To Vendor', to: '/finance/advance-vendor' },
-          { label: 'Add Advance' }
+          { label: isEdit ? 'Edit Advance' : 'Add Advance' }
         ]}
       />
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
@@ -95,7 +118,7 @@ export default function AddAdvanceToVendor() {
             <div className="flex justify-end gap-2 mt-6">
               <Button type="button" variant="outline" onClick={() => navigate('/finance/advance-vendor')}>Cancel</Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
-                {loading ? 'Saving...' : 'Add Advance'}
+                {loading ? (isEdit ? 'Saving...' : 'Saving...') : (isEdit ? 'Update Advance' : 'Add Advance')}
               </Button>
             </div>
           </form>

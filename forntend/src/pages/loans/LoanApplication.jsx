@@ -7,7 +7,6 @@ import PageHeading from '../../components/ui/PageHeading';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import TextArea from '../../components/ui/TextArea';
-import { MoneyInput } from '../../components/ui/MoneyInput';
 import Loader from '../../components/ui/Loader';
 import axiosInstance from '../../utils/axiosInstance';
 
@@ -116,7 +115,11 @@ const LoanApplication = () => {
       await axiosInstance.post('/api/finance/loans', formData);
       navigate('/finance/loans');
     } catch (error) {
-      setError('Failed to submit loan application. Please try again.');
+      if (error.response) {
+        setError(error.response.data?.error || error.response.statusText);
+      } else {
+        setError(error.message || 'Failed to submit loan application. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -282,10 +285,15 @@ const LoanApplication = () => {
               <div>
                 <div className="mb-2">
                   <h3 className="text-sm font-medium text-gray-700">Loan Amount</h3>
-                  <MoneyInput
+                  <Input
+                    type="number"
+                    name="amount"
                     value={formData.amount}
                     onChange={handleInputChange}
-                    prefix="₹"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter amount"
+                    required
                   />
                 </div>
               </div>
@@ -337,10 +345,15 @@ const LoanApplication = () => {
               <div>
                 <div className="mb-2">
                   <h3 className="text-sm font-medium text-gray-700">Monthly Installment</h3>
-                  <MoneyInput
+                  <Input
+                    type="number"
+                    name="monthlyInstallment"
                     value={formData.monthlyInstallment}
                     onChange={handleInputChange}
-                    prefix="₹"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter monthly installment"
+                    required
                   />
                 </div>
               </div>

@@ -82,7 +82,8 @@ export default function JournalEntries() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [entries, setEntries] = useState([]);
-  const totalPages = 2;
+  const [search, setSearch] = useState("");
+  const pageSize = 10;
 
   useEffect(() => {
     // Simulate API call
@@ -92,15 +93,27 @@ export default function JournalEntries() {
     }, 1000);
   }, []);
 
+  // Filtered and paginated entries
+  const filteredEntries = entries.filter(e =>
+    e.reference.toLowerCase().includes(search.toLowerCase()) ||
+    e.debit.toLowerCase().includes(search.toLowerCase()) ||
+    e.credit.toLowerCase().includes(search.toLowerCase()) ||
+    e.narration.toLowerCase().includes(search.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredEntries.length / pageSize) || 1;
+  const paginatedEntries = filteredEntries.slice((page - 1) * pageSize, page * pageSize);
+
   const columns = [
     { 
       Header: 'Date', 
       accessor: 'date',
+      disableSort: false,
       Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
     },
     { 
       Header: 'Reference', 
       accessor: 'reference',
+      disableSort: false,
       Cell: ({ value }) => (
         <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
           {value}
@@ -110,6 +123,7 @@ export default function JournalEntries() {
     { 
       Header: 'Debit Account', 
       accessor: 'debit',
+      disableSort: false,
       Cell: ({ value }) => (
         <span className="text-red-600 font-medium">{value}</span>
       )
@@ -117,6 +131,7 @@ export default function JournalEntries() {
     { 
       Header: 'Credit Account', 
       accessor: 'credit',
+      disableSort: false,
       Cell: ({ value }) => (
         <span className="text-green-600 font-medium">{value}</span>
       )
@@ -124,11 +139,13 @@ export default function JournalEntries() {
     { 
       Header: 'Amount', 
       accessor: 'amount',
+      disableSort: false,
       Cell: ({ value }) => `₹${value.toLocaleString()}`
     },
     { 
       Header: 'Status', 
       accessor: 'status',
+      disableSort: false,
       Cell: ({ value }) => (
         <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
           {value}
@@ -138,6 +155,7 @@ export default function JournalEntries() {
     { 
       Header: 'Narration', 
       accessor: 'narration',
+      disableSort: false,
       Cell: ({ value }) => (
         <div className="max-w-xs truncate" title={value}>
           {value}
@@ -145,10 +163,6 @@ export default function JournalEntries() {
       )
     },
   ];
-
-  if (loading) {
-    return <Loader />;
-  }
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
@@ -161,9 +175,8 @@ export default function JournalEntries() {
           { label: "Journal Entries" }
         ]}
       />
-
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {journalSummary.map((summary, index) => (
           <Card
             key={index}
@@ -175,23 +188,36 @@ export default function JournalEntries() {
           />
         ))}
       </div>
-
-      {/* Journal Entries Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Journal Entries History</h3>
+      {/* Filters and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-1 items-center gap-2">
+          <input
+            type="text"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+            placeholder="Search journal entries..."
+          />
         </div>
-        {entries.length === 0 ? (
-        <EmptyState message="No journal entries found." />
-      ) : (
-          <>
-            <Table columns={columns} data={entries} />
-            <div className="p-4 border-t border-gray-100">
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
-          </>
-        )}
       </div>
+      {/* Table Section */}
+      <Card>
+        {loading ? <Loader /> : paginatedEntries.length === 0 ? <EmptyState message="No journal entries found." /> : (
+          <Table
+            columns={columns}
+            data={paginatedEntries}
+            stickyHeader={true}
+            pageSize={pageSize}
+            className="mt-2"
+          />
+        )}
+        {/* Pagination */}
+        {paginatedEntries.length > 0 && (
+          <div className="p-4 border-t border-gray-100">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

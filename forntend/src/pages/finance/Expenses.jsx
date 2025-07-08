@@ -23,23 +23,7 @@ export default function Expenses() {
   const [loading, setLoading] = useState(false);
   const [expenses, setExpenses] = useState([]);
   const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortState, setSortState] = useState({
-    column: 'date',
-    direction: 'desc'
-  });
   const navigate = useNavigate();
-
-  const handleSort = (column) => {
-    setSortState(prev => ({
-      column,
-      direction: prev.column === column ? (prev.direction === 'asc' ? 'desc' : 'asc') : 'asc'
-    }));
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
 
   const fetchExpenses = async () => {
     try {
@@ -51,10 +35,6 @@ export default function Expenses() {
           category: filters.category,
           status: filters.status,
           search: filters.search,
-          page: currentPage,
-          limit: 10,
-          sort: sortState.column,
-          order: sortState.direction
         }
       });
       
@@ -62,7 +42,7 @@ export default function Expenses() {
         // Handle different response structures
         const data = Array.isArray(response.data) ? response.data : response.data.data || [];
         setExpenses(data);
-        setTotal(response.data.total || data.length);
+        setTotal(data.length);
       } else {
         setExpenses([]);
         setTotal(0);
@@ -79,7 +59,7 @@ export default function Expenses() {
 
   useEffect(() => {
     fetchExpenses();
-  }, [filters, currentPage, sortState]);
+  }, [filters]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this expense?')) {
@@ -97,6 +77,39 @@ export default function Expenses() {
     }
   };
 
+  // Summary cards
+  const summaryCards = [
+    { title: 'Total Expenses', value: `₹${expenses?.length > 0 ? expenses.reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`, icon: <FiDownload className="h-6 w-6 text-red-500" /> },
+    { title: 'Approved', value: `₹${expenses?.length > 0 ? expenses.filter(e => e.status === 'approved').reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`, icon: <FiCheck className="h-6 w-6 text-green-500" /> },
+    { title: 'Pending', value: `₹${expenses?.length > 0 ? expenses.filter(e => e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`, icon: <FiRefreshCw className="h-6 w-6 text-yellow-500" /> },
+    { title: 'Rejected', value: `₹${expenses?.length > 0 ? expenses.filter(e => e.status === 'rejected').reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`, icon: <FiFilter className="h-6 w-6 text-gray-500" /> },
+  ];
+
+  // Table columns
+  const columns = [
+    { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? format(new Date(value), 'dd MMM yyyy') : '-' },
+    { Header: 'Description', accessor: 'description' },
+    { Header: 'Category', accessor: 'category', Cell: ({ value }) => value?.name || '-' },
+    { Header: 'Amount', accessor: 'amount', Cell: ({ value }) => `₹${value?.toLocaleString()}` },
+    { Header: 'Status', accessor: 'status', Cell: ({ value }) => (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+        value === 'approved' ? 'bg-green-100 text-green-800' :
+        value === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+        value === 'rejected' ? 'bg-red-100 text-red-800' :
+        'bg-gray-100 text-gray-800'
+      }`}>
+        {value.charAt(0).toUpperCase() + value.slice(1)}
+      </span>
+    ) },
+    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
+      <div className="flex gap-2">
+        <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/expenses/${row.original._id || row.original.id}`)}><FiEye /></Button>
+        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/expenses/${row.original._id || row.original.id}/edit`)}><FiEdit /></Button>
+        <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id || row.original.id)}><FiTrash2 /></Button>
+      </div>
+    ) }
+  ];
+
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
@@ -106,213 +119,71 @@ export default function Expenses() {
           { label: "Finance", to: "/finance" },
           { label: "Expenses" }
         ]}
-        actions={[
-          <Button
-            key="add-expense"
-            variant="primary"
-            onClick={() => navigate('/finance/expenses/new')}
-          >
-            <FiPlus className="mr-2" /> Add Expense
-          </Button>,
-          <Button
-            key="export"
-            variant="outline"
-            onClick={() => alert('Export (mock)')}
-          >
-            <FiDownload className="mr-2" /> Export
-          </Button>
-        ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card 
-          title="Total Expenses" 
-          value={`₹${expenses?.length > 0 ? expenses.reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`} 
-          icon={<FiDownload className="h-6 w-6 text-red-500" />} 
-        />
-        <Card 
-          title="Approved" 
-          value={`₹${expenses?.length > 0 ? expenses.filter(e => e.status === 'approved').reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`} 
-          icon={<FiCheck className="h-6 w-6 text-green-500" />} 
-        />
-        <Card 
-          title="Pending" 
-          value={`₹${expenses?.length > 0 ? expenses.filter(e => e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`} 
-          icon={<FiRefreshCw className="h-6 w-6 text-yellow-500" />} 
-        />
-        <Card 
-          title="Rejected" 
-          value={`₹${expenses?.length > 0 ? expenses.filter(e => e.status === 'rejected').reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString() : '0'}`} 
-          icon={<FiFilter className="h-6 w-6 text-gray-500" />} 
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        {summaryCards.map((card, idx) => (
+          <Card key={idx} title={card.title} value={card.value} icon={card.icon} />
+        ))}
       </div>
-      {/* Filters Section */}
-      <Card>
-        <div className="p-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <input
-              type="date"
-              value={filters.startDate}
-              onChange={e => setFilters(f => ({ ...f, startDate: e.target.value }))}
-              className="border rounded px-3 py-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-              placeholder="Start Date"
-            />
-            <input
-              type="date"
-              value={filters.endDate}
-              onChange={e => setFilters(f => ({ ...f, endDate: e.target.value }))}
-              className="border rounded px-3 py-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-              placeholder="End Date"
-            />
-            <select
-              value={filters.category}
-              onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
-              className="border rounded px-3 py-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-            >
-              <option value="">All Categories</option>
-              <option value="salary">Salary</option>
-              <option value="rent">Rent</option>
-              <option value="utilities">Utilities</option>
-              <option value="supplies">Supplies</option>
-              <option value="travel">Travel</option>
-              <option value="other">Other</option>
-            </select>
-            <select
-              value={filters.status}
-              onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
-              className="border rounded px-3 py-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-            >
-              <option value="">All Statuses</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-          <div className="flex-1 flex items-center gap-2">
-            <div className="relative w-full sm:w-64">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={filters.search}
-                onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
-                className="pl-10 pr-3 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Search expenses..."
-              />
-            </div>
-            <Button variant="outline" onClick={() => setFilters({ startDate: '', endDate: '', category: '', status: '', search: '' })}>
-              <FiRefreshCw className="mr-2" /> Reset
-            </Button>
-          </div>
+      {/* Filters and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="date"
+            value={filters.startDate}
+            onChange={e => setFilters(f => ({ ...f, startDate: e.target.value }))}
+            className="border rounded px-3 py-2 w-36 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+            placeholder="Start Date"
+          />
+          <input
+            type="date"
+            value={filters.endDate}
+            onChange={e => setFilters(f => ({ ...f, endDate: e.target.value }))}
+            className="border rounded px-3 py-2 w-36 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+            placeholder="End Date"
+          />
+          <select
+            value={filters.category}
+            onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
+            className="border rounded px-2 py-2 text-sm"
+          >
+            <option value="">All Categories</option>
+            <option value="salary">Salary</option>
+            <option value="rent">Rent</option>
+            <option value="utilities">Utilities</option>
+            <option value="supplies">Supplies</option>
+            <option value="travel">Travel</option>
+            <option value="other">Other</option>
+          </select>
+          <select
+            value={filters.status}
+            onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
+            className="border rounded px-2 py-2 text-sm"
+          >
+            <option value="">All Statuses</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <input
+            type="text"
+            value={filters.search}
+            onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+            placeholder="Search expenses..."
+          />
         </div>
-      </Card>
-      {/* Expenses Table */}
-      <Card>
-        <div className="p-4 space-y-4">
-          {loading ? (
-            <Loader />
-          ) : (
-            <Table
-              data={expenses}
-              columns={[
-                {
-                  Header: 'Date',
-                  accessor: 'date',
-                  Cell: ({ value }) => format(new Date(value), 'MMM d, yyyy'),
-                  className: 'text-center whitespace-nowrap',
-                  disableSort: false
-                },
-                {
-                  Header: 'Description',
-                  accessor: 'description',
-                  className: 'text-left whitespace-normal',
-                  disableSort: false
-                },
-                {
-                  Header: 'Category',
-                  accessor: 'category',
-                  className: 'text-left',
-                  disableSort: false
-                },
-                {
-                  Header: 'Amount',
-                  accessor: 'amount',
-                  Cell: ({ value }) => `₹${value.toLocaleString()}`,
-                  className: 'text-right whitespace-nowrap',
-                  disableSort: false
-                },
-                {
-                  Header: 'Status',
-                  accessor: 'status',
-                  Cell: ({ value }) => (
-                    <span className={`px-2 py-1 rounded-full text-sm ${
-                      value === 'approved' ? 'bg-green-100 text-green-800' :
-                      value === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {value.charAt(0).toUpperCase() + value.slice(1)}
-                    </span>
-                  ),
-                  className: 'text-center whitespace-nowrap',
-                  disableSort: false
-                },
-                {
-                  Header: 'Actions',
-                  accessor: '_id',
-                  className: 'text-center whitespace-nowrap',
-                  Cell: ({ value, row }) => (
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/finance/expenses/${value}`)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <FiEye className="mr-1" /> View
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/finance/expenses/${value}/edit`)}
-                        className="text-green-600 hover:text-green-800"
-                      >
-                        <FiEdit className="mr-1" /> Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        color="red"
-                        onClick={() => handleDelete(value)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <FiTrash2 className="mr-1" /> Delete
-                      </Button>
-                    </div>
-                  ),
-                  className: 'text-center',
-                  disableSort: true
-                }
-              ]}
-              className="mt-4"
-              onRowClick={(row) => navigate(`/finance/expenses/${row._id}`)}
-              loading={loading}
-              emptyMessage="No expenses found"
-              stickyHeader={true}
-              pageSize={10}
-              defaultSort={{ column: 'date', direction: 'desc' }}
-            />
-          )}
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-500">
-              Showing {expenses?.length || 0} of {total || 0} expenses
-            </div>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={total ? Math.ceil(total / 10) : 1}
-              onPageChange={handlePageChange}
-            />
-          </div>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button onClick={() => navigate('/finance/expenses/new')} className="bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2" />Add Expense</Button>
+          <Button key="export-csv" variant="outline" className="ml-2" onClick={() => alert('Export (mock)')}><FiDownload className="mr-2" />Export CSV</Button>
         </div>
+      </div>
+      {/* Table Section */}
+      <Card>
+        {loading ? <Loader /> : expenses.length === 0 ? <EmptyState message="No expenses found." /> : (
+          <Table columns={columns} data={expenses} />
+        )}
       </Card>
     </div>
   );

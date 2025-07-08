@@ -10,7 +10,6 @@ import EmptyState from "../../components/ui/EmptyState";
 import PageHeading from '../../components/ui/PageHeading';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
-import { MoneyInput } from '../../components/ui/MoneyInput';
 import Card from '../../components/ui/Card';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiDollarSign, FiCreditCard, FiPackage, FiTrendingUp, FiTrendingDown, FiEye, FiEdit, FiTrash2, FiMoreVertical, FiDownload, FiRefreshCw, FiX } from 'react-icons/fi';
@@ -844,8 +843,10 @@ export default function ChartOfAccounts() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Current Balance</label>
-                  <MoneyInput
-                    defaultValue={selectedAccount.currentBalance}
+                  <Input
+                    type="number"
+                    step="0.01"
+                    
                     {...register("currentBalance")}
                   />
                 </div>

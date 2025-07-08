@@ -1,6 +1,13 @@
 const calculateEMI = (principal, rate, tenure) => {
   // Convert rate from percentage to decimal
   const monthlyRate = rate / 12 / 100;
+  if (monthlyRate === 0) {
+    return principal / tenure;
+  }
+  // EMI formula: [P x R x (1+R)^N]/[(1+R)^N-1]
+  const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, tenure)) /
+    (Math.pow(1 + monthlyRate, tenure) - 1);
+  return Math.round(emi);
 };
 
 const calculateInterest = (principal, rate, tenure) => {

@@ -20,6 +20,7 @@ export default function ExpenseCategories() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [categorySearch, setCategorySearch] = useState('');
   
   const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm();
   const { user } = useAuth();
@@ -125,38 +126,47 @@ export default function ExpenseCategories() {
     { title: 'Inactive', value: categories.filter(c => !c.isActive).length, color: 'red' },
   ];
 
+  // Filtered categories by search
+  const filteredCategories = categories.filter(cat =>
+    cat.name.toLowerCase().includes(categorySearch.toLowerCase()) ||
+    (cat.description || '').toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
   // Table columns for categories
   const columns = [
-    { Header: 'Name', accessor: 'name' },
-    { Header: 'Description', accessor: 'description', Cell: ({ value }) => value || '—' },
-    { Header: 'Status', accessor: 'isActive', Cell: ({ value }) => (
-      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+    { Header: 'Name', accessor: 'name', className: 'font-medium', disableSort: false },
+    { Header: 'Description', accessor: 'description', Cell: ({ value }) => value || '—', disableSort: false },
+    { Header: 'Status', accessor: 'isActive', disableSort: false, Cell: ({ value }) => (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
         {value ? 'Active' : 'Inactive'}
       </span>
     ) },
-    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
-      <div className="flex justify-end space-x-2">
-        <button
+    { Header: 'Actions', accessor: 'actions', disableSort: true, Cell: ({ row }) => (
+      <div className="flex gap-2 justify-end">
+        <Button
+          size="sm"
+          variant={row.original.isActive ? 'danger' : 'success'}
           onClick={() => toggleStatus(row.original)}
-          className={`p-1 rounded-full ${row.original.isActive ? 'text-red-600 hover:bg-red-100' : 'text-green-600 hover:bg-green-100'}`}
           title={row.original.isActive ? 'Deactivate' : 'Activate'}
         >
           {row.original.isActive ? <FiX /> : <FiCheck />}
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          variant="primary"
           onClick={() => handleEdit(row.original)}
-          className="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-100"
           title="Edit"
         >
           <FiEdit2 />
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          variant="danger"
           onClick={() => setCategoryToDelete(row.original)}
-          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
           title="Delete"
         >
           <FiTrash2 />
-        </button>
+        </Button>
       </div>
     ) },
   ];
@@ -170,115 +180,71 @@ export default function ExpenseCategories() {
           { label: "Finance", to: "/finance" },
           { label: "Expense Categories" }
         ]}
-        actions={[
-          <Button
-            key="add-category"
-            onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <FiPlus className="mr-2" /> Add Category
-          </Button>
-        ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {summary.map((item, idx) => (
           <Card key={idx} title={item.title} value={item.value} icon={<span className={`inline-block w-3 h-3 rounded-full bg-${item.color}-500`} />} />
         ))}
       </div>
-      {/* Category Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Category List</h3>
-            </div>
-        {loading ? (
-          <Loader />
-          ) : categories.length === 0 ? (
-            <EmptyState message="No categories found. Create your first category to get started." />
-          ) : (
-          <Table columns={columns} data={categories} />
-          )}
+      {/* Filters and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-1 items-center gap-2">
+          <input
+            type="text"
+            value={categorySearch}
+            onChange={e => setCategorySearch(e.target.value)}
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+            placeholder="Search categories..."
+          />
         </div>
-
-      {/* Add/Edit Category Modal */}
-      <Modal
-        open={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingCategory(null);
-        }}
-        title={editingCategory ? 'Edit Category' : 'Add New Category'}
-      >
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2" />Add Category</Button>
+        </div>
+      </div>
+      {/* Table Section */}
+      <Card>
+        {loading ? <Loader /> : filteredCategories.length === 0 ? <EmptyState message="No categories found. Create your first category to get started." /> : (
+          <Table
+            columns={columns}
+            data={filteredCategories}
+            stickyHeader={true}
+            pageSize={10}
+            className="mt-2"
+          />
+        )}
+      </Card>
+      {/* Modal for Add/Edit Category */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingCategory ? 'Edit Category' : 'Add Category'}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
-            label="Name"
+            label="Category Name"
             {...register('name', { required: 'Name is required' })}
             error={errors.name?.message}
-            disabled={loading}
-            placeholder="e.g. Office Supplies, Travel"
+            autoFocus
           />
-          
           <Input
-            label="Description (Optional)"
+            label="Description"
             {...register('description')}
             error={errors.description?.message}
-            disabled={loading}
-            placeholder="A brief description of this category"
           />
-          
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setIsModalOpen(false);
-                setEditingCategory(null);
-              }}
-              disabled={loading}
-            >
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {loading ? 'Saving...' : editingCategory ? 'Update Category' : 'Add Category'}
+            <Button type="submit" variant="primary" loading={loading}>
+              {editingCategory ? 'Update' : 'Add'}
             </Button>
           </div>
         </form>
       </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        open={!!categoryToDelete}
-        onClose={() => setCategoryToDelete(null)}
-        title="Delete Category"
-      >
+      {/* Confirm Delete Modal */}
+      <Modal isOpen={!!categoryToDelete} onClose={() => setCategoryToDelete(null)} title="Delete Category?">
         <div className="space-y-4">
-          <p className="text-gray-700">
-            Are you sure you want to delete the category "{categoryToDelete?.name}"? 
-            This action cannot be undone.
-          </p>
-          
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCategoryToDelete(null)}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              onClick={confirmDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
+          <p>Are you sure you want to delete the category <b>{categoryToDelete?.name}</b>?</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setCategoryToDelete(null)} disabled={isDeleting}>Cancel</Button>
+            <Button variant="danger" onClick={confirmDelete} loading={isDeleting}>Delete</Button>
           </div>
         </div>
       </Modal>

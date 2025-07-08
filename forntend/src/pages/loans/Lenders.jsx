@@ -9,6 +9,7 @@ import Loader from '../../components/ui/Loader';
 import EmptyState from '../../components/ui/EmptyState';
 import Table from '../../components/ui/Table';
 import { FiPlus, FiEdit2, FiTrash2, FiDatabase, FiUsers, FiDollarSign, FiMapPin, FiPhone, FiSearch } from 'react-icons/fi';
+import Pagination from '../../components/ui/Pagination';
 
 const lenderSummary = [
   { title: 'Total Lenders', value: 0, icon: <FiUsers className="h-6 w-6 text-blue-500" /> },
@@ -29,6 +30,8 @@ const Lenders = () => {
     loanType: '',
     search: ''
   });
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const fetchLenders = async () => {
     try {
@@ -91,6 +94,16 @@ const Lenders = () => {
     fetchLenders();
   }, []);
 
+  // Filtered and paginated lenders
+  const filteredLenders = lenders.filter(lender =>
+    lender.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+    lender.type?.toLowerCase().includes(filters.search.toLowerCase()) ||
+    lender.email?.toLowerCase().includes(filters.search.toLowerCase()) ||
+    lender.phone?.toLowerCase().includes(filters.search.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredLenders.length / pageSize) || 1;
+  const paginatedLenders = filteredLenders.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
@@ -101,8 +114,8 @@ const Lenders = () => {
           { label: "Lenders" }
         ]}
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {lenderSummary.map((item, index) => (
           <Card key={index} className="p-4">
             <div className="flex items-center">
@@ -115,57 +128,53 @@ const Lenders = () => {
           </Card>
         ))}
       </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center space-x-4">
+      {/* Filters and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-1 items-center gap-2">
+          <input
+            type="text"
+            placeholder="Search lenders..."
+            value={filters.search}
+            onChange={handleInputChange}
+            name="search"
+            className="w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex gap-2 mt-2 md:mt-0">
           <Button
             onClick={() => navigate('/finance/lenders/add')}
             icon={<FiPlus />}
-            variant="primary"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Add New Lender
           </Button>
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search lenders..."
-                value={filters.search}
-                onChange={handleInputChange}
-                name="search"
-                className="w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <FiSearch className="absolute right-3 top-2.5 text-gray-400" />
-            </div>
-          </div>
         </div>
       </div>
-
-      {loading ? (
-        <Loader />
-      ) : lenders.length === 0 ? (
-        <EmptyState
-          title="No Lenders Found"
-          description="You haven't added any lenders yet. Click the button below to add a new lender."
-          icon={<FiDatabase className="h-12 w-12 text-gray-400" />}
-          action={
-            <Button
-              onClick={() => navigate('/finance/lenders/add')}
-              icon={<FiPlus />}
-              variant="primary"
-            >
-              Add New Lender
-            </Button>
-          }
-        />
-      ) : (
-        <div className="space-y-4">
+      {/* Table Section */}
+      <Card>
+        {loading ? <Loader /> : paginatedLenders.length === 0 ? (
+          <EmptyState
+            title="No Lenders Found"
+            description="You haven't added any lenders yet. Click the button below to add a new lender."
+            icon={<FiDatabase className="h-12 w-12 text-gray-400" />}
+            action={
+              <Button
+                onClick={() => navigate('/finance/lenders/add')}
+                icon={<FiPlus />}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Add New Lender
+              </Button>
+            }
+          />
+        ) : (
           <Table
-            data={lenders}
+            data={paginatedLenders}
             columns={[
               {
                 Header: 'Name',
                 accessor: 'name',
+                disableSort: false,
                 Cell: ({ value }) => (
                   <span className="font-medium">{value}</span>
                 )
@@ -173,10 +182,12 @@ const Lenders = () => {
               {
                 Header: 'Type',
                 accessor: 'type',
+                disableSort: false
               },
               {
                 Header: 'Status',
                 accessor: 'status',
+                disableSort: false,
                 Cell: ({ value }) => (
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${
@@ -190,40 +201,59 @@ const Lenders = () => {
               {
                 Header: 'Email',
                 accessor: 'email',
+                disableSort: false
               },
               {
                 Header: 'Phone',
                 accessor: 'phone',
+                disableSort: false
               },
               {
                 Header: 'Actions',
                 accessor: '_id',
-                Cell: ({ value, row }) => (
-                  <div className="flex space-x-2">
+                disableSort: true,
+                Cell: ({ value }) => (
+                  <div className="flex gap-2">
                     <Button
-                      variant="outline"
-                      icon={<FiEdit2 />}
-                      onClick={() => handleEdit(value)}
-                      className="text-sm"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => navigate(`/finance/lenders/${value}`)}
+                      title="View"
                     >
-                      Edit
+                      View
                     </Button>
                     <Button
-                      variant="outline"
-                      color="red"
-                      icon={<FiTrash2 />}
-                      onClick={() => handleDelete(value)}
-                      className="text-sm"
+                      size="sm"
+                      variant="primary"
+                      onClick={() => handleEdit(value)}
+                      title="Edit"
                     >
-                      Delete
+                      <FiEdit2 />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleDelete(value)}
+                      title="Delete"
+                    >
+                      <FiTrash2 />
                     </Button>
                   </div>
                 )
               }
             ]}
+            stickyHeader={true}
+            pageSize={pageSize}
+            className="mt-2"
           />
-        </div>
-      )}
+        )}
+        {/* Pagination */}
+        {paginatedLenders.length > 0 && (
+          <div className="p-4 border-t border-gray-100">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

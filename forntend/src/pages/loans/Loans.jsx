@@ -7,6 +7,9 @@ import Card from '../../components/ui/Card';
 import axiosInstance from '../../utils/axiosInstance';
 import PageHeading from '../../components/ui/PageHeading';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import Loader from '../../components/ui/Loader';
+import EmptyState from '../../components/ui/EmptyState';
+import Pagination from '../../components/ui/Pagination';
 
 const Loans = () => {
   const navigate = useNavigate();
@@ -25,6 +28,8 @@ const Loans = () => {
     totalRepayments: 0,
     totalInterest: 0
   });
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     fetchLoanStats();
@@ -164,6 +169,19 @@ const Loans = () => {
     }
   ];
 
+  // Filtered and paginated loans
+  const filteredLoans = loans.filter(loan =>
+    (filters.status === '' || loan.status === filters.status) &&
+    (filters.loanType === '' || loan.loanType === filters.loanType) &&
+    (
+      loan.loanNumber?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      loan.applicant?.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      loan.loanType?.toLowerCase().includes(filters.search.toLowerCase())
+    )
+  );
+  const totalPages = Math.ceil(filteredLoans.length / pageSize) || 1;
+  const paginatedLoans = filteredLoans.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
@@ -176,7 +194,7 @@ const Loans = () => {
       />
 
       {/* Loan Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <Card 
           title="Total Loans" 
           value={loanStats.totalLoans}
@@ -201,80 +219,74 @@ const Loans = () => {
         <Card 
           title="Overdue Loans" 
           value={loanStats.overdueLoans}
-          icon={<FiAlertTriangle className="h-6 w-6 text-yellow-500" />}
+          icon={<FiFileText className="h-6 w-6 text-yellow-500" />}
           trend="up"
-          trendValue="1.5%"
+          trendValue="1.2%"
         />
       </div>
 
-      {/* Filters and Actions */}
-      <Card>
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-800">Loan Filters</h3>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/finance/loans/apply')}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              <FiPlus className="mr-2" /> New Loan Application
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <select
-              name="status"
-              value={filters.status}
-              onChange={handleFilterChange}
-              className="border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Statuses</option>
-              <option value="APPLIED">Applied</option>
-              <option value="APPROVED">Approved</option>
-              <option value="DISBURSED">Disbursed</option>
-              <option value="REPAYING">Repaying</option>
-              <option value="CLOSED">Closed</option>
-            </select>
-
-            <select
-              name="loanType"
-              value={filters.loanType}
-              onChange={handleFilterChange}
-              className="border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Loan Types</option>
-              <option value="PERSONAL">Personal Loan</option>
-              <option value="BUSINESS">Business Loan</option>
-              <option value="MORTGAGE">Mortgage Loan</option>
-              <option value="EDUCATION">Education Loan</option>
-              <option value="VEHICLE">Vehicle Loan</option>
-            </select>
-
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                name="search"
-                value={filters.search}
-                onChange={handleFilterChange}
-                className="pl-10 pr-3 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Search loans..."
-              />
-            </div>
-          </div>
-          <div className="flex justify-end mb-4">
-            <Button variant="outline" onClick={handleReset}>
-              <FiRefreshCw className="mr-2" /> Reset Filters
-            </Button>
-          </div>
-
-          <Table
-            data={loans}
-            columns={columns}
-            loading={loading}
-            emptyMessage="No loans found"
-            stickyHeader={true}
+      {/* Filters and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-wrap gap-2 items-center">
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+            className="border rounded px-2 py-2 text-sm"
+          >
+            <option value="">All Statuses</option>
+            <option value="APPLIED">Applied</option>
+            <option value="APPROVED">Approved</option>
+            <option value="DISBURSED">Disbursed</option>
+            <option value="REPAYING">Repaying</option>
+            <option value="CLOSED">Closed</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+          <select
+            name="loanType"
+            value={filters.loanType}
+            onChange={handleFilterChange}
+            className="border rounded px-2 py-2 text-sm"
+          >
+            <option value="">All Types</option>
+            <option value="Term Loan">Term Loan</option>
+            <option value="Working Capital">Working Capital</option>
+            <option value="Equipment">Equipment</option>
+            <option value="Vehicle">Vehicle</option>
+            <option value="Other">Other</option>
+          </select>
+          <input
+            type="text"
+            name="search"
+            value={filters.search}
+            onChange={handleFilterChange}
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+            placeholder="Search loans..."
           />
+          <Button variant="outline" onClick={handleReset}><FiRefreshCw className="mr-2" />Reset</Button>
         </div>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button onClick={() => navigate('/finance/loans/new')} className="bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2" />Add Loan</Button>
+        </div>
+      </div>
+
+      {/* Table Section */}
+      <Card>
+        {loading ? <Loader /> : paginatedLoans.length === 0 ? <EmptyState message="No loans found." /> : (
+          <Table
+            columns={columns}
+            data={paginatedLoans}
+            stickyHeader={true}
+            pageSize={pageSize}
+            className="mt-2"
+          />
+        )}
+        {/* Pagination */}
+        {paginatedLoans.length > 0 && (
+          <div className="p-4 border-t border-gray-100">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
       </Card>
     </div>
   );

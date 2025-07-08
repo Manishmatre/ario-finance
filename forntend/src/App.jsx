@@ -50,6 +50,7 @@ import EditVendor from './pages/finance/EditVendor';
 import VendorDetails from './pages/finance/VendorDetails';
 import AddPurchaseBill from './pages/finance/AddPurchaseBill';
 import BillDetails from './pages/finance/BillDetails';
+import LenderDetails from './pages/loans/LenderDetails';
 
 export default function App() {
   return (
@@ -121,6 +122,7 @@ export default function App() {
               <Route path="/finance/loans/:id/analysis" element={<LoanAnalysis />} />
               <Route path="/finance/lenders" element={<Lenders />} />
               <Route path="/finance/lenders/add/:id?" element={<AddLender />} />
+              <Route path="/finance/lenders/:id" element={<LenderDetails />} />
               <Route path="*" element={<Navigate to="/finance" />} />
             </Route>
           </Route>

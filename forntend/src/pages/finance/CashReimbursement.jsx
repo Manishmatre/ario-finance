@@ -8,6 +8,7 @@ import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
 import { FiDollarSign, FiUsers, FiCalendar, FiCheckCircle } from "react-icons/fi";
 import Select from "../../components/ui/Select";
+import Pagination from "../../components/ui/Pagination";
 
 // Mock data
 const employees = [
@@ -87,6 +88,9 @@ export default function CashReimbursement() {
   const [success, setSuccess] = useState(false);
   const [reimbursements, setReimbursements] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     // Simulate API call
@@ -95,6 +99,106 @@ export default function CashReimbursement() {
       setLoading(false);
     }, 1000);
   }, []);
+
+  // Filtered and paginated reimbursements
+  const filteredReimbursements = reimbursements.filter(r =>
+    r.reference.toLowerCase().includes(search.toLowerCase()) ||
+    r.employee.toLowerCase().includes(search.toLowerCase()) ||
+    r.department.toLowerCase().includes(search.toLowerCase()) ||
+    r.category.toLowerCase().includes(search.toLowerCase()) ||
+    r.purpose.toLowerCase().includes(search.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredReimbursements.length / pageSize) || 1;
+  const paginatedReimbursements = filteredReimbursements.slice((page - 1) * pageSize, page * pageSize);
+
+  const columns = [
+    { 
+      Header: 'Reference', 
+      accessor: 'reference',
+      disableSort: false,
+      Cell: ({ value }) => (
+        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+          {value}
+        </span>
+      )
+    },
+    { 
+      Header: 'Employee', 
+      accessor: 'employee',
+      disableSort: false,
+      Cell: ({ value, row }) => (
+        <div>
+          <div className="font-medium">{value}</div>
+          <div className="text-sm text-gray-500">{row.original.department}</div>
+        </div>
+      )
+    },
+    { 
+      Header: 'Amount', 
+      accessor: 'amount',
+      disableSort: false,
+      Cell: ({ value }) => `₹${value.toLocaleString()}`
+    },
+    { 
+      Header: 'Date', 
+      accessor: 'date',
+      disableSort: false,
+      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
+    },
+    { 
+      Header: 'Category', 
+      accessor: 'category',
+      disableSort: false,
+      Cell: ({ value }) => (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          {value}
+        </span>
+      )
+    },
+    { 
+      Header: 'Purpose', 
+      accessor: 'purpose',
+      disableSort: false,
+      Cell: ({ value }) => (
+        <div className="max-w-xs truncate" title={value}>
+          {value}
+        </div>
+      )
+    },
+    { 
+      Header: 'Status', 
+      accessor: 'status',
+      disableSort: false,
+      Cell: ({ value }) => {
+        const colors = {
+          'Approved': 'bg-green-100 text-green-800',
+          'Pending': 'bg-yellow-100 text-yellow-800',
+          'Rejected': 'bg-red-100 text-red-800'
+        };
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[value]}`}>
+            {value}
+          </span>
+        );
+      }
+    },
+    { 
+      Header: 'Actions', 
+      accessor: 'actions',
+      disableSort: true,
+      Cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary">View</Button>
+          {row.original.status === 'Pending' && (
+            <>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">Approve</Button>
+              <Button size="sm" variant="danger">Reject</Button>
+            </>
+          )}
+        </div>
+      )
+    },
+  ];
 
   const onSubmit = data => {
     setLoading(true);
@@ -121,134 +225,64 @@ export default function CashReimbursement() {
     }, 1000);
   };
 
-  const columns = [
-    { 
-      Header: 'Reference', 
-      accessor: 'reference',
-      Cell: ({ value }) => (
-        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Employee', 
-      accessor: 'employee',
-      Cell: ({ value, row }) => (
-        <div>
-          <div className="font-medium">{value}</div>
-          <div className="text-sm text-gray-500">{row.original.department}</div>
-        </div>
-      )
-    },
-    { 
-      Header: 'Amount', 
-      accessor: 'amount',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
-    { 
-      Header: 'Date', 
-      accessor: 'date',
-      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
-    },
-    { 
-      Header: 'Category', 
-      accessor: 'category',
-      Cell: ({ value }) => (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Purpose', 
-      accessor: 'purpose',
-      Cell: ({ value }) => (
-        <div className="max-w-xs truncate" title={value}>
-          {value}
-        </div>
-      )
-    },
-    { 
-      Header: 'Status', 
-      accessor: 'status',
-      Cell: ({ value }) => {
-        const colors = {
-          'Approved': 'bg-green-100 text-green-800',
-          'Pending': 'bg-yellow-100 text-yellow-800',
-          'Rejected': 'bg-red-100 text-red-800'
-        };
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[value]}`}>
-            {value}
-          </span>
-        );
-      }
-    },
-    { 
-      Header: 'Actions', 
-      accessor: 'actions',
-      Cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button size="sm" variant="secondary">View</Button>
-          {row.original.status === 'Pending' && (
-            <>
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">Approve</Button>
-              <Button size="sm" variant="danger">Reject</Button>
-            </>
-          )}
-        </div>
-      )
-    },
-  ];
-
-  if (loading) {
-    return <Loader />;
-  }
-
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Cash Reimbursement"
-        subtitle="Manage employee expense reimbursements"
+        title="Cash Reimbursements"
+        subtitle="Manage and track all employee cash reimbursements"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
-          { label: "Cash Reimbursement" }
+          { label: "Cash Reimbursements" }
         ]}
       />
-
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {reimbursementSummary.map((summary, index) => (
           <Card
             key={index}
             title={summary.title}
-            value={summary.title.includes('Amount') 
-              ? `₹${summary.value.toLocaleString()}` 
+            value={summary.title.includes('Amount') || summary.title.includes('Reimbursements')
+              ? `₹${summary.value.toLocaleString()}`
               : summary.value.toString()}
             icon={summary.icon}
           />
         ))}
       </div>
-
-      {/* Add Reimbursement Button */}
-      <div className="flex justify-between items-center">
-        <Button onClick={() => setModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-          + Submit Reimbursement
-        </Button>
-      </div>
-
-      {/* Reimbursement History Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Reimbursement Requests</h3>
+      {/* Filters and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-1 items-center gap-2">
+          <input
+            type="text"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+            placeholder="Search reimbursements..."
+          />
         </div>
-        {reimbursements.length === 0 ? (
-          <EmptyState message="No reimbursement requests found." />
-        ) : (
-          <Table columns={columns} data={reimbursements} />
-        )}
+        <div className="flex justify-between items-center">
+          <Button onClick={() => setModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+            + Submit Reimbursement
+          </Button>
+        </div>
       </div>
+      {/* Table Section */}
+      <Card>
+        {loading ? <Loader /> : paginatedReimbursements.length === 0 ? <EmptyState message="No reimbursements found." /> : (
+          <Table
+            columns={columns}
+            data={paginatedReimbursements}
+            stickyHeader={true}
+            pageSize={pageSize}
+            className="mt-2"
+          />
+        )}
+        {/* Pagination */}
+        {paginatedReimbursements.length > 0 && (
+          <div className="p-4 border-t border-gray-100">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
+      </Card>
 
       {/* Add Reimbursement Modal */}
       {modalOpen && (

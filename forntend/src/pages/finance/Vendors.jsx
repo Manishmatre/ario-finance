@@ -72,7 +72,7 @@ export default function Vendors() {
     { Header: 'Address', accessor: 'address', Cell: ({ value }) => (<div className="max-w-xs truncate" title={value}>{value}</div>) },
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
-        <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/vendors/view?id=${row.original._id || row.original.id}`)}>View</Button>
+        <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/vendors/${row.original._id || row.original.id}`)}>View</Button>
         <Button size="sm" variant="primary" onClick={() => navigate('/finance/vendors/edit', { state: { vendor: row.original } })}>Edit</Button>
         <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id || row.original.id)}>Delete</Button>
       </div>

@@ -47,7 +47,7 @@ import ExpenseCategories from './pages/finance/ExpenseCategories';
 import ExpenseReports from './pages/finance/ExpenseReports';
 import AddVendor from './pages/finance/AddVendor';
 import EditVendor from './pages/finance/EditVendor';
-import ViewVendor from './pages/finance/ViewVendor';
+import VendorDetails from './pages/finance/VendorDetails';
 import AddPurchaseBill from './pages/finance/AddPurchaseBill';
 import BillDetails from './pages/finance/BillDetails';
 
@@ -113,7 +113,7 @@ export default function App() {
               <Route path="/finance/profile" element={<Profile />} />
               <Route path="/finance/vendors/add" element={<AddVendor />} />
               <Route path="/finance/vendors/edit" element={<EditVendor />} />
-              <Route path="/finance/vendors/view" element={<ViewVendor />} />
+              <Route path="/finance/vendors/:id" element={<VendorDetails />} />
               {/* Loan Management Routes */}
               <Route path="/finance/loans" element={<Loans />} />
               <Route path="/finance/loans/apply" element={<LoanApplication />} />

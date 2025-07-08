@@ -11,7 +11,7 @@ router.post('/', upload.single('file'), billController.uploadBill);
 router.patch('/:id/pay', billController.payBill);
 router.get('/', billController.listBills);
 router.get('/:id', billController.getBill);
-router.put('/:id', billController.updateBill);
+router.put('/:id', upload.single('file'), billController.updateBill);
 router.delete('/:id', billController.deleteBill);
 
 module.exports = router;

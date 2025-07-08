@@ -17,6 +17,7 @@ export default function BillDetails() {
   const [editMode, setEditMode] = useState(false);
   const [vendors, setVendors] = useState([]);
   const [form, setForm] = useState({});
+  const [file, setFile] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function BillDetails() {
           billNo: billRes.data.billNo || '',
           billDate: billRes.data.billDate ? billRes.data.billDate.slice(0, 10) : '',
           amount: billRes.data.amount || '',
+          isPaid: billRes.data.isPaid || false,
         });
         setVendors(vendorsRes.data);
         setLoading(false);
@@ -57,14 +59,44 @@ export default function BillDetails() {
     setLoading(true);
     setError(null);
     try {
-      const updateData = {
-        vendorId: form.vendorId,
-        billNo: form.billNo,
-        billDate: form.billDate,
-        amount: form.amount,
-      };
-      const res = await axiosInstance.put(`/api/finance/bills/${bill._id || bill.id}`, updateData);
+      let res;
+      if (file) {
+        // If a new file is selected, use FormData and POST to the same endpoint as add
+        const formData = new FormData();
+        formData.append('vendorId', form.vendorId);
+        formData.append('billNo', form.billNo);
+        formData.append('billDate', form.billDate);
+        formData.append('amount', form.amount);
+        formData.append('isPaid', form.isPaid === true || form.isPaid === 'true');
+        formData.append('file', file);
+        // Use POST to /api/finance/bills to create a new bill with file, or PATCH/PUT to update with file
+        res = await axiosInstance.post(`/api/finance/bills`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        // No new file, just update fields
+        const updateData = {
+          vendorId: form.vendorId,
+          billNo: form.billNo,
+          billDate: form.billDate,
+          amount: form.amount,
+          isPaid: form.isPaid === true || form.isPaid === 'true',
+        };
+        res = await axiosInstance.put(`/api/finance/bills/${bill._id || bill.id}`, updateData);
+      }
       setBill(res.data);
+      // Map vendorName from vendors list if available
+      if (vendors.length > 0) {
+        const vendorMap = {};
+        vendors.forEach(v => { vendorMap[v._id] = v.name; });
+        let vendorName = res.data.vendorId?.name || res.data.vendorId || res.data.vendor || '-';
+        if (typeof res.data.vendorId === 'string' && vendorMap[res.data.vendorId]) {
+          vendorName = vendorMap[res.data.vendorId];
+        }
+        setBill({ ...res.data, vendorName });
+      } else {
+        setBill(res.data);
+      }
       setEditMode(false);
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to update bill');
@@ -149,8 +181,25 @@ export default function BillDetails() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Amount *</label>
                 <Input type="number" min="1" name="amount" value={form.amount} onChange={handleChange} required />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                <select
+                  name="isPaid"
+                  value={form.isPaid === true || form.isPaid === 'true' ? 'true' : 'false'}
+                  onChange={e => setForm(f => ({ ...f, isPaid: e.target.value === 'true' }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="false">Pending</option>
+                  <option value="true">Paid</option>
+                </select>
+              </div>
             </div>
             <div className="flex gap-2 mt-8">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bill File (PDF/JPG/PNG)</label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files[0])} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
               <Button type="button" variant="secondary" onClick={handleCancelEdit}>Cancel</Button>
               <Button type="submit" variant="primary">Save Changes</Button>
             </div>
@@ -162,7 +211,12 @@ export default function BillDetails() {
             <div><strong>Bill Date:</strong> {bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'}</div>
             <div><strong>Amount:</strong> ₹{bill.amount?.toLocaleString()}</div>
             <div><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs font-medium ${bill.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{bill.isPaid ? 'Paid' : 'Pending'}</span></div>
-            {bill.fileUrl && <div><strong>Bill File:</strong> <a href={bill.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View/Download</a></div>}
+            {bill.fileUrl && /^https?:\/\//.test(bill.fileUrl) && (
+              <div><strong>Bill File:</strong> <a href={bill.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View/Download</a></div>
+            )}
+            {bill.fileUrl && !/^https?:\/\//.test(bill.fileUrl) && (
+              <div><strong>Bill File:</strong> <span className="text-gray-400">Invalid file URL</span></div>
+            )}
             {bill.projectId && <div><strong>Project:</strong> {bill.projectId.name || bill.projectId}</div>}
             {bill.createdBy && <div><strong>Created By:</strong> {bill.createdBy}</div>}
             {bill.createdAt && <div><strong>Created At:</strong> {new Date(bill.createdAt).toLocaleString()}</div>}

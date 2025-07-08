@@ -1,14 +1,20 @@
-const { GridFSBucket } = require('mongodb');
-const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
 
-// Abstraction: can swap to GCS later
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Allow all file types (images, PDFs, docs, etc.) by using resource_type: 'auto'
 exports.uploadFile = async (buffer, filename, mimetype) => {
-  const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'uploads' });
   return new Promise((resolve, reject) => {
-    const uploadStream = bucket.openUploadStream(filename, { contentType: mimetype });
-    uploadStream.end(buffer, (err, file) => {
-      if (err) return reject(err);
-      resolve(`/api/finance/files/${file._id}`);
-    });
+    cloudinary.uploader.upload_stream(
+      { resource_type: 'auto', public_id: `bills/${filename}` },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    ).end(buffer);
   });
 };

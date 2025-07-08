@@ -11,12 +11,20 @@ import { useForm } from 'react-hook-form';
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from 'xlsx';
 import { useNavigate } from 'react-router-dom';
 
-const billsSummary = [
-  { title: 'Total Bills', value: 6, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
-  { title: 'Pending Amount', value: 1286400, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
-  { title: 'Paid Amount', value: 165200, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
-  { title: 'Overdue Bills', value: 2, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
-];
+// Compute real summary stats from bills
+const getBillsSummary = (bills) => {
+  const now = new Date();
+  const totalBills = bills.length;
+  const pendingAmount = bills.filter(b => !b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
+  const paidAmount = bills.filter(b => b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
+  const overdueBills = bills.filter(b => !b.isPaid && b.billDate && new Date(b.billDate) < now).length;
+  return [
+    { title: 'Total Bills', value: totalBills, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
+    { title: 'Pending Amount', value: pendingAmount, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
+    { title: 'Paid Amount', value: paidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
+    { title: 'Overdue Bills', value: overdueBills, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
+  ];
+};
 
 export default function PurchaseBills() {
   const [bills, setBills] = useState([]);
@@ -25,12 +33,10 @@ export default function PurchaseBills() {
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingBill, setEditingBill] = useState(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,24 +82,7 @@ export default function PurchaseBills() {
   };
 
   const handleEditBill = (bill) => {
-    setEditingBill(bill);
-    setEditModalOpen(true);
-    reset(bill);
-  };
-
-  const handleUpdateBill = async (data) => {
-    try {
-      setLoading(true);
-      const res = await axiosInstance.put(`/api/finance/bills/${editingBill._id || editingBill.id}`, data);
-      setBills(bills.map(b => (b._id === res.data._id ? res.data : b)));
-      setEditModalOpen(false);
-      setEditingBill(null);
-      reset();
-    } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to update bill');
-    } finally {
-      setLoading(false);
-    }
+    navigate(`/finance/bills/${bill._id || bill.id}?edit=1`);
   };
 
   const handlePayBill = async (bill) => {
@@ -192,13 +181,15 @@ export default function PurchaseBills() {
     }
   };
 
-  // Search and pagination logic
-  const filteredBills = bills.filter(b =>
-    (b.vendorName?.toLowerCase().includes(search.toLowerCase()) ||
-      b.billNo?.toLowerCase().includes(search.toLowerCase()))
-  );
-  const totalPages = Math.max(1, Math.ceil(filteredBills.length / rowsPerPage));
-  const paginatedBills = filteredBills.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  // Filtering logic
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [vendorFilter, setVendorFilter] = useState('all');
+  const filteredBills = bills.filter(b => {
+    const matchesSearch = b.vendorName?.toLowerCase().includes(search.toLowerCase()) || b.billNo?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'paid' && b.isPaid) || (statusFilter === 'pending' && !b.isPaid);
+    const matchesVendor = vendorFilter === 'all' || b.vendorId === vendorFilter || b.vendorId?._id === vendorFilter;
+    return matchesSearch && matchesStatus && matchesVendor;
+  });
 
   const handleExportCSV = () => {
     const exportData = filteredBills.map(bill => ({
@@ -222,43 +213,15 @@ export default function PurchaseBills() {
       <PageHeading
         title="Purchase Bills"
         subtitle="Manage and track all your purchase bills"
-        actions={[
-          <Button onClick={() => navigate('/finance/bills/add')} className="bg-blue-600 hover:bg-blue-700 text-white">
-            Add New Bill
-          </Button>,
-          <Button key="export-csv" variant="outline" className="ml-2" onClick={handleExportCSV}>Export CSV</Button>
+        breadcrumbs={[
+          { label: 'Finance', to: '/finance' },
+          { label: 'Purchase Bills' }
         ]}
       />
 
-      {/* Search and Pagination Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
-        <input
-          type="text"
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search by vendor or bill number..."
-          className="border rounded px-3 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-        />
-        <div className="flex gap-2 justify-end mt-2 md:mt-0">
-          <button
-            className="px-3 py-1 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-l-md"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >Previous</button>
-          <span className="px-4 py-1 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-700">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            className="px-3 py-1 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-r-md"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >Next</button>
-        </div>
-      </div>
-
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {billsSummary.map((summary, index) => (
+        {getBillsSummary(bills).map((summary, index) => (
           <Card
             key={index}
             title={summary.title}
@@ -270,15 +233,52 @@ export default function PurchaseBills() {
         ))}
       </div>
 
+      {/* Filters and Actions Bar (now just above the table) */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by vendor or bill number..."
+            className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+          />
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="border rounded px-2 py-2 text-sm"
+          >
+            <option value="all">All Status</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+          </select>
+          <select
+            value={vendorFilter}
+            onChange={e => setVendorFilter(e.target.value)}
+            className="border rounded px-2 py-2 text-sm"
+          >
+            <option value="all">All Vendors</option>
+            {vendors.map(v => (
+              <option key={v._id} value={v._id}>{v.name}</option>
+            ))}
+          </select>
+          {/* Date range filter placeholder (implement as needed) */}
+        </div>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button onClick={() => navigate('/finance/bills/add')} className="bg-blue-600 hover:bg-blue-700 text-white">Add Bill</Button>
+          <Button key="export-csv" variant="outline" className="ml-2" onClick={handleExportCSV}>Export CSV</Button>
+        </div>
+      </div>
+
       {/* Purchase Bills Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
           <h3 className="text-lg font-medium text-gray-800">Bills Directory</h3>
         </div>
-        {paginatedBills.length === 0 ? (
+        {filteredBills.length === 0 ? (
           <EmptyState message="No purchase bills found." />
         ) : (
-          <Table columns={columns} data={paginatedBills} />
+          <Table columns={columns} data={filteredBills} />
         )}
       </div>
 
@@ -311,41 +311,6 @@ export default function PurchaseBills() {
               <div className="flex gap-3 mt-6">
                 <Button type="submit" className="flex-1">Add Bill</Button>
                 <Button type="button" variant="secondary" onClick={() => { setModalOpen(false); reset(); }} className="flex-1">Cancel</Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Bill Modal */}
-      {editModalOpen && editingBill && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 min-w-[400px] shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Edit Bill</h3>
-            <form onSubmit={handleSubmit(handleUpdateBill)} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-                <input className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" {...register('vendor', { required: true })} />
-                {errors.vendor && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bill No</label>
-                <input className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" {...register('billNo', { required: true })} />
-                {errors.billNo && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bill Date</label>
-                <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" {...register('billDate', { required: true })} />
-                {errors.billDate && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" {...register('amount', { required: true, min: 1 })} />
-                {errors.amount && <span className="text-red-500 text-sm">Required</span>}
-              </div>
-              <div className="flex gap-3 mt-6">
-                <Button type="submit" className="flex-1">Update Bill</Button>
-                <Button type="button" variant="secondary" onClick={() => { setEditModalOpen(false); setEditingBill(null); reset(); }} className="flex-1">Cancel</Button>
               </div>
             </form>
           </div>

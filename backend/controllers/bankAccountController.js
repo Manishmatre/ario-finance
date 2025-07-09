@@ -1,5 +1,4 @@
 const BankAccount = require('../models/BankAccount');
-const Account = require('../models/Account');
 
 // Get all bank accounts for a tenant
 exports.getBankAccounts = async (req, res) => {
@@ -7,7 +6,7 @@ exports.getBankAccounts = async (req, res) => {
     const { page = 1, limit = 10, status, type, bankName } = req.query;
     
     // Build filter object
-    const filter = { tenantId: req.tenantId || 'demo-tenant-1' };
+    const filter = { tenantId: req.tenantId };
     if (status) filter.status = status;
     if (type) filter.type = type;
     if (bankName) filter.bankName = bankName;
@@ -27,7 +26,7 @@ exports.getBankAccounts = async (req, res) => {
 
     // Get summary statistics
     const summary = await BankAccount.aggregate([
-      { $match: { tenantId: req.tenantId || 'demo-tenant-1' } },
+      { $match: { tenantId: req.tenantId } },
       {
         $group: {
           _id: null,
@@ -65,7 +64,7 @@ exports.getBankAccount = async (req, res) => {
   try {
     const bankAccount = await BankAccount.findOne({
       _id: req.params.id,
-      tenantId: req.tenantId || 'demo-tenant-1'
+      tenantId: req.tenantId
     });
 
     if (!bankAccount) {
@@ -112,7 +111,7 @@ exports.createBankAccount = async (req, res) => {
     // Check if account number already exists for this tenant
     const existingAccount = await BankAccount.findOne({
       bankAccountNo,
-      tenantId: req.tenantId || 'demo-tenant-1'
+      tenantId: req.tenantId
     });
 
     if (existingAccount) {
@@ -134,7 +133,7 @@ exports.createBankAccount = async (req, res) => {
       }
     }
 
-    // Create bank account
+    // Create the bank account
     const bankAccount = new BankAccount({
       bankName,
       type,
@@ -152,23 +151,10 @@ exports.createBankAccount = async (req, res) => {
         chequeBook: false
       },
       notes,
-      tenantId: req.tenantId || 'demo-tenant-1',
+      tenantId: req.tenantId,
       createdBy: req.user?.id || 'system'
     });
-
     await bankAccount.save();
-
-    // Ensure a matching Account exists in COA
-    const coaAccount = await Account.findOne({ name: bankName, tenantId: bankAccount.tenantId });
-    if (!coaAccount) {
-      await Account.create({
-        name: bankName,
-        code: bankAccountNo,
-        type: 'asset',
-        tenantId: bankAccount.tenantId,
-        createdBy: bankAccount.createdBy
-      });
-    }
 
     res.status(201).json({
       message: 'Bank account created successfully',
@@ -212,7 +198,7 @@ exports.updateBankAccount = async (req, res) => {
     // Find the bank account
     const bankAccount = await BankAccount.findOne({
       _id: req.params.id,
-      tenantId: req.tenantId || 'demo-tenant-1'
+      tenantId: req.tenantId
     });
 
     if (!bankAccount) {
@@ -231,7 +217,7 @@ exports.updateBankAccount = async (req, res) => {
     if (bankAccountNo && bankAccountNo !== bankAccount.bankAccountNo) {
       const existingAccount = await BankAccount.findOne({
         bankAccountNo,
-        tenantId: req.tenantId || 'demo-tenant-1',
+        tenantId: req.tenantId,
         _id: { $ne: req.params.id }
       });
 
@@ -259,7 +245,7 @@ exports.updateBankAccount = async (req, res) => {
 
     // Update the bank account
     const updatedBankAccount = await BankAccount.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.tenantId || 'demo-tenant-1' },
+      { _id: req.params.id, tenantId: req.tenantId },
       {
         bankName,
         type,
@@ -296,7 +282,7 @@ exports.updateBankAccount = async (req, res) => {
 exports.deleteBankAccount = async (req, res) => {
   try {
     const bankAccount = await BankAccount.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.tenantId || 'demo-tenant-1' },
+      { _id: req.params.id, tenantId: req.tenantId },
       { status: 'inactive' },
       { new: true }
     );
@@ -320,7 +306,7 @@ exports.deleteBankAccountHard = async (req, res) => {
   try {
     const bankAccount = await BankAccount.findOneAndDelete({
       _id: req.params.id,
-      tenantId: req.tenantId || 'demo-tenant-1'
+      tenantId: req.tenantId
     });
 
     if (!bankAccount) {
@@ -341,7 +327,7 @@ exports.deleteBankAccountHard = async (req, res) => {
 exports.getBankAccountStats = async (req, res) => {
   try {
     const stats = await BankAccount.aggregate([
-      { $match: { tenantId: req.tenantId || 'demo-tenant-1' } },
+      { $match: { tenantId: req.tenantId } },
       {
         $group: {
           _id: null,
@@ -365,7 +351,7 @@ exports.getBankAccountStats = async (req, res) => {
 
     // Get accounts by type
     const accountsByType = await BankAccount.aggregate([
-      { $match: { tenantId: req.tenantId || 'demo-tenant-1' } },
+      { $match: { tenantId: req.tenantId } },
       {
         $group: {
           _id: '$type',
@@ -377,7 +363,7 @@ exports.getBankAccountStats = async (req, res) => {
 
     // Get accounts by bank
     const accountsByBank = await BankAccount.aggregate([
-      { $match: { tenantId: req.tenantId || 'demo-tenant-1' } },
+      { $match: { tenantId: req.tenantId } },
       {
         $group: {
           _id: '$bankName',

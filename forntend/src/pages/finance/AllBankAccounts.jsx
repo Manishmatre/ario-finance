@@ -86,32 +86,6 @@ const mockAccounts = [
     interestRate: 5.5,
     lastTransaction: '2024-11-15',
   },
-  {
-    _id: '6',
-    bankName: 'Cash in Hand',
-    type: 'Cash',
-    accountHolder: 'Ario Pvt Ltd',
-    bankAccountNo: 'CASH001',
-    ifsc: 'N/A',
-    branchName: 'Office',
-    status: 'active',
-    openingBalance: 100000,
-    currentBalance: 125000,
-    interestRate: 0,
-    lastTransaction: '2025-01-15',
-    denominations: {
-      '2000': 15,
-      '500': 20,
-      '200': 10,
-      '100': 20,
-      '50': 40,
-      '20': 50,
-      '10': 100,
-      '5': 200,
-      '2': 500,
-      '1': 1000
-    }
-  },
 ];
 
 // Calculate summary from accounts data
@@ -168,7 +142,7 @@ const BANK_OPTIONS = [
   { value: 'Other', label: 'Other Bank' },
 ];
 
-export default function ChartOfAccounts() {
+export default function AllBankAccounts() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -188,42 +162,11 @@ export default function ChartOfAccounts() {
     try {
       const response = await axios.get("/api/finance/bank-accounts");
       const bankAccounts = response.data.bankAccounts || [];
-      
-      // Add cash account to the list
-      const cashAccount = {
-        _id: 'cash-account',
-        bankName: 'Cash in Hand',
-        type: 'Cash',
-        accountHolder: 'Ario Pvt Ltd',
-        bankAccountNo: 'CASH001',
-        ifsc: 'N/A',
-        branchName: 'Office',
-        status: 'active',
-        openingBalance: 100000,
-        currentBalance: 125000,
-        interestRate: 0,
-        lastTransaction: '2025-01-15',
-        denominations: {
-          '2000': 15,
-          '500': 20,
-          '200': 10,
-          '100': 20,
-          '50': 40,
-          '20': 50,
-          '10': 100,
-          '5': 200,
-          '2': 500,
-          '1': 1000
-        }
-      };
-      
-      setAccounts([...bankAccounts, cashAccount]);
-        setLoading(false);
+      setAccounts(bankAccounts);
+      setLoading(false);
     } catch (err) {
-      console.error('Error fetching bank accounts:', err);
-      setAccounts(mockAccounts);
-      setError("Showing mock data. Backend unavailable.");
-        setLoading(false);
+      setError("Failed to fetch accounts");
+      setLoading(false);
     }
   };
 
@@ -543,11 +486,11 @@ export default function ChartOfAccounts() {
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Chart of Accounts"
-        subtitle="Manage your accounts and categories"
+        title="All Bank Accounts"
+        subtitle="View and manage all your bank accounts"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
-          { label: "Chart of Accounts" }
+          { label: "All Bank Accounts" }
         ]}
         action={
           <Button onClick={() => navigate('/finance/add-bank-account')}>

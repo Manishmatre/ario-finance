@@ -85,8 +85,14 @@ export default function MakeBillPaid() {
     setLoading(true);
     setError(null);
     try {
-      const payload = { isPaid: true };
-      await axiosInstance.patch(`/api/finance/bills/${id}/pay`, payload);
+      const payload = {
+        isPaid: true,
+        ourBankAccount: form.ourBankAccount,
+        paymentMode: form.paymentMode || 'NEFT',
+        amount: form.amount,
+        narration: form.notes,
+      };
+      const res = await axiosInstance.patch(`/api/finance/bills/${id}/pay`, payload);
       setSuccess(true);
       setTimeout(() => {
         navigate('/finance/bills');

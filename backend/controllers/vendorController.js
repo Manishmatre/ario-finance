@@ -4,6 +4,7 @@ const AdvanceVendor = require('../models/AdvanceVendor');
 
 exports.listVendors = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const vendors = await Vendor.find({ tenantId: req.tenantId });
     res.json(vendors);
   } catch (err) {
@@ -13,6 +14,7 @@ exports.listVendors = async (req, res) => {
 
 exports.createVendor = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const { name, gstNo, phone, address, bankAccounts, paymentModes } = req.body;
     const vendor = await Vendor.create({
       name, gstNo, phone, address, bankAccounts, paymentModes, tenantId: req.tenantId, createdBy: req.user?.id
@@ -25,6 +27,7 @@ exports.createVendor = async (req, res) => {
 
 exports.getVendor = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     // Add tenantId check for correct and fast lookup
     const vendor = await Vendor.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
@@ -36,6 +39,7 @@ exports.getVendor = async (req, res) => {
 
 exports.updateVendor = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const vendor = await Vendor.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.tenantId },
       req.body,
@@ -51,6 +55,7 @@ exports.updateVendor = async (req, res) => {
 // Vendor summary API
 exports.getVendorSummary = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const tenantId = req.tenantId;
 
     // Total vendors
@@ -90,6 +95,7 @@ exports.getVendorSummary = async (req, res) => {
 
 exports.getVendorBills = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const bills = await require('../models/PurchaseBill').find({ tenantId: req.tenantId, vendorId: req.params.id });
     res.json(bills);
   } catch (err) {
@@ -99,6 +105,7 @@ exports.getVendorBills = async (req, res) => {
 
 exports.getVendorPayments = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     // Placeholder: implement actual payments model if available
     res.json([]);
   } catch (err) {
@@ -108,6 +115,7 @@ exports.getVendorPayments = async (req, res) => {
 
 exports.getVendorLedger = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const tenantId = req.tenantId;
     const vendorId = req.params.id;
     const PurchaseBill = require('../models/PurchaseBill');

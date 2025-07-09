@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './contexts/AuthContext';
 import FinanceLayout from './layouts/FinanceLayout';
 import Dashboard from './pages/finance/FinanceDashboard';
-import ChartOfAccounts from './pages/finance/ChartOfAccounts';
+import AllBankAccounts from './pages/finance/AllBankAccounts';
 import JournalEntries from './pages/finance/JournalEntries';
 import LedgerView from './pages/finance/LedgerView';
 import AddTransaction from './pages/finance/AddTransaction';
@@ -80,7 +80,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
           <Route element={<FinanceLayout />}>
               <Route path="/finance" element={<Dashboard />} />
-              <Route path="/finance/accounts" element={<ChartOfAccounts />} />
+              <Route path="/finance/accounts" element={<AllBankAccounts />} />
               <Route path="/finance/add-bank-account" element={<AddBankAccount />} />
               
               {/* Expense Management Routes */}

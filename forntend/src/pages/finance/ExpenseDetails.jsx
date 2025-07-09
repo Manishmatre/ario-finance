@@ -16,6 +16,8 @@ export default function ExpenseDetails() {
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [bankAccountDetails, setBankAccountDetails] = useState(null);
+  const [transaction, setTransaction] = useState(null);
 
   // Fetch categories for ID->name mapping
   useEffect(() => {
@@ -30,6 +32,37 @@ export default function ExpenseDetails() {
       try {
         const res = await axiosInstance.get(`/api/finance/expenses/${id}`);
         setExpense(res.data);
+        // Determine the bank account ID (top-level or in details)
+        let bankAccountId = res.data.bankAccount;
+        if (!bankAccountId && res.data.details && res.data.details.bankAccount) {
+          bankAccountId = res.data.details.bankAccount;
+        }
+        // If bankAccount is just an ID, fetch its details
+        if (
+          res.data.paymentMethod === 'bank_transfer' &&
+          bankAccountId &&
+          typeof bankAccountId === 'string'
+        ) {
+          const bankRes = await axiosInstance.get(`/api/finance/bank-accounts/${bankAccountId}`);
+          setBankAccountDetails(bankRes.data);
+        } else if (
+          res.data.paymentMethod === 'bank_transfer' &&
+          bankAccountId &&
+          typeof bankAccountId === 'object'
+        ) {
+          setBankAccountDetails(bankAccountId);
+        } else {
+          setBankAccountDetails(null);
+        }
+        // Fetch related transaction
+        if (res.data.paymentMethod === 'bank_transfer' && bankAccountId) {
+          const txnRes = await axiosInstance.get(`/api/finance/bank-accounts/${bankAccountId}/ledger`);
+          // Find the transaction for this expense by amount and date
+          const txn = (txnRes.data || []).find(t => t.amount === res.data.amount && new Date(t.date).toISOString().slice(0,10) === new Date(res.data.date).toISOString().slice(0,10));
+          setTransaction(txn || null);
+        } else {
+          setTransaction(null);
+        }
       } catch (err) {
         toast.error('Failed to fetch expense details');
         navigate('/finance/expenses');
@@ -167,7 +200,7 @@ export default function ExpenseDetails() {
         </div>
       </div>
       {/* Bank Account Details */}
-      {expense.paymentMethod === 'bank_transfer' && expense.bankAccount && (
+      {expense.paymentMethod === 'bank_transfer' && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-100">
           <div className="p-4 border-b border-gray-100">
             <h3 className="text-lg font-medium text-gray-800">Bank Account Details</h3>
@@ -175,45 +208,62 @@ export default function ExpenseDetails() {
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-medium text-gray-500">Bank Name</h3>
-              <p className="text-lg">{expense.bankAccount.bankName}</p>
+              <p className="text-lg">{bankAccountDetails?.bankName || '-'}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Account Number</h3>
-              <p className="text-lg">{expense.bankAccount.bankAccountNo}</p>
+              <p className="text-lg">{bankAccountDetails?.bankAccountNo || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Account Holder</h3>
+              <p className="text-lg">{bankAccountDetails?.accountHolder || '-'}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Branch</h3>
-              <p className="text-lg">{expense.bankAccount.branchName}</p>
+              <p className="text-lg">{bankAccountDetails?.branchName || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">IFSC</h3>
+              <p className="text-lg">{bankAccountDetails?.ifsc || '-'}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Current Balance</h3>
-              <p className="text-lg">₹{expense.bankAccount.currentBalance?.toLocaleString('en-IN')}</p>
+              <p className="text-lg">₹{bankAccountDetails?.currentBalance?.toLocaleString('en-IN') || '-'}</p>
             </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Status</h3>
+              <p className="text-lg">{bankAccountDetails?.status || '-'}</p>
+            </div>
+            {(!bankAccountDetails && (typeof expense.bankAccount === 'string' || (expense.details && typeof expense.details.bankAccount === 'string'))) && (
+              <div className="md:col-span-2 text-red-500">
+                Bank details not found for ID: {expense.bankAccount || (expense.details && expense.details.bankAccount)}
+              </div>
+            )}
           </div>
         </div>
       )}
-      {/* Transaction Details */}
-      {expense.transaction && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+      {/* Bank Transaction Details */}
+      {transaction && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 mt-4">
           <div className="p-4 border-b border-gray-100">
-            <h3 className="text-lg font-medium text-gray-800">Transaction Details</h3>
+            <h3 className="text-lg font-medium text-gray-800">Bank Transaction</h3>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Transaction ID</h3>
-              <p className="text-lg">{expense.transaction._id}</p>
+              <h3 className="text-sm font-medium text-gray-500">Transaction Date</h3>
+              <p className="text-lg">{transaction.date ? new Date(transaction.date).toLocaleDateString('en-IN') : '-'}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Amount</h3>
-              <p className="text-lg">₹{expense.transaction.amount?.toLocaleString('en-IN')}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Date</h3>
-              <p className="text-lg">{expense.transaction.date ? new Date(expense.transaction.date).toLocaleString() : '-'}</p>
+              <p className="text-lg">₹{transaction.amount?.toLocaleString('en-IN')}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Narration</h3>
-              <p className="text-lg">{expense.transaction.narration}</p>
+              <p className="text-lg">{transaction.narration || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Balance After</h3>
+              <p className="text-lg">₹{transaction.balance?.toLocaleString('en-IN') || '-'}</p>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axiosInstance from '../../utils/axiosInstance';
 import Table from "../../components/ui/Table";
 import Select from "../../components/ui/Select";
 import Loader from "../../components/ui/Loader";
@@ -6,114 +7,168 @@ import EmptyState from "../../components/ui/EmptyState";
 import Pagination from "../../components/ui/Pagination";
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
-import { FiBook, FiTrendingUp, FiTrendingDown, FiDollarSign } from "react-icons/fi";
+import Button from '../../components/ui/Button';
+import { FiBook, FiTrendingUp, FiTrendingDown, FiDollarSign, FiDownload } from "react-icons/fi";
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-// Mock data
-const mockAccounts = [
-  { _id: '1', name: 'HDFC Bank', code: '1001', type: 'Asset', balance: 1250000 },
-  { _id: '2', name: 'ICICI Bank', code: '1002', type: 'Asset', balance: 780000 },
-  { _id: '3', name: 'Accounts Receivable', code: '1100', type: 'Asset', balance: 587000 },
-  { _id: '4', name: 'Accounts Payable', code: '2000', type: 'Liability', balance: 325000 },
-  { _id: '5', name: 'Office Rent Expense', code: '5001', type: 'Expense', balance: 50000 },
-  { _id: '6', name: 'Consulting Revenue', code: '4001', type: 'Revenue', balance: 125000 },
-];
+const PAGE_SIZE = 10;
 
-const mockLedgerEntries = {
-  '1': [ // HDFC Bank
-    { id: 1, date: '2025-01-15', type: 'Credit', amount: 50000, narration: 'Client payment received', balance: 1250000 },
-    { id: 2, date: '2025-01-14', type: 'Debit', amount: 25000, narration: 'Office rent payment', balance: 1200000 },
-    { id: 3, date: '2025-01-13', type: 'Credit', amount: 15000, narration: 'Consulting fee received', balance: 1225000 },
-    { id: 4, date: '2025-01-12', type: 'Debit', amount: 8000, narration: 'Utility bill payment', balance: 1210000 },
-  ],
-  '2': [ // ICICI Bank
-    { id: 1, date: '2025-01-15', type: 'Credit', amount: 35000, narration: 'Software license payment', balance: 780000 },
-    { id: 2, date: '2025-01-14', type: 'Debit', amount: 12000, narration: 'Team lunch expenses', balance: 745000 },
-    { id: 3, date: '2025-01-13', type: 'Credit', amount: 22000, narration: 'Project milestone payment', balance: 757000 },
-  ],
-  '3': [ // Accounts Receivable
-    { id: 1, date: '2025-01-15', type: 'Debit', amount: 75000, narration: 'Invoice raised to ABC Corp', balance: 587000 },
-    { id: 2, date: '2025-01-14', type: 'Credit', amount: 50000, narration: 'Payment received from XYZ Ltd', balance: 512000 },
-    { id: 3, date: '2025-01-13', type: 'Debit', amount: 45000, narration: 'Invoice raised to DEF Inc', balance: 562000 },
-  ],
+const downloadCSV = (rows) => {
+  if (!rows || !rows.length) return;
+  const headers = ['Date', 'Type', 'Narration', 'Debit', 'Credit', 'Balance'];
+  const csvRows = [headers.join(',')];
+  rows.forEach(row => {
+    csvRows.push([
+      row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
+      row.type || '',
+      row.narration || '',
+      row.debit ? row.debit : '',
+      row.credit ? row.credit : '',
+      row.balance ? row.balance : ''
+    ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+  });
+  const csvContent = csvRows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  saveAs(blob, 'ledger.csv');
+};
+
+const downloadExcel = (rows, account) => {
+  if (!rows || !rows.length) return;
+  const wsData = [
+    [`Account: ${account?.name || ''}`],
+    [`Code: ${account?.code || ''}`],
+    [`Type: ${account?.type || ''}`],
+    [],
+    ['Date', 'Type', 'Narration', 'Debit', 'Credit', 'Balance']
+  ];
+  rows.forEach(row => {
+    wsData.push([
+      row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
+      row.type || '',
+      row.narration || '',
+      row.debit ? row.debit : '',
+      row.credit ? row.credit : '',
+      row.balance ? row.balance : ''
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Ledger');
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'ledger.xlsx');
+};
+
+const downloadPDF = (rows, account) => {
+  if (!rows || !rows.length) return;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text(`Account: ${account?.name || ''}`, 10, 10);
+  doc.setFontSize(10);
+  doc.text(`Code: ${account?.code || ''}`, 10, 18);
+  doc.text(`Type: ${account?.type || ''}`, 10, 24);
+  doc.text('Ledger:', 10, 32);
+  const tableData = rows.map(row => [
+    row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
+    row.type || '',
+    row.narration || '',
+    row.debit ? row.debit : '',
+    row.credit ? row.credit : '',
+    row.balance ? row.balance : ''
+  ]);
+  autoTable(doc, {
+    head: [['Date', 'Type', 'Narration', 'Debit', 'Credit', 'Balance']],
+    body: tableData,
+    startY: 36,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [41, 128, 185] }
+  });
+  doc.save('ledger.pdf');
+};
+
+const addRunningBalance = (rows, accountId) => {
+  let balance = 0;
+  // Sort by date ascending for running balance
+  const sorted = [...rows].sort((a, b) => new Date(a.date) - new Date(b.date));
+  return sorted.map(row => {
+    // If vendorId is present, it's a payment (debit/outflow)
+    const isDebit = !!row.vendorId;
+    const isCredit = !row.vendorId;
+    const debit = isDebit ? row.amount : 0;
+    const credit = isCredit ? row.amount : 0;
+    balance += credit - debit;
+    return {
+      ...row,
+      type: isDebit ? 'Debit' : 'Credit',
+      debit,
+      credit,
+      balance,
+    };
+  });
 };
 
 export default function LedgerView() {
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const totalPages = 2;
+  const [account, setAccount] = useState(null);
+  const [total, setTotal] = useState(0);
 
-  // Fetch accounts on mount
   useEffect(() => {
-    setTimeout(() => {
-      setAccounts(mockAccounts);
+    setLoading(true);
+    axiosInstance.get('/api/finance/bank-accounts')
+      .then(res => {
+        setAccounts(res.data.bankAccounts || []);
         setLoading(false);
-    }, 1000);
+      })
+      .catch(() => {
+        setAccounts([]);
+        setLoading(false);
+      });
   }, []);
 
-  // Fetch ledger entries when account changes
   useEffect(() => {
     if (!selectedAccount) {
       setEntries([]);
+      setAccount(null);
+      setTotal(0);
       return;
     }
-    
     setLoading(true);
-    setTimeout(() => {
-      setEntries(mockLedgerEntries[selectedAccount] || []);
+    const acc = accounts.find(a => a._id === selectedAccount);
+    setAccount(acc);
+    axiosInstance.get(`/api/finance/bank-accounts/${selectedAccount}/ledger`)
+      .then(res => {
+        setEntries(res.data || []);
+        setTotal((res.data || []).length);
         setLoading(false);
-    }, 500);
-  }, [selectedAccount]);
+      })
+      .catch(() => {
+        setEntries([]);
+        setTotal(0);
+        setLoading(false);
+      });
+  }, [selectedAccount, accounts]);
 
-  const columns = [
-    { 
-      Header: 'Date', 
-      accessor: 'date',
-      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
-    },
-    { 
-      Header: 'Type', 
-      accessor: 'type',
-      Cell: ({ value }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Amount', 
-      accessor: 'amount',
-      Cell: ({ value, row }) => (
-        <span className={`font-medium ${row.original.type === 'Credit' ? 'text-green-600' : 'text-red-600'}`}>
-          {row.original.type === 'Credit' ? '+' : '-'}₹{value.toLocaleString()}
-        </span>
-      )
-    },
-    { 
-      Header: 'Narration', 
-      accessor: 'narration',
-      Cell: ({ value }) => (
-        <div className="max-w-xs">
-          {value}
-        </div>
-      )
-    },
-    { 
-      Header: 'Balance', 
-      accessor: 'balance',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
+  const ledgerWithBalance = addRunningBalance(entries, selectedAccount);
+  const paginated = ledgerWithBalance.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Summary for selected account
+  const totalDebits = ledgerWithBalance.reduce((sum, e) => sum + (e.debit || 0), 0);
+  const totalCredits = ledgerWithBalance.reduce((sum, e) => sum + (e.credit || 0), 0);
+  const currentBalance = ledgerWithBalance.length > 0 ? ledgerWithBalance[ledgerWithBalance.length - 1].balance : 0;
+
+  const accountSummary = [
+    { title: 'Bank Name', value: account?.bankName || '-', icon: <FiBook className="h-6 w-6 text-blue-500" /> },
+    { title: 'Account No', value: account?.bankAccountNo || '-', icon: <FiDollarSign className="h-6 w-6 text-green-500" /> },
+    { title: 'Total Debits', value: `₹${totalDebits.toLocaleString()}` , icon: <FiTrendingUp className="h-6 w-6 text-purple-500" /> },
+    { title: 'Total Credits', value: `₹${totalCredits.toLocaleString()}` , icon: <FiTrendingDown className="h-6 w-6 text-red-500" /> },
+    { title: 'Current Balance', value: `₹${currentBalance.toLocaleString()}` , icon: <FiDollarSign className="h-6 w-6 text-blue-700" /> },
   ];
-
-  const selectedAccountData = accounts.find(acc => acc._id === selectedAccount);
-
-  if (loading && !selectedAccount) {
-    return <Loader />;
-  }
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
@@ -122,63 +177,77 @@ export default function LedgerView() {
         subtitle="View detailed ledger entries for any account"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
-          { label: "Transactions", to: "/finance/transactions" },
           { label: "Ledger View" }
         ]}
       />
+
+      {/* Summary Cards */}
+      {account && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {accountSummary.map((summary, index) => (
+            <Card
+              key={index}
+              title={summary.title}
+              value={summary.value}
+              icon={summary.icon}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Account Selection */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
         <div className="max-w-md">
           <label className="block text-sm font-medium text-gray-700 mb-2">Select Account</label>
-        <Select
-          options={accounts.map((a) => ({ value: a._id, label: `${a.name} (${a.code})` }))}
-          value={selectedAccount}
-          onChange={(e) => setSelectedAccount(e.target.value)}
-        />
+          <Select
+            options={accounts.map((a) => ({ value: a._id, label: `${a.bankName} (${a.bankAccountNo})` }))}
+            value={selectedAccount}
+            onChange={(e) => { setSelectedAccount(e.target.value); setPage(1); }}
+            placeholder="Select Bank Account"
+            className="w-64"
+          />
         </div>
       </div>
 
-      {/* Account Summary */}
-      {selectedAccountData && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card
-            title="Account Name"
-            value={selectedAccountData.name}
-            icon={<FiBook className="h-6 w-6 text-blue-500" />}
-          />
-          <Card
-            title="Account Code"
-            value={selectedAccountData.code}
-            icon={<FiDollarSign className="h-6 w-6 text-green-500" />}
-          />
-          <Card
-            title="Current Balance"
-            value={`₹${selectedAccountData.balance.toLocaleString()}`}
-            icon={<FiTrendingUp className="h-6 w-6 text-purple-500" />}
-          />
+      {/* Download Buttons */}
+      {selectedAccount && ledgerWithBalance.length > 0 && (
+        <div className="flex justify-end mb-2 gap-2">
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadCSV(ledgerWithBalance)}>
+            Download CSV
+          </Button>
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadExcel(ledgerWithBalance, account)}>
+            Download Excel
+          </Button>
+          <Button variant="outline" icon={<FiDownload />} onClick={() => downloadPDF(ledgerWithBalance, account)}>
+            Download PDF
+          </Button>
         </div>
       )}
 
       {/* Ledger Entries Table */}
-      {selectedAccount && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-          <div className="p-4 border-b border-gray-100">
-            <h3 className="text-lg font-medium text-gray-800">Ledger Entries</h3>
-      </div>
-      {loading ? (
-        <Loader />
-      ) : entries.length === 0 ? (
-            <EmptyState message="No ledger entries found for this account." />
+      {loading ? <Loader /> : !selectedAccount ? <EmptyState message="Select an account to view ledger." /> : ledgerWithBalance.length === 0 ? (
+        <EmptyState message="No ledger entries found for this account." />
       ) : (
-            <>
-              <Table columns={columns} data={entries} />
-              <div className="p-4 border-t border-gray-100">
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-              </div>
-            </>
-          )}
-        </div>
+        <>
+          <Table
+            columns={[
+              { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
+              { Header: 'Type', accessor: 'type' },
+              { Header: 'Note', accessor: 'narration' },
+              { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+              { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+              { Header: 'Ref', accessor: '_id', Cell: ({ value }) => value ? value.toString().slice(-6) : '-' },
+              { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => <span className={value < 0 ? 'text-red-600 font-bold' : 'text-green-700 font-bold'}>{`₹${value?.toLocaleString()}`}</span> },
+            ]}
+            data={paginated.map((row, i) => ({ ...row, _id: row._id || `${row.type}-${row.date}-${i}` }))}
+          />
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </div>
   );

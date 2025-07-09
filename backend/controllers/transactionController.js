@@ -58,3 +58,32 @@ exports.approveTransaction = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+exports.listBankAccountTransactions = async (req, res) => {
+  try {
+    const { bankAccountId } = req.query;
+    if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId is required' });
+    const query = { tenantId: req.tenantId, bankAccountId };
+    const txns = await TransactionLine.find(query).sort({ date: 1 }); // ascending order
+    // Calculate running balance
+    let balance = 0;
+    const txnsWithBalance = txns.map(txn => {
+      // If vendorId is present, it's a payment (debit/outflow)
+      const isDebit = !!txn.vendorId;
+      const isCredit = !txn.vendorId;
+      const debit = isDebit ? txn.amount : 0;
+      const credit = isCredit ? txn.amount : 0;
+      balance += credit - debit;
+      return {
+        ...txn.toObject(),
+        type: isDebit ? 'Debit' : 'Credit',
+        debit,
+        credit,
+        balance
+      };
+    });
+    res.json(txnsWithBalance);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

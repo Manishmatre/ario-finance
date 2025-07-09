@@ -3,9 +3,10 @@ const router = express.Router();
 const withTenant = require('../middleware/withTenant');
 const validateBankAccount = require('../middleware/validateBankAccount');
 const bankAccountController = require('../controllers/bankAccountController');
+const transactionController = require('../controllers/transactionController');
 
 // Apply tenant middleware to all routes
-// router.use(withTenant);
+router.use(withTenant);
 
 // Temporary test route without auth
 router.post('/test', (req, res) => {
@@ -21,6 +22,12 @@ router.get('/stats', bankAccountController.getBankAccountStats);
 
 // GET /api/finance/bank-accounts/:id - Get a specific bank account
 router.get('/:id', bankAccountController.getBankAccount);
+
+// Add ledger endpoint for a bank account
+router.get('/:id/ledger', (req, res, next) => {
+  req.query.bankAccountId = req.params.id;
+  transactionController.listBankAccountTransactions(req, res, next);
+});
 
 // POST /api/finance/bank-accounts - Create a new bank account
 router.post('/', bankAccountController.createBankAccount);

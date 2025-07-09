@@ -39,7 +39,7 @@ const accountsMenu = [
 ];
 
 const accountsSubMenu = [
-  { to: "/finance/accounts", label: "Chart of Accounts", icon: <FiBook /> },
+  { to: "/finance/accounts", label: "All Bank Accounts", icon: <FiBook /> },
   { to: "/finance/add-bank-account", label: "Add Bank Account", icon: <FiPlusCircle /> },
   { to: "/finance/bankbook", label: "Bankbook", icon: <FiCreditCard /> },
   { to: "/finance/cashbook", label: "Cashbook", icon: <FiDollarSign /> },

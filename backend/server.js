@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const accountsRouter = require('./routes/accounts');
 const bankAccountsRouter = require('./routes/bankAccounts');
 const transactionsRouter = require('./routes/transactions');
 const vendorsRouter = require('./routes/vendors');
@@ -50,7 +49,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api/finance/accounts', accountsRouter);
 app.use('/api/finance/bank-accounts', bankAccountsRouter);
 app.use('/api/finance/lenders', require('./routes/lenderRoutes'));
 app.use('/api/finance/transactions', transactionsRouter);

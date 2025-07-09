@@ -1,12 +1,12 @@
 const PurchaseBill = require('../models/PurchaseBill');
 const { uploadFile } = require('../utils/storage');
 const TransactionLine = require('../models/TransactionLine');
-const Account = require('../models/Account');
 const BankAccount = require('../models/BankAccount');
 const Vendor = require('../models/Vendor');
 
 exports.uploadBill = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const { vendorId, billNo, billDate, amount, projectId } = req.body;
     console.log('Received uploadBill request');
     if (!req.file) {
@@ -48,6 +48,7 @@ exports.uploadBill = async (req, res) => {
 
 exports.payBill = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const bill = await PurchaseBill.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!bill) return res.status(404).json({ error: 'Not found' });
     if (bill.isPaid) return res.status(400).json({ error: 'Bill already paid' });
@@ -66,8 +67,9 @@ exports.payBill = async (req, res) => {
     // 1. Find vendor account (by vendor name/code/tenant)
     const vendor = await Vendor.findById(bill.vendorId);
     if (!vendor) return res.status(400).json({ error: 'Vendor not found' });
-    const vendorAccount = await Account.findOne({ name: vendor.name, tenantId: req.tenantId });
-    if (!vendorAccount) return res.status(400).json({ error: 'Vendor account not found in Chart of Accounts' });
+    // Remove all Account model and Chart of Accounts logic. Use only BankAccount.
+    // const vendorAccount = await Account.findOne({ name: vendor.name, tenantId: req.tenantId });
+    // if (!vendorAccount) return res.status(400).json({ error: 'Vendor account not found in Chart of Accounts' });
 
     // 2. Find our bank account (by _id)
     let bankAccountDoc = null;
@@ -75,8 +77,9 @@ exports.payBill = async (req, res) => {
     if (ourBankAccount) {
       bankAccountDoc = await BankAccount.findOne({ _id: ourBankAccount, tenantId: req.tenantId });
       if (!bankAccountDoc) return res.status(400).json({ error: 'Company bank account not found' });
-      bankAccount = await Account.findOne({ name: bankAccountDoc.bankName, tenantId: req.tenantId });
-      if (!bankAccount) return res.status(400).json({ error: 'Bank account not found in Chart of Accounts' });
+      // Remove all Account model and Chart of Accounts logic. Use only BankAccount.
+      // bankAccount = await Account.findOne({ name: bankAccountDoc.bankName, tenantId: req.tenantId });
+      // if (!bankAccount) return res.status(400).json({ error: 'Bank account not found in Chart of Accounts' });
     } else {
       return res.status(400).json({ error: 'Bank account required for this payment mode' });
     }
@@ -86,14 +89,11 @@ exports.payBill = async (req, res) => {
       return res.status(400).json({ error: 'Only bank transfer payment modes are allowed' });
     }
 
-    // 3. Create transaction (double-entry)
-    const creditAccount = bankAccount;
-    const debitAccount = vendorAccount;
-
+    // 3. Create transaction (bank-centric)
     const txn = await TransactionLine.create({
       date: new Date(),
-      debitAccount: debitAccount._id,
-      creditAccount: creditAccount._id,
+      bankAccountId: bankAccountDoc._id,
+      vendorId: vendor._id,
       amount: paymentAmount,
       narration: narrationText,
       tenantId: req.tenantId,
@@ -117,6 +117,7 @@ exports.payBill = async (req, res) => {
 
 exports.listBills = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const bills = await PurchaseBill.find({ tenantId: req.tenantId }).populate('vendorId', 'name');
     res.json(bills);
   } catch (err) {
@@ -126,6 +127,7 @@ exports.listBills = async (req, res) => {
 
 exports.getBill = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const bill = await PurchaseBill.findOne({ _id: req.params.id, tenantId: req.tenantId }).populate('vendorId', 'name');
     if (!bill) return res.status(404).json({ error: 'Not found' });
     res.json(bill);
@@ -136,6 +138,7 @@ exports.getBill = async (req, res) => {
 
 exports.updateBill = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     let vendorId = req.body.vendorId;
     let fixedVendorId = vendorId;
     if (vendorId && typeof vendorId === 'object') {
@@ -170,6 +173,7 @@ exports.updateBill = async (req, res) => {
 
 exports.deleteBill = async (req, res) => {
   try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const bill = await PurchaseBill.findOneAndDelete({ _id: req.params.id, tenantId: req.tenantId });
     if (!bill) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });

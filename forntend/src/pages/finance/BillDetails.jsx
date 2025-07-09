@@ -8,6 +8,7 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import axiosInstance from '../../utils/axiosInstance';
 import { FiFileText, FiDollarSign, FiCalendar, FiCheckCircle, FiPlus } from 'react-icons/fi';
+import { Modal } from '../../components/ui/Modal';
 
 export default function BillDetails() {
   const { id } = useParams();
@@ -22,11 +23,18 @@ export default function BillDetails() {
 
   useEffect(() => {
     setLoading(true);
+    // Fetch bill, vendors, and vendorDetails in parallel
+    let billId = id;
+    let billData = null;
+    let vendorsData = null;
+    let vendorDetailsPromise = null;
     Promise.all([
-      axiosInstance.get(`/api/finance/bills/${id}`),
+      axiosInstance.get(`/api/finance/bills/${billId}`),
       axiosInstance.get('/api/finance/vendors')
     ])
       .then(([billRes, vendorsRes]) => {
+        billData = billRes.data;
+        vendorsData = vendorsRes.data;
         const vendorMap = {};
         vendorsRes.data.forEach(v => { vendorMap[v._id] = v.name; });
         let vendorName = billRes.data.vendorId?.name || billRes.data.vendorId || billRes.data.vendor || '-';
@@ -42,6 +50,27 @@ export default function BillDetails() {
           isPaid: billRes.data.isPaid || false,
         });
         setVendors(vendorsRes.data);
+        // Always fetch vendor details in parallel
+        let vId = '';
+        if (billRes.data.vendor && typeof billRes.data.vendor === 'object' && billRes.data.vendor._id) {
+          vId = billRes.data.vendor._id;
+        } else if (typeof billRes.data.vendorId === 'string') {
+          vId = billRes.data.vendorId;
+        }
+        console.log('DEBUG: vendorId for details fetch:', vId);
+        if (vId) {
+          vendorDetailsPromise = axiosInstance.get(`/api/finance/vendors/${vId}`)
+            .then(vendorRes => {
+              console.log('DEBUG: vendorDetails response:', vendorRes.data);
+              // setVendorDetails(vendorRes.data); // This state is no longer needed
+            })
+            .catch((err) => {
+              console.log('DEBUG: vendorDetails fetch error', err);
+              // setVendorDetails(null); // This state is no longer needed
+            });
+        } else {
+          // setVendorDetails(null); // This state is no longer needed
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -105,17 +134,6 @@ export default function BillDetails() {
     }
   };
 
-  const handlePay = async () => {
-    try {
-      setLoading(true);
-      const res = await axiosInstance.patch(`/api/finance/bills/${bill._id || bill.id}/pay`);
-      setBill(res.data);
-      setLoading(false);
-    } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to mark bill as paid');
-      setLoading(false);
-    }
-  };
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this bill?')) return;
     try {
@@ -142,9 +160,7 @@ export default function BillDetails() {
           { label: 'Purchase Bills', to: '/finance/bills' },
           { label: 'Bill Details' }
         ]}
-        actions={[
-          <Button key="add-bill" as={Link} to="/finance/bills/add" icon={<FiPlus />} className="bg-blue-600 hover:bg-blue-700 text-white">Add New Bill</Button>
-        ]}
+        // Removed actions prop to eliminate Add New Bill button
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <Card title="Vendor" value={bill.vendorName} icon={<FiFileText className="h-6 w-6 text-blue-500" />} />
@@ -223,10 +239,37 @@ export default function BillDetails() {
             {bill.updatedAt && <div><strong>Updated At:</strong> {new Date(bill.updatedAt).toLocaleString()}</div>}
           </div>
         )}
+        {/* After the main bill info, add payment details if bill.isPaid */}
+        {!editMode && bill.isPaid && (
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold text-green-700 mb-2">Payment Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><strong>Payment Mode:</strong> {bill.paymentMode || <span className="text-gray-400">-</span>}</div>
+              <div><strong>Our Bank Account:</strong> {bill.ourBankAccountName || bill.ourBankAccount || <span className="text-gray-400">-</span>}</div>
+              <div><strong>Vendor Bank Account:</strong> {bill.vendorBankAccountName || bill.vendorBankAccount || <span className="text-gray-400">-</span>}</div>
+              <div><strong>Reference/UTR:</strong> {bill.reference || <span className="text-gray-400">-</span>}</div>
+              <div><strong>Payment Date:</strong> {bill.paymentDate ? new Date(bill.paymentDate).toLocaleDateString('en-IN') : <span className="text-gray-400">-</span>}</div>
+              {bill.relatedTxnId && (
+                <div><strong>Transaction ID:</strong> {bill.relatedTxnId}</div>
+              )}
+            </div>
+            {bill.relatedTxnId && (
+              <div className="mt-2">
+                <Button variant="outline" onClick={() => navigate(`/finance/transactions/${bill.relatedTxnId}`)}>
+                  View Transaction
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex gap-2 mt-8">
           <Button variant="secondary" onClick={() => navigate('/finance/bills')}>Back</Button>
           {!editMode && <Button variant="primary" onClick={handleEdit}>Edit</Button>}
-          {!bill.isPaid && !editMode && <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handlePay}>Mark as Paid</Button>}
+          {!bill.isPaid && !editMode && (
+            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => navigate(`/finance/bills/${bill._id || bill.id}/pay`)}>
+              Mark as Paid
+            </Button>
+          )}
           {!editMode && <Button variant="danger" onClick={handleDelete}>Delete</Button>}
         </div>
       </div>

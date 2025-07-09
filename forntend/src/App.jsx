@@ -45,13 +45,13 @@ import ExpenseDetails from './pages/finance/ExpenseDetails';
 import ExpenseCategories from './pages/finance/ExpenseCategories';
 import ExpenseReports from './pages/finance/ExpenseReports';
 import AddVendor from './pages/finance/AddVendor';
-import EditVendor from './pages/finance/EditVendor';
 import VendorDetails from './pages/finance/VendorDetails';
 import AddPurchaseBill from './pages/finance/AddPurchaseBill';
 import BillDetails from './pages/finance/BillDetails';
 import LenderDetails from './pages/loans/LenderDetails';
 import AddAdvanceToVendor from './pages/finance/AddAdvanceToVendor';
 import Bankbook from './pages/finance/Bankbook';
+import MakeBillPaid from './pages/finance/MakeBillPaid';
 
 export default function App() {
   return (
@@ -98,6 +98,7 @@ export default function App() {
               <Route path="/finance/bills" element={<PurchaseBills />} />
               <Route path="/finance/bills/add" element={<AddPurchaseBill />} />
               <Route path="/finance/bills/:id" element={<BillDetails />} />
+              <Route path="/finance/bills/:id/pay" element={<MakeBillPaid />} />
               <Route path="/finance/vendors" element={<Vendors />} />
               <Route path="/finance/vendor-ledger" element={<VendorLedger />} />
               <Route path="/finance/advance-vendor" element={<AdvanceToVendor />} />
@@ -115,7 +116,7 @@ export default function App() {
               <Route path="/finance/settings" element={<Settings />} />
               <Route path="/finance/profile" element={<Profile />} />
               <Route path="/finance/vendors/add" element={<AddVendor />} />
-              <Route path="/finance/vendors/edit" element={<EditVendor />} />
+              <Route path="/finance/vendors/edit/:id" element={<AddVendor />} />
               <Route path="/finance/vendors/:id" element={<VendorDetails />} />
               {/* Loan Management Routes */}
               <Route path="/finance/loans" element={<Loans />} />

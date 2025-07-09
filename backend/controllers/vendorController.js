@@ -13,9 +13,9 @@ exports.listVendors = async (req, res) => {
 
 exports.createVendor = async (req, res) => {
   try {
-    const { name, gstNo, phone, address } = req.body;
+    const { name, gstNo, phone, address, bankAccounts, paymentModes } = req.body;
     const vendor = await Vendor.create({
-      name, gstNo, phone, address, tenantId: req.tenantId, createdBy: req.user?.id
+      name, gstNo, phone, address, bankAccounts, paymentModes, tenantId: req.tenantId, createdBy: req.user?.id
     });
     res.status(201).json(vendor);
   } catch (err) {
@@ -25,8 +25,8 @@ exports.createVendor = async (req, res) => {
 
 exports.getVendor = async (req, res) => {
   try {
-    // TEMP: Remove tenantId check for debugging
-    const vendor = await Vendor.findOne({ _id: req.params.id });
+    // Add tenantId check for correct and fast lookup
+    const vendor = await Vendor.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
     res.json(vendor);
   } catch (err) {

@@ -89,7 +89,7 @@ export default function AdvanceToVendor() {
       <div className="flex gap-2">
         <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/advance-vendor/edit/${row.original._id}`)} icon={<FiEdit />} />
         <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id)} icon={<FiTrash2 />} />
-      </div>
+        </div>
     ) }
   ];
 

@@ -311,21 +311,21 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   ${accountsOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
                 style={{ transitionProperty: 'max-height, opacity, padding' }}
               >
-                {accountsSubMenu.map(sub => (
-                  <NavLink
-                    key={sub.to}
-                    to={sub.to}
-                    className={() =>
-                      location.pathname === sub.to
-                        ? 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out bg-blue-600 text-white'
-                        : 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out text-gray-200 hover:bg-blue-800 hover:text-white'
-                    }
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    {sub.icon}
-                    {sub.label}
-                  </NavLink>
-                ))}
+                  {accountsSubMenu.map(sub => (
+                    <NavLink
+                      key={sub.to}
+                      to={sub.to}
+                      className={() =>
+                        location.pathname === sub.to
+                          ? 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out bg-blue-600 text-white'
+                          : 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out text-gray-200 hover:bg-blue-800 hover:text-white'
+                      }
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      {sub.icon}
+                      {sub.label}
+                    </NavLink>
+                  ))}
               </div>
             </div>
             {/* Profile Link */}

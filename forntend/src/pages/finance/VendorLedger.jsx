@@ -153,9 +153,9 @@ const VendorLedger = () => {
       .catch(() => {
         setLedger([]);
         setVendor(null);
-        setTotal(0);
-        setLoading(false);
-      });
+      setTotal(0);
+      setLoading(false);
+    });
   }, [selectedVendor]);
 
   const ledgerWithBalance = addRunningBalance(ledger);
@@ -212,13 +212,13 @@ const VendorLedger = () => {
           ) : vendors.length === 0 ? (
             <div className="text-gray-500">No vendors found. Please add a vendor first.</div>
           ) : (
-            <Select
-              options={vendors.map(v => ({ value: v._id, label: v.name }))}
-              value={selectedVendor}
-              onChange={e => { setSelectedVendor(e.target.value); setPage(1); }}
-              placeholder="Select Vendor"
-              className="w-64"
-            />
+          <Select
+            options={vendors.map(v => ({ value: v._id, label: v.name }))}
+            value={selectedVendor}
+            onChange={e => { setSelectedVendor(e.target.value); setPage(1); }}
+            placeholder="Select Vendor"
+            className="w-64"
+          />
           )}
         </div>
       </div>

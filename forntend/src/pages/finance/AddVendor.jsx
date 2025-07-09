@@ -1,44 +1,98 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import { FiCheckCircle } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
+import Select from '../../components/ui/Select';
 
 const STATUS_OPTIONS = [
   { value: 'Active', label: 'Active' },
   { value: 'Inactive', label: 'Inactive' },
 ];
 
+const PAYMENT_MODE_OPTIONS = [
+  'NEFT', 'RTGS', 'IMPS', 'UPI', 'Cheque', 'Cash', 'Card', 'Wallet', 'Other'
+];
+
+const BANK_OPTIONS = [
+  { value: '', label: 'Select Bank' },
+  { value: 'SBI', label: 'State Bank of India' },
+  { value: 'HDFC', label: 'HDFC Bank' },
+  { value: 'ICICI', label: 'ICICI Bank' },
+  { value: 'Axis', label: 'Axis Bank' },
+  { value: 'Kotak', label: 'Kotak Mahindra Bank' },
+  { value: 'Yes Bank', label: 'Yes Bank' },
+  { value: 'PNB', label: 'Punjab National Bank' },
+  { value: 'Canara', label: 'Canara Bank' },
+  { value: 'Bank of Baroda', label: 'Bank of Baroda' },
+  { value: 'Union Bank', label: 'Union Bank of India' },
+  { value: 'Other', label: 'Other (Specify)' },
+];
+
 export default function AddVendor() {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { id: vendorId } = useParams();
+  const isEdit = !!vendorId;
+  const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm({
+    defaultValues: {
+      bankAccounts: [{}],
+      paymentModes: []
+    }
+  });
+  const { fields: bankAccountFields, append: appendBankAccount, remove: removeBankAccount } = useFieldArray({
+    control,
+    name: 'bankAccounts'
+  });
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    if (isEdit) {
+      setLoading(true);
+      axiosInstance.get(`/api/finance/vendors/${vendorId}`)
+        .then(res => {
+          const v = res.data;
+          setValue('name', v.name || '');
+          setValue('gstNo', v.gstNo || '');
+          setValue('phone', v.phone || '');
+          setValue('address', v.address || '');
+          setValue('bankAccounts', Array.isArray(v.bankAccounts) && v.bankAccounts.length > 0 ? v.bankAccounts : [{}]);
+          setValue('paymentModes', Array.isArray(v.paymentModes) ? v.paymentModes : []);
+        })
+        .catch(err => setError('Failed to fetch vendor'))
+        .finally(() => setLoading(false));
+    }
+  }, [isEdit, vendorId, setValue]);
+
   const onSubmit = async data => {
     setLoading(true);
     setError(null);
     try {
-      // Only send supported fields
       const payload = {
         name: data.name,
         gstNo: data.gstNo,
         phone: data.phone,
-        address: data.address
+        address: data.address,
+        bankAccounts: data.bankAccounts?.filter(acc => acc.accountHolder || acc.bankName || acc.accountNumber || acc.ifsc || acc.branch || acc.notes),
+        paymentModes: data.paymentModes || []
       };
-      await axiosInstance.post('/api/finance/vendors', payload);
+      if (isEdit) {
+        await axiosInstance.put(`/api/finance/vendors/${vendorId}`, payload);
+      } else {
+        await axiosInstance.post('/api/finance/vendors', payload);
+      }
       setSuccess(true);
       setTimeout(() => {
         navigate('/finance/vendors');
       }, 1200);
       reset();
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to add vendor');
+      setError(err.response?.data?.error || err.message || (isEdit ? 'Failed to update vendor' : 'Failed to add vendor'));
     } finally {
       setLoading(false);
     }
@@ -47,11 +101,11 @@ export default function AddVendor() {
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Add Vendor"
-        subtitle="Create a new vendor record"
+        title={isEdit ? 'Edit Vendor' : 'Add Vendor'}
+        subtitle={isEdit ? 'Update vendor details' : 'Create a new vendor record'}
         breadcrumbs={[
           { label: 'Vendors', to: '/finance/vendors' },
-          { label: 'Add Vendor' }
+          { label: isEdit ? 'Edit Vendor' : 'Add Vendor' }
         ]}
       />
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
@@ -92,10 +146,67 @@ export default function AddVendor() {
                 <Input {...register('address')} placeholder="Enter address" />
               </div>
             </div>
+            {/* Bank Accounts Section */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h4 className="text-md font-semibold mb-4 flex items-center justify-between">Bank Account Details (for payments)
+                <Button type="button" variant="outline" onClick={() => appendBankAccount({})}>Add Another</Button>
+              </h4>
+              {bankAccountFields.map((field, idx) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 border-b border-gray-100 pb-4 relative">
+                  <button type="button" className="absolute top-0 right-0 text-red-500 text-xs" onClick={() => removeBankAccount(idx)} disabled={bankAccountFields.length === 1}>Remove</button>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Account Holder</label>
+                    <Input {...register(`bankAccounts.${idx}.accountHolder`)} placeholder="Enter account holder name" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
+                    <Select
+                      options={BANK_OPTIONS}
+                      {...register(`bankAccounts.${idx}.bankName`)}
+                      value={control._formValues?.bankAccounts?.[idx]?.bankName || ''}
+                      onChange={e => {
+                        setValue(`bankAccounts.${idx}.bankName`, e.target.value);
+                      }}
+                    />
+                    {control._formValues?.bankAccounts?.[idx]?.bankName === 'Other' && (
+                      <Input className="mt-2" {...register(`bankAccounts.${idx}.customBankName`)} placeholder="Enter bank name" />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
+                    <Input {...register(`bankAccounts.${idx}.accountNumber`)} placeholder="Enter account number" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">IFSC Code</label>
+                    <Input {...register(`bankAccounts.${idx}.ifsc`)} placeholder="Enter IFSC code" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+                    <Input {...register(`bankAccounts.${idx}.branch`)} placeholder="Enter branch name" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <Input {...register(`bankAccounts.${idx}.notes`)} placeholder="Any notes (optional)" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Payment Modes Section */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h4 className="text-md font-semibold mb-4">Preferred Payment Modes</h4>
+              <div className="flex flex-wrap gap-4">
+                {PAYMENT_MODE_OPTIONS.map(mode => (
+                  <label key={mode} className="flex items-center gap-2 text-sm font-medium">
+                    <input type="checkbox" value={mode} {...register('paymentModes')} className="accent-blue-600" />
+                    {mode}
+                  </label>
+                ))}
+              </div>
+            </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => navigate('/finance/vendors')}>Cancel</Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
-                {loading ? 'Saving...' : 'Add Vendor'}
+                {loading ? (isEdit ? 'Updating...' : 'Saving...') : (isEdit ? 'Update Vendor' : 'Add Vendor')}
               </Button>
             </div>
           </form>

@@ -1,5 +1,9 @@
 const PurchaseBill = require('../models/PurchaseBill');
 const { uploadFile } = require('../utils/storage');
+const TransactionLine = require('../models/TransactionLine');
+const Account = require('../models/Account');
+const BankAccount = require('../models/BankAccount');
+const Vendor = require('../models/Vendor');
 
 exports.uploadBill = async (req, res) => {
   try {
@@ -44,12 +48,68 @@ exports.uploadBill = async (req, res) => {
 
 exports.payBill = async (req, res) => {
   try {
-    const bill = await PurchaseBill.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.tenantId },
-      { isPaid: true }, { new: true }
-    ).populate('vendorId', 'name');
+    const bill = await PurchaseBill.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!bill) return res.status(404).json({ error: 'Not found' });
-    res.json(bill);
+    if (bill.isPaid) return res.status(400).json({ error: 'Bill already paid' });
+
+    // Minimal status-only update
+    if (req.body && Object.keys(req.body).length === 1 && req.body.isPaid === true) {
+      bill.isPaid = true;
+      await bill.save();
+      return res.json(bill);
+    }
+
+    const { ourBankAccount, paymentMode, amount, narration } = req.body;
+    let paymentAmount = amount || bill.amount;
+    let narrationText = narration || `Payment for Bill ${bill.billNo}`;
+
+    // 1. Find vendor account (by vendor name/code/tenant)
+    const vendor = await Vendor.findById(bill.vendorId);
+    if (!vendor) return res.status(400).json({ error: 'Vendor not found' });
+    const vendorAccount = await Account.findOne({ name: vendor.name, tenantId: req.tenantId });
+    if (!vendorAccount) return res.status(400).json({ error: 'Vendor account not found in Chart of Accounts' });
+
+    // 2. Find our bank account (by _id)
+    let bankAccountDoc = null;
+    let bankAccount = null;
+    if (ourBankAccount) {
+      bankAccountDoc = await BankAccount.findOne({ _id: ourBankAccount, tenantId: req.tenantId });
+      if (!bankAccountDoc) return res.status(400).json({ error: 'Company bank account not found' });
+      bankAccount = await Account.findOne({ name: bankAccountDoc.bankName, tenantId: req.tenantId });
+      if (!bankAccount) return res.status(400).json({ error: 'Bank account not found in Chart of Accounts' });
+    } else {
+      return res.status(400).json({ error: 'Bank account required for this payment mode' });
+    }
+
+    // Only allow bank transfer payment modes
+    if (!["UPI", "NEFT", "RTGS", "IMPS", "Cheque"].includes(paymentMode)) {
+      return res.status(400).json({ error: 'Only bank transfer payment modes are allowed' });
+    }
+
+    // 3. Create transaction (double-entry)
+    const creditAccount = bankAccount;
+    const debitAccount = vendorAccount;
+
+    const txn = await TransactionLine.create({
+      date: new Date(),
+      debitAccount: debitAccount._id,
+      creditAccount: creditAccount._id,
+      amount: paymentAmount,
+      narration: narrationText,
+      tenantId: req.tenantId,
+      createdBy: req.user?.id
+    });
+
+    // 4. Update bill
+    bill.isPaid = true;
+    bill.relatedTxnId = txn._id;
+    await bill.save();
+
+    // 5. Update bank account balance
+    bankAccountDoc.currentBalance = (bankAccountDoc.currentBalance || 0) - paymentAmount;
+    await bankAccountDoc.save();
+
+    res.json({ bill, txn });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

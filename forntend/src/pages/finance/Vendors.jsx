@@ -21,7 +21,7 @@ const getVendorsSummary = (vendors) => {
     { title: 'Total Outstanding', value: totalOutstanding, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
     { title: 'Active Vendors', value: activeVendors, icon: <FiMapPin className="h-6 w-6 text-green-500" /> },
     { title: 'Categories', value: categories, icon: <FiPhone className="h-6 w-6 text-purple-500" /> },
-  ];
+];
 };
 
 export default function Vendors() {
@@ -86,7 +86,7 @@ export default function Vendors() {
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
         <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/vendors/${row.original._id || row.original.id}`)}>View</Button>
-        <Button size="sm" variant="primary" onClick={() => navigate('/finance/vendors/edit', { state: { vendor: row.original } })}>Edit</Button>
+        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/vendors/edit/${row.original._id || row.original.id}`)}>Edit</Button>
         <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id || row.original.id)}>Delete</Button>
       </div>
     ) }
@@ -129,13 +129,13 @@ export default function Vendors() {
       {/* Search and Add Vendor Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 mt-4">
         <div className="flex flex-wrap gap-2 items-center">
-          <input
-            type="text"
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search by name, GST, or phone..."
+        <input
+          type="text"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1); }}
+          placeholder="Search by name, GST, or phone..."
             className="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-          />
+        />
         </div>
         <div className="flex gap-2 mt-2 md:mt-0">
           <Button key="add-vendor" className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2" onClick={() => navigate('/finance/vendors/add')}>

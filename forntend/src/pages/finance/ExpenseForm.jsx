@@ -48,7 +48,7 @@ export default function ExpenseForm() {
   // Fetch and set expense data in edit mode
   useEffect(() => {
     if (!isEditMode) return;
-    setLoading(true);
+          setLoading(true);
     axiosInstance.get(`/api/finance/expenses/${id}`)
       .then(res => {
         const exp = res.data;
@@ -190,14 +190,14 @@ export default function ExpenseForm() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method *</label>
                 <Select options={paymentMethodOptions} {...register('paymentMethod', { required: true })} />
                 {errors.paymentMethod && <span className="text-red-500 text-xs">Payment method is required</span>}
-              </div>
+                    </div>
               {showReference && (
-                <div>
+                    <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Reference No</label>
                   <Input {...register('referenceNo')} />
                   </div>
                 )}
-                  <div>
+                <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
                 <Select options={statusOptions} {...register('status', { required: true })} />
                 {errors.status && <span className="text-red-500 text-xs">Status is required</span>}
@@ -207,8 +207,8 @@ export default function ExpenseForm() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account *</label>
                   <Select options={bankAccountOptions} {...register('bankAccount', { required: showBankDropdown })} />
                   {errors.bankAccount && <span className="text-red-500 text-xs">Bank account is required</span>}
-                </div>
-              )}
+                  </div>
+                )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Receipt (Image/PDF, optional)</label>
                 <Input type="file" accept="image/*,application/pdf" onChange={handleFileChange} />

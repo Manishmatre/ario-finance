@@ -42,16 +42,21 @@ exports.createExpense = async (req, res) => {
       // Find the bank account
       const bankAcc = await BankAccount.findOne({ _id: expense.bankAccount, tenantId: req.tenantId });
       if (bankAcc) {
-        // Create a transaction (debit bank, credit expense)
-        await TransactionLine.create({
-          date: expense.date,
-          debitAccount: bankAcc._id, // This should be the Account _id, but for now use bankAcc._id
-          creditAccount: expense.category, // Use category as expense account
-          amount: expense.amount,
-          narration: `Expense: ${expense.description}`,
-          tenantId: req.tenantId,
-          createdBy: req.user?.userId || req.user?.id
-        });
+        // Find the Account for this bank (by bank name and tenant)
+        const Account = require('../models/Account');
+        const bankAccountCOA = await Account.findOne({ name: bankAcc.bankName, tenantId: req.tenantId });
+        if (bankAccountCOA) {
+          // Create a transaction (debit expense, credit bank)
+          await TransactionLine.create({
+            date: expense.date,
+            debitAccount: expense.category, // Expense account
+            creditAccount: bankAccountCOA._id, // Bank account in COA
+            amount: expense.amount,
+            narration: `Expense: ${expense.description}`,
+            tenantId: req.tenantId,
+            createdBy: req.user?.userId || req.user?.id
+          });
+        }
         // Update bank balance
         bankAcc.currentBalance = (bankAcc.currentBalance || 0) - expense.amount;
         await bankAcc.save();

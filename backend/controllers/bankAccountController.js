@@ -1,4 +1,5 @@
 const BankAccount = require('../models/BankAccount');
+const Account = require('../models/Account');
 
 // Get all bank accounts for a tenant
 exports.getBankAccounts = async (req, res) => {
@@ -156,6 +157,18 @@ exports.createBankAccount = async (req, res) => {
     });
 
     await bankAccount.save();
+
+    // Ensure a matching Account exists in COA
+    const coaAccount = await Account.findOne({ name: bankName, tenantId: bankAccount.tenantId });
+    if (!coaAccount) {
+      await Account.create({
+        name: bankName,
+        code: bankAccountNo,
+        type: 'asset',
+        tenantId: bankAccount.tenantId,
+        createdBy: bankAccount.createdBy
+      });
+    }
 
     res.status(201).json({
       message: 'Bank account created successfully',

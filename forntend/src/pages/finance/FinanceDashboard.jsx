@@ -1,65 +1,13 @@
-import React, { useEffect, useState } from 'react';
+  import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../utils/axios';
+// Removed: import { io } from 'socket.io-client';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ArrowUpIcon, ArrowDownIcon, CurrencyRupeeIcon, BanknotesIcon, CreditCardIcon, ScaleIcon } from '@heroicons/react/24/outline';
 import PageHeading from "../../components/ui/PageHeading";
 
-// Mock data
-const monthlyData = [
-  { name: 'Jan', income: 4000, expense: 2400 },
-  { name: 'Feb', income: 3000, expense: 1398 },
-  { name: 'Mar', income: 2000, expense: 9800 },
-  { name: 'Apr', income: 2780, expense: 3908 },
-  { name: 'May', income: 1890, expense: 4800 },
-  { name: 'Jun', income: 2390, expense: 3800 },
-];
-
-const recentTransactions = [
-  { id: 1, date: '2025-07-06', description: 'Office Rent', amount: 50000, type: 'expense', status: 'completed' },
-  { id: 2, date: '2025-07-05', description: 'Client Payment', amount: 125000, type: 'income', status: 'completed' },
-  { id: 3, date: '2025-07-04', description: 'Software Subscription', amount: 15000, type: 'expense', status: 'pending' },
-  { id: 4, date: '2025-07-03', description: 'Consulting Fee', amount: 45000, type: 'income', status: 'completed' },
-];
-
-const accountBalances = [
-  { name: 'HDFC Bank', balance: 1250000, accountNo: 'XXXX-XXXX-7890' },
-  { name: 'ICICI Bank', balance: 780000, accountNo: 'XXXX-XXXX-4567' },
-  { name: 'SBI', balance: 320000, accountNo: 'XXXX-XXXX-1234' },
-];
-
-// Upcoming Bills Mock Data
-const upcomingBills = [
-  { id: 1, dueDate: '2025-07-10', description: 'Internet Bill', amount: 4500, status: 'pending' },
-  { id: 2, dueDate: '2025-07-12', description: 'Office Rent', amount: 50000, status: 'pending' },
-  { id: 3, dueDate: '2025-07-15', description: 'Team Lunch', amount: 15000, status: 'pending' },
-];
-
-// Expense Category Breakdown
-const expenseCategories = [
-  { name: 'Salaries', value: 45, color: '#3b82f6' },
-  { name: 'Rent', value: 20, color: '#10b981' },
-  { name: 'Utilities', value: 15, color: '#8b5cf6' },
-  { name: 'Marketing', value: 10, color: '#f59e0b' },
-  { name: 'Others', value: 10, color: '#64748b' },
-];
-
-// Budget Utilization
-const budgetData = [
-  { name: 'Marketing', used: 65000, total: 100000, color: '#3b82f6' },
-  { name: 'Operations', used: 45000, total: 100000, color: '#10b981' },
-  { name: 'R&D', used: 30000, total: 100000, color: '#8b5cf6' },
-  { name: 'HR', used: 75000, total: 100000, color: '#f59e0b' },
-];
-
-// Recent Activities
-const recentActivities = [
-  { id: 1, date: '2025-07-06', activity: 'Paid Office Rent', type: 'expense' },
-  { id: 2, date: '2025-07-05', activity: 'Received Client Payment', type: 'income' },
-  { id: 3, date: '2025-07-04', activity: 'Added new Vendor: ABC Pvt Ltd', type: 'info' },
-  { id: 4, date: '2025-07-03', activity: 'Submitted Reimbursement', type: 'expense' },
-];
+// Removed: const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:4000');
 
 export default function FinanceDashboard() {
   const [kpis, setKpis] = useState({
@@ -70,39 +18,88 @@ export default function FinanceDashboard() {
     totalIncome: 0,
     totalExpense: 0,
   });
-  
-  const { token } = useAuth();
+
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const [accountBalances, setAccountBalances] = useState([]);
+  const [upcomingBills, setUpcomingBills] = useState([]);
+  const [expenseCategories, setExpenseCategories] = useState([]);
+  const [budgetData, setBudgetData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { token } = useAuth();
+
   useEffect(() => {
-    // Simulate API call
-    const fetchData = async () => {
+    const fetchDashboardData = async () => {
       try {
-        // Mock API response
-        setTimeout(() => {
-          setKpis({
-            cashInHand: 1250000,
-            budgetVsActual: 0.85,
-            payables: 325000,
-            receivables: 587000,
-            totalIncome: 2450000,
-            totalExpense: 1875000,
-          });
-          setLoading(false);
-        }, 1000);
-        
-        // Real API call would look like:
-        // const response = await axios.get('/api/finance/dashboard', {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
-        // setKpis(response.data);
+        setLoading(true);
+        // Fetch KPIs
+        const kpiResponse = await axios.get('/api/finance/dashboard/kpis', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setKpis(kpiResponse.data);
+
+        // Fetch recent transactions (limit 10)
+        const txnResponse = await axios.get('/api/finance/transactions', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { page: 1 }
+        });
+        setRecentTransactions(txnResponse.data.slice(0, 10));
+
+        // Fetch bank accounts
+        const bankResponse = await axios.get('/api/finance/bank-accounts', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { page: 1, limit: 10 }
+        });
+        setAccountBalances(bankResponse.data.bankAccounts);
+
+        // Fetch bills
+        const billsResponse = await axios.get('/api/finance/bills', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // Filter upcoming bills (not paid and due date in future)
+        const upcoming = billsResponse.data.filter(bill => !bill.isPaid && new Date(bill.billDate) >= new Date());
+        setUpcomingBills(upcoming);
+
+        // Fetch expense categories
+        const categoriesResponse = await axios.get('/api/finance/expenses/categories', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // Map categories to pie chart format
+        const pieData = categoriesResponse.data.map(cat => ({
+          name: cat.name,
+          value: 1, // Placeholder, real values from reports
+          color: '#' + Math.floor(Math.random()*16777215).toString(16) // Random color
+        }));
+        setExpenseCategories(pieData);
+
+        // Fetch expense reports for budget data
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+        const reportsResponse = await axios.get('/api/finance/expenses/reports', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { startDate, endDate }
+        });
+        // Map budget data from reports by category
+        const budget = reportsResponse.data.byCategory.map(cat => ({
+          name: cat.categoryName,
+          used: cat.totalAmount,
+          total: 100000, // Placeholder total budget
+          color: '#' + Math.floor(Math.random()*16777215).toString(16)
+        }));
+        setBudgetData(budget);
+
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchDashboardData();
+
+    // Removed all socket event listeners and cleanup
   }, [token]);
 
   if (loading) {
@@ -128,31 +125,31 @@ export default function FinanceDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card 
           title="Total Balance" 
-          value={`₹${kpis.cashInHand?.toLocaleString() || '0'}`} 
+          value={`₹${(kpis.cashInHand ?? 0).toLocaleString()}`} 
           icon={<CurrencyRupeeIcon className="h-6 w-6 text-blue-500" />}
           trend="up"
           trendValue="12.5%"
         />
         <Card 
           title="Total Income" 
-          value={`₹${kpis.totalIncome?.toLocaleString() || '0'}`} 
+          value={`₹${(kpis.totalIncome ?? 0).toLocaleString()}`} 
           icon={<ArrowUpIcon className="h-6 w-6 text-green-500" />}
           trend="up"
           trendValue="8.2%"
         />
         <Card 
           title="Total Expenses" 
-          value={`₹${kpis.totalExpense?.toLocaleString() || '0'}`} 
+          value={`₹${(kpis.totalExpense ?? 0).toLocaleString()}`} 
           icon={<ArrowDownIcon className="h-6 w-6 text-red-500" />}
           trend="down"
           trendValue="3.4%"
         />
         <Card 
           title="Budget vs Actual" 
-          value={`${(kpis.budgetVsActual * 100)?.toFixed(1) || '0'}%`} 
+          value={`${((kpis.budgetVsActual ?? 0) * 100).toFixed(1)}%`} 
           icon={<ScaleIcon className="h-6 w-6 text-purple-500" />}
           trend={kpis.budgetVsActual >= 0.8 ? "up" : "down"}
-          trendValue={`${((kpis.budgetVsActual - 0.8) * 100)?.toFixed(1)}%`}
+          trendValue={`${(((kpis.budgetVsActual ?? 0) - 0.8) * 100).toFixed(1)}%`}
         />
       </div>
 
@@ -195,12 +192,12 @@ export default function FinanceDashboard() {
             </PieChart>
           </ResponsiveContainer>
           <div className="flex flex-wrap justify-center mt-4 gap-2">
-            {expenseCategories.map((cat, idx) => (
-              <span key={cat.name} className="flex items-center text-xs">
-                <span className="inline-block w-3 h-3 rounded-full mr-1" style={{ background: cat.color }}></span>
-                {cat.name}
-              </span>
-            ))}
+          {expenseCategories.map((cat, idx) => (
+            <span key={cat.name} className="flex items-center text-xs">
+              <span className="inline-block w-3 h-3 rounded-full mr-1" style={{ background: cat.color }}></span>
+              {cat.name}
+            </span>
+          ))}
           </div>
         </div>
         {/* Account Balances */}
@@ -208,13 +205,13 @@ export default function FinanceDashboard() {
           <h3 className="text-lg font-medium text-gray-800 mb-4">Account Balances</h3>
           <div className="space-y-4">
             {accountBalances.map((account) => (
-              <div key={account.name} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <div key={account._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">{account.name}</p>
-                  <p className="text-sm text-gray-500">{account.accountNo}</p>
+                  <p className="font-medium text-gray-900">{account.bankName || account.name}</p>
+                  <p className="text-sm text-gray-500">{account.bankAccountNo || account.accountNo}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">₹{account.balance.toLocaleString()}</p>
+                  <p className="font-semibold">₹{(account.currentBalance ?? account.balance ?? 0).toLocaleString()}</p>
                   <p className="text-xs text-gray-500">Available Balance</p>
                 </div>
               </div>
@@ -238,13 +235,13 @@ export default function FinanceDashboard() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {upcomingBills.map((bill) => (
-                <tr key={bill.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{new Date(bill.dueDate).toLocaleDateString()}</td>
+                <tr key={bill._id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{new Date(bill.billDate || bill.dueDate).toLocaleDateString()}</td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm">{bill.description}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium text-red-600">-₹{bill.amount.toLocaleString()}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium text-red-600">-₹{(bill.amount ?? 0).toLocaleString()}</td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
+                      {bill.status ? (typeof bill.status === 'string' && bill.status.length > 0 ? bill.status.charAt(0).toUpperCase() + bill.status.slice(1) : '-') : ''}
                     </span>
                   </td>
                 </tr>
@@ -274,7 +271,7 @@ export default function FinanceDashboard() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {recentTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
+                <tr key={transaction._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(transaction.date).toLocaleDateString()}
                   </td>
@@ -292,7 +289,9 @@ export default function FinanceDashboard() {
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                      {typeof transaction.status === 'string' && transaction.status.length > 0
+                        ? transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)
+                        : '-'}
                     </span>
                   </td>
                 </tr>

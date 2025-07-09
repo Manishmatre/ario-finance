@@ -1,4 +1,5 @@
 const BankAccount = require('../models/BankAccount');
+const { io } = require('../server');
 
 // Get all bank accounts for a tenant
 exports.getBankAccounts = async (req, res) => {
@@ -78,7 +79,6 @@ exports.getBankAccount = async (req, res) => {
   }
 };
 
-// Create a new bank account
 exports.createBankAccount = async (req, res) => {
   try {
     const {
@@ -155,6 +155,8 @@ exports.createBankAccount = async (req, res) => {
       createdBy: req.user?.id || 'system'
     });
     await bankAccount.save();
+
+    io.emit('bankAccountCreated', bankAccount);
 
     res.status(201).json({
       message: 'Bank account created successfully',

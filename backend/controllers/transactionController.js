@@ -1,4 +1,5 @@
 const TransactionLine = require('../models/TransactionLine');
+const { io } = require('../server');
 
 // List transactions (with pagination & filters)
 exports.listTransactions = async (req, res) => {
@@ -27,6 +28,7 @@ exports.createTransaction = async (req, res) => {
       date, debitAccount, creditAccount, amount, narration, projectId, costCode,
       tenantId: req.tenantId, createdBy: req.user?.id
     });
+    io.emit('transactionCreated', txn1);
     res.status(201).json(txn1);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -40,6 +42,7 @@ exports.updateTransaction = async (req, res) => {
       req.body, { new: true }
     );
     if (!txn) return res.status(404).json({ error: 'Not found' });
+    io.emit('transactionUpdated', txn);
     res.json(txn);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -53,6 +56,7 @@ exports.approveTransaction = async (req, res) => {
       { isApproved: true }, { new: true }
     );
     if (!txn) return res.status(404).json({ error: 'Not found' });
+    io.emit('transactionApproved', txn);
     res.json(txn);
   } catch (err) {
     res.status(400).json({ error: err.message });

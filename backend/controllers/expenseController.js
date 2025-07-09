@@ -4,8 +4,8 @@ const BankAccount = require('../models/BankAccount');
 const TransactionLine = require('../models/TransactionLine');
 const { uploadFile } = require('../utils/storage');
 const mongoose = require('mongoose');
+const { io } = require('../server');
 
-// Create a new expense
 exports.createExpense = async (req, res) => {
   try {
     console.log('DEBUG: req.body:', req.body);
@@ -65,6 +65,8 @@ exports.createExpense = async (req, res) => {
       }
     }
     
+    io.emit('expenseCreated', expense);
+
     res.status(201).json(expense);
   } catch (err) {
     console.error('DEBUG: Expense create error:', err);
@@ -144,7 +146,6 @@ exports.getExpenseById = async (req, res) => {
   }
 };
 
-// Update expense
 exports.updateExpense = async (req, res) => {
   try {
     const allowedFields = [
@@ -179,6 +180,8 @@ exports.updateExpense = async (req, res) => {
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' });
     }
+
+    io.emit('expenseUpdated', expense);
     
     res.json(expense);
   } catch (err) {
@@ -186,7 +189,6 @@ exports.updateExpense = async (req, res) => {
   }
 };
 
-// Delete expense
 exports.deleteExpense = async (req, res) => {
   try {
     // First check if the expense exists
@@ -213,6 +215,8 @@ exports.deleteExpense = async (req, res) => {
         console.error('Error deleting receipt:', storageErr);
       }
     }
+
+    io.emit('expenseDeleted', { id: req.params.id });
 
     res.json({ 
       message: 'Expense deleted successfully',

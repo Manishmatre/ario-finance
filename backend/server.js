@@ -2,6 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+
 const bankAccountsRouter = require('./routes/bankAccounts');
 const transactionsRouter = require('./routes/transactions');
 const vendorsRouter = require('./routes/vendors');
@@ -27,6 +30,14 @@ if (!process.env.MONGO_URI) {
 }
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
 
 // Enable CORS with specific options
 const corsOptions = {
@@ -65,9 +76,19 @@ app.use('/api/finance/loans', loanRouter);
 app.use('/api/finance/employees', require('./routes/employees'));
 app.use('/api/auth', require('./routes/auth'));
 
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
 const PORT = process.env.PORT || 4000;
 
 mongoose.connect(process.env.MONGO_URI).then(() => {
   console.log('MongoDB connected');
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
+
+module.exports = { io };

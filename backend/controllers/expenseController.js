@@ -1,6 +1,9 @@
 const Expense = require('../models/Expense');
 const ExpenseCategory = require('../models/ExpenseCategory');
+const BankAccount = require('../models/BankAccount');
+const TransactionLine = require('../models/TransactionLine');
 const { uploadFile } = require('../utils/storage');
+const mongoose = require('mongoose');
 
 // Create a new expense
 exports.createExpense = async (req, res) => {
@@ -33,6 +36,28 @@ exports.createExpense = async (req, res) => {
     }
     
     const expense = await Expense.create(expenseData);
+
+    // If payment method is bank_transfer and bankAccount is provided, create transaction and update balance
+    if (expense.paymentMethod === 'bank_transfer' && expense.bankAccount) {
+      // Find the bank account
+      const bankAcc = await BankAccount.findOne({ _id: expense.bankAccount, tenantId: req.tenantId });
+      if (bankAcc) {
+        // Create a transaction (debit bank, credit expense)
+        await TransactionLine.create({
+          date: expense.date,
+          debitAccount: bankAcc._id, // This should be the Account _id, but for now use bankAcc._id
+          creditAccount: expense.category, // Use category as expense account
+          amount: expense.amount,
+          narration: `Expense: ${expense.description}`,
+          tenantId: req.tenantId,
+          createdBy: req.user?.userId || req.user?.id
+        });
+        // Update bank balance
+        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - expense.amount;
+        await bankAcc.save();
+      }
+    }
+    
     res.status(201).json(expense);
   } catch (err) {
     console.error('DEBUG: Expense create error:', err);
@@ -53,7 +78,20 @@ exports.getExpenses = async (req, res) => {
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
-    if (category) query.category = category;
+    if (category) {
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        query.category = category;
+      } else {
+        // Try to resolve category name to ObjectId
+        const catDoc = await require('../models/ExpenseCategory').findOne({ name: category, tenantId: req.tenantId });
+        if (catDoc) {
+          query.category = catDoc._id;
+        } else {
+          // If not found, return empty result (no expenses match this category)
+          return res.json([]);
+        }
+      }
+    }
     if (status) query.status = status;
     if (paymentMethod) query.paymentMethod = paymentMethod;
     
@@ -73,13 +111,27 @@ exports.getExpenseById = async (req, res) => {
     const expense = await Expense.findOne({
       _id: req.params.id,
       tenantId: req.tenantId
-    }).populate('category', 'name');
-    
+    })
+      .populate('category', 'name')
+      .populate('bankAccount');
+
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' });
     }
-    
-    res.json(expense);
+
+    let transaction = null;
+    if (expense.paymentMethod === 'bank_transfer' && expense.bankAccount) {
+      // Find the transaction for this expense (by date, amount, bankAccount, and narration)
+      transaction = await require('../models/TransactionLine').findOne({
+        date: expense.date,
+        amount: expense.amount,
+        debitAccount: expense.bankAccount._id,
+        creditAccount: expense.category._id || expense.category,
+        tenantId: req.tenantId
+      });
+    }
+
+    res.json({ ...expense.toObject(), transaction });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

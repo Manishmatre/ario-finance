@@ -171,12 +171,9 @@ export default function Expenses() {
             className="border rounded px-2 py-2 text-sm"
             >
               <option value="">All Categories</option>
-              <option value="salary">Salary</option>
-              <option value="rent">Rent</option>
-              <option value="utilities">Utilities</option>
-              <option value="supplies">Supplies</option>
-              <option value="travel">Travel</option>
-              <option value="other">Other</option>
+              {categories.map(cat => (
+                <option key={cat._id} value={cat._id}>{cat.name}</option>
+              ))}
             </select>
             <select
               value={filters.status}

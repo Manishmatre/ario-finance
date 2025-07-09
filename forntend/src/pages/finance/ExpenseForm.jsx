@@ -9,6 +9,7 @@ import TextArea from '../../components/ui/TextArea';
 import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import Loader from '../../components/ui/Loader';
+import { useEffect as useEffect2 } from 'react';
 
 export default function ExpenseForm() {
   const { id } = useParams();
@@ -20,6 +21,7 @@ export default function ExpenseForm() {
   const [receiptPreview, setReceiptPreview] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [success, setSuccess] = useState(false);
+  const [bankAccounts, setBankAccounts] = useState([]);
   
   const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = useForm({
     defaultValues: {
@@ -69,6 +71,13 @@ export default function ExpenseForm() {
       .finally(() => setLoading(false));
   }, [isEditMode, id, setValue]);
 
+  // Fetch bank accounts for dropdown
+  useEffect2(() => {
+    axiosInstance.get('/api/finance/bank-accounts?limit=100')
+      .then(res => setBankAccounts(res.data.bankAccounts || []))
+      .catch(() => setBankAccounts([]));
+  }, []);
+
   // File upload/preview
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -108,9 +117,11 @@ export default function ExpenseForm() {
 
   // Watch category for conditional fields
   const category = watch('category');
+  const paymentMethod = watch('paymentMethod');
 
   // Example: Show referenceNo only for 'Travel' or 'Supplies' category
   const showReference = category && ['travel', 'supplies'].includes(category.toLowerCase());
+  const showBankDropdown = paymentMethod === 'bank_transfer';
 
   // Build options arrays for Select
   const categoryOptions = [{ value: '', label: 'Select category' }, ...categories.map(cat => ({ value: cat._id || cat.value || cat.name, label: cat.name || cat.label }))];
@@ -128,6 +139,7 @@ export default function ExpenseForm() {
     { value: 'rejected', label: 'Rejected' },
     { value: 'paid', label: 'Paid' },
   ];
+  const bankAccountOptions = [{ value: '', label: 'Select bank account' }, ...bankAccounts.map(acc => ({ value: acc._id, label: `${acc.bankName} - ${acc.bankAccountNo}` }))];
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
@@ -190,6 +202,13 @@ export default function ExpenseForm() {
                 <Select options={statusOptions} {...register('status', { required: true })} />
                 {errors.status && <span className="text-red-500 text-xs">Status is required</span>}
               </div>
+              {showBankDropdown && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account *</label>
+                  <Select options={bankAccountOptions} {...register('bankAccount', { required: showBankDropdown })} />
+                  {errors.bankAccount && <span className="text-red-500 text-xs">Bank account is required</span>}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Receipt (Image/PDF, optional)</label>
                 <Input type="file" accept="image/*,application/pdf" onChange={handleFileChange} />

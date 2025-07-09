@@ -10,6 +10,7 @@ const ExpenseSchema = new mongoose.Schema({
     required: true,
     enum: ['cash', 'bank_transfer', 'credit_card', 'debit_card', 'upi', 'other']
   },
+  bankAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'BankAccount' },
   referenceNo: { type: String, trim: true },
   receipt: { type: String }, // URL to the receipt file
   status: { 

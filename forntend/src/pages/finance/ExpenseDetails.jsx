@@ -166,6 +166,58 @@ export default function ExpenseDetails() {
           </div>
         </div>
       </div>
+      {/* Bank Account Details */}
+      {expense.paymentMethod === 'bank_transfer' && expense.bankAccount && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="text-lg font-medium text-gray-800">Bank Account Details</h3>
+          </div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Bank Name</h3>
+              <p className="text-lg">{expense.bankAccount.bankName}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Account Number</h3>
+              <p className="text-lg">{expense.bankAccount.bankAccountNo}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Branch</h3>
+              <p className="text-lg">{expense.bankAccount.branchName}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Current Balance</h3>
+              <p className="text-lg">₹{expense.bankAccount.currentBalance?.toLocaleString('en-IN')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Transaction Details */}
+      {expense.transaction && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="text-lg font-medium text-gray-800">Transaction Details</h3>
+          </div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Transaction ID</h3>
+              <p className="text-lg">{expense.transaction._id}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Amount</h3>
+              <p className="text-lg">₹{expense.transaction.amount?.toLocaleString('en-IN')}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Date</h3>
+              <p className="text-lg">{expense.transaction.date ? new Date(expense.transaction.date).toLocaleString() : '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Narration</h3>
+              <p className="text-lg">{expense.transaction.narration}</p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Receipt/Document Section */}
       {expense.receipt && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-100">

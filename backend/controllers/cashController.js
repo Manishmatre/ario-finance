@@ -4,7 +4,27 @@ const EmployeeAdvance = require('../models/EmployeeAdvance');
 
 exports.getCashbook = async (req, res) => {
   try {
-    const cashbook = await TransactionLine.find({ tenantId: req.tenantId });
+    const { type } = req.query;
+    let filter = { tenantId: req.tenantId };
+    let accountName = null;
+    if (type === 'cash') accountName = 'Cash';
+    if (type === 'bank') accountName = 'Bank';
+    let accountIds = [];
+    if (accountName) {
+      // Find all accounts with this name for the tenant
+      const Account = require('../models/Account');
+      const accounts = await Account.find({ name: accountName, tenantId: req.tenantId });
+      accountIds = accounts.map(a => a._id);
+      // Filter transactions where either debit or credit is this account
+      filter.$or = [
+        { debitAccount: { $in: accountIds } },
+        { creditAccount: { $in: accountIds } }
+      ];
+    }
+    const cashbook = await TransactionLine.find(filter)
+      .populate('debitAccount')
+      .populate('creditAccount')
+      .sort({ date: -1 });
     res.json(cashbook);
   } catch (err) {
     res.status(500).json({ error: err.message });

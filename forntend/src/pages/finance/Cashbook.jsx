@@ -7,6 +7,7 @@ import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiBriefcase, FiPackage, FiAlertCircle, FiRefreshCw } from "react-icons/fi";
+import axiosInstance from '../../utils/axiosInstance';
 
 // Mock data
 const cashbookData = [
@@ -177,14 +178,19 @@ export default function Cashbook() {
   const [cashbook, setCashbook] = useState([]);
   const [showCashDrawer, setShowCashDrawer] = useState(false);
   const [showDenominations, setShowDenominations] = useState(false);
-  const totalPages = 2;
+  const totalPages = 1;
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setCashbook(cashbookData);
-      setLoading(false);
-    }, 1000);
+    setLoading(true);
+    axiosInstance.get('/api/finance/cash/cashbook?type=cash')
+      .then(res => {
+        setCashbook(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setCashbook([]);
+        setLoading(false);
+      });
   }, []);
 
   const columns = [
@@ -197,28 +203,19 @@ export default function Cashbook() {
       Header: 'Amount', 
       accessor: 'amount',
       Cell: ({ value, row }) => (
-        <span className={`font-medium ${row.original.type === 'In' ? 'text-green-600' : 'text-red-600'}`}>
-          {row.original.type === 'In' ? '+' : '-'}₹{value.toLocaleString()}
+        <span className={`font-medium ${row.original.debitAccount?.name === 'Cash' ? 'text-red-600' : 'text-green-600'}`}>
+          {row.original.debitAccount?.name === 'Cash' ? '-' : '+'}₹{value.toLocaleString()}
         </span>
       )
     },
     { 
       Header: 'Type', 
       accessor: 'type',
-      Cell: ({ value }) => (
+      Cell: ({ row }) => (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'In' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          row.original.debitAccount?.name === 'Cash' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
         }`}>
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Category', 
-      accessor: 'category',
-      Cell: ({ value }) => (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          {value}
+          {row.original.debitAccount?.name === 'Cash' ? 'Out' : 'In'}
         </span>
       )
     },
@@ -228,27 +225,14 @@ export default function Cashbook() {
       Cell: ({ value, row }) => (
         <div>
           <div className="font-medium">{value}</div>
-          <div className="text-sm text-gray-500">Ref: {row.original.reference}</div>
+          <div className="text-sm text-gray-500">Ref: {row.original.reference || '-'}</div>
         </div>
       )
     },
     { 
       Header: 'Balance', 
       accessor: 'balance',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
-    { 
-      Header: 'Actions', 
-      accessor: 'actions',
-      Cell: ({ row }) => (
-        <Button 
-          size="sm" 
-          variant="secondary"
-          onClick={() => setShowDenominations(row.original)}
-        >
-          View Details
-        </Button>
-      )
+      Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-'
     },
   ];
 
@@ -260,39 +244,18 @@ export default function Cashbook() {
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
         title="Cashbook"
-        subtitle="Track all cash transactions and balances"
+        subtitle="Track all cash transactions and cash balances"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
           { label: "Accounts", to: "/finance/accounts" },
           { label: "Cashbook" }
         ]}
-        action={
-          <Button 
-            onClick={() => setShowCashDrawer(true)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <FiPackage className="h-4 w-4 mr-2" />
-            Cash Drawer
-          </Button>
-        }
       />
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cashSummary.map((summary, index) => (
-          <Card
-            key={index}
-            title={summary.title}
-            value={`₹${summary.value.toLocaleString()}`}
-            icon={summary.icon}
-          />
-        ))}
-      </div>
 
       {/* Cashbook Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Cash Transaction History</h3>
+          <h3 className="text-lg font-medium text-gray-800">Transaction History</h3>
         </div>
         {cashbook.length === 0 ? (
         <EmptyState message="No cashbook entries found." />
@@ -300,110 +263,11 @@ export default function Cashbook() {
           <>
             <Table columns={columns} data={cashbook} />
             <div className="p-4 border-t border-gray-100">
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </>
         )}
       </div>
-
-      {/* Cash Drawer Modal */}
-      {showCashDrawer && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 min-w-[600px] max-w-2xl shadow-lg max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-bold mb-4">Cash Drawer Details</h3>
-            
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Total Cash</label>
-                <p className="text-2xl font-bold text-green-600">₹{currentCashDrawer.total.toLocaleString()}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Last Counted</label>
-                <p className="text-sm text-gray-900">{new Date(currentCashDrawer.lastCounted).toLocaleString('en-IN')}</p>
-                <p className="text-sm text-gray-500">by {currentCashDrawer.countedBy}</p>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h4 className="font-medium text-gray-900 mb-3">Denomination Breakdown</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {Object.entries(currentCashDrawer.denominations).map(([denomination, count]) => (
-                  <div key={denomination} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">₹{denomination}</span>
-                    <span className="text-gray-600">{count} × ₹{denomination} = ₹{(count * parseInt(denomination)).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
-              <p className="text-sm text-gray-600 bg-yellow-50 p-3 rounded-lg">
-                {currentCashDrawer.notes}
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button onClick={() => setShowCashDrawer(false)} variant="secondary" className="flex-1">
-                Close
-              </Button>
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                <FiRefreshCw className="h-4 w-4 mr-2" />
-                Re-count Cash
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Transaction Denominations Modal */}
-      {showDenominations && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 min-w-[500px] shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Transaction Details - {showDenominations.reference}</h3>
-            
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Date</label>
-                <p className="text-sm text-gray-900">{new Date(showDenominations.date).toLocaleDateString('en-IN')}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Amount</label>
-                <p className="text-sm text-gray-900">₹{showDenominations.amount.toLocaleString()}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Type</label>
-                <p className="text-sm text-gray-900">{showDenominations.type}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Category</label>
-                <p className="text-sm text-gray-900">{showDenominations.category}</p>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h4 className="font-medium text-gray-900 mb-3">Denomination Breakdown</h4>
-              <div className="grid grid-cols-2 gap-4">
-                {Object.entries(showDenominations.denominations).map(([denomination, count]) => (
-                  <div key={denomination} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="font-medium">₹{denomination}</span>
-                    <span className="text-gray-600">{count} notes</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h4 className="font-medium text-gray-900 mb-2">Narration</h4>
-              <p className="text-sm text-gray-600">{showDenominations.narration}</p>
-            </div>
-
-            <Button onClick={() => setShowDenominations(false)} className="w-full">
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

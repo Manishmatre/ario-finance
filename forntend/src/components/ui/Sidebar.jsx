@@ -55,6 +55,12 @@ const expensesMenu = [
   { to: "/finance/expenses/reports", label: "Expense Reports", icon: <FiClipboard /> },
 ];
 
+const employeesMenu = [
+  { to: '/finance/employees', label: 'All Employees', icon: <FiUsers /> },
+  { to: '/finance/employees/add', label: 'Add Employee', icon: <FiPlusCircle /> },
+  { to: '/finance/employee-transactions', label: 'Employee Transactions', icon: <FiList /> },
+];
+
 const navLinks = [
   { to: "/finance", label: "Dashboard", icon: <FiHome /> },
   { to: "/finance/cash-advance", label: "Cash Advance To Employee", icon: <FiDollarSign /> },
@@ -72,6 +78,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const isLoansActive = loansMenu.some(link => location.pathname.startsWith(link.to)) || location.pathname.startsWith('/finance/lenders');
   const isVendorActive = isPayablesActive;
   const isPurchaseActive = isPayablesActive;
+  const isEmployeesActive = employeesMenu.some(link => location.pathname.startsWith(link.to));
 
   // Dropdown open state: always open if active, else controlled by click
   const [payablesOpen, setPayablesOpen] = useState(isPayablesActive);
@@ -79,12 +86,14 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const [expensesOpen, setExpensesOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(isTransactionsActive);
   const [accountsOpen, setAccountsOpen] = useState(isAccountsActive);
+  const [employeesOpen, setEmployeesOpen] = useState(isEmployeesActive);
 
   useEffect(() => { setPayablesOpen(isPayablesActive); }, [isPayablesActive]);
   useEffect(() => { setExpensesOpen(isExpensesActive); }, [isExpensesActive]);
   useEffect(() => { setTransactionsOpen(isTransactionsActive); }, [isTransactionsActive]);
   useEffect(() => { setAccountsOpen(isAccountsActive); }, [isAccountsActive]);
   useEffect(() => { setLoansOpen(isLoansActive); }, [isLoansActive]);
+  useEffect(() => { setEmployeesOpen(isEmployeesActive); }, [isEmployeesActive]);
 
   // Helper to close all dropdowns except the one being opened
   const handleDropdown = (menu) => {
@@ -95,6 +104,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setTransactionsOpen(false);
         setAccountsOpen(false);
         setPayablesOpen(false);
+        setEmployeesOpen(false);
         break;
       case 'expenses':
         setExpensesOpen(!expensesOpen);
@@ -102,6 +112,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setTransactionsOpen(false);
         setAccountsOpen(false);
         setPayablesOpen(false);
+        setEmployeesOpen(false);
         break;
       case 'transactions':
         setTransactionsOpen(!transactionsOpen);
@@ -109,6 +120,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setExpensesOpen(false);
         setAccountsOpen(false);
         setPayablesOpen(false);
+        setEmployeesOpen(false);
         break;
       case 'accounts':
         setAccountsOpen(!accountsOpen);
@@ -116,6 +128,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setPayablesOpen(false);
+        setEmployeesOpen(false);
         break;
       case 'payables':
         setPayablesOpen(!payablesOpen);
@@ -123,6 +136,15 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
+        setEmployeesOpen(false);
+        break;
+      case 'employees':
+        setEmployeesOpen(!employeesOpen);
+        setLoansOpen(false);
+        setExpensesOpen(false);
+        setTransactionsOpen(false);
+        setAccountsOpen(false);
+        setPayablesOpen(false);
         break;
       default:
         break;
@@ -160,6 +182,40 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 <span>{link.label}</span>
               </NavLink>
             ))}
+
+            {/* Employees Menu (Dropdown) */}
+            <div>
+              <button
+                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
+                  ${employeesOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
+                onClick={() => handleDropdown('employees')}
+              >
+                <FiUsers />
+                <span>Employees</span>
+                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${employeesOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <div
+                className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
+                  ${employeesOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
+                style={{ transitionProperty: 'max-height, opacity, padding' }}
+              >
+                {employeesMenu.map(link => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={() =>
+                      location.pathname === link.to
+                        ? 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out bg-blue-600 text-white'
+                        : 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out text-gray-200 hover:bg-blue-800 hover:text-white'
+                    }
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    {link.icon}
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
 
             {/* Loans Menu */}
             <div>

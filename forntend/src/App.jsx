@@ -25,7 +25,7 @@ import LoanDocuments from './pages/loans/LoanDocuments';
 import Lenders from './pages/loans/Lenders';
 import AddLender from './pages/loans/AddLender';
 import PettyCashRegister from './pages/finance/PettyCashRegister';
-import CashAdvanceToEmployee from './pages/finance/CashAdvanceToEmployee';
+// import CashAdvanceToEmployee from './pages/finance/CashAdvanceToEmployee';
 import CashReimbursement from './pages/finance/CashReimbursement';
 import GRNList from './pages/finance/GRNList';
 import GRNForm from './pages/finance/GRNForm';
@@ -52,6 +52,13 @@ import LenderDetails from './pages/loans/LenderDetails';
 import AddAdvanceToVendor from './pages/finance/AddAdvanceToVendor';
 import Bankbook from './pages/finance/Bankbook';
 import MakeBillPaid from './pages/finance/MakeBillPaid';
+import EmployeeList from './pages/finance/EmployeeList';
+import AddEmployee from './pages/finance/AddEmployee';
+import EmployeeDetails from './pages/finance/EmployeeDetails';
+import AdvanceToEmployee from './pages/finance/AdvanceToEmployee';
+import PayEmployeeSalary from './pages/finance/PayEmployeeSalary';
+import EmployeeTransactions from './pages/finance/EmployeeTransactions';
+import AddEmployeeTransaction from './pages/finance/AddEmployeeTransaction';
 
 export default function App() {
   return (
@@ -107,7 +114,6 @@ export default function App() {
               <Route path="/finance/vendor-payments" element={<VendorPayments />} />
               <Route path="/finance/cashbook" element={<Cashbook />} />
               <Route path="/finance/petty-cash" element={<PettyCashRegister />} />
-              <Route path="/finance/cash-advance" element={<CashAdvanceToEmployee />} />
               <Route path="/finance/cash-reimburse" element={<CashReimbursement />} />
               <Route path="/finance/grns" element={<GRNList />} />
               <Route path="/finance/grns/new" element={<GRNForm />} />
@@ -127,6 +133,14 @@ export default function App() {
               <Route path="/finance/lenders/add/:id?" element={<AddLender />} />
               <Route path="/finance/lenders/:id" element={<LenderDetails />} />
               <Route path="/finance/bankbook" element={<Bankbook />} />
+              {/* Employee Management Routes */}
+              <Route path="/finance/employees" element={<EmployeeList />} />
+              <Route path="/finance/employees/add" element={<AddEmployee />} />
+              <Route path="/finance/employees/:id" element={<EmployeeDetails />} />
+              <Route path="/finance/employees/:id/advance" element={<AdvanceToEmployee />} />
+              <Route path="/finance/employees/:id/salary" element={<PayEmployeeSalary />} />
+              <Route path="/finance/employee-transactions" element={<EmployeeTransactions />} />
+              <Route path="/finance/employee-transactions/add" element={<AddEmployeeTransaction />} />
               <Route path="*" element={<Navigate to="/finance" />} />
             </Route>
           </Route>

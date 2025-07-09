@@ -62,6 +62,7 @@ app.use('/api/finance/products', productRouter);
 app.use('/api/finance/purchase-orders', purchaseOrderRouter);
 app.use('/api/finance/grns', grnRouter);
 app.use('/api/finance/loans', loanRouter);
+app.use('/api/finance/employees', require('./routes/employees'));
 app.use('/api/auth', require('./routes/auth'));
 
 const PORT = process.env.PORT || 4000;

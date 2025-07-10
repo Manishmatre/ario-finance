@@ -54,6 +54,7 @@ export default function EmployeeDetails() {
     { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
     { Header: 'Reason', accessor: 'reason' },
     { Header: 'Status', accessor: 'status', Cell: ({ value }) => <span className={`px-2 py-1 rounded text-xs ${value==='approved'?'bg-green-100 text-green-800':value==='pending'?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800'}`}>{value}</span> },
+    { Header: 'Payment Mode', accessor: 'paymentMode' },
   ];
 
   const salaryColumns = [
@@ -63,6 +64,7 @@ export default function EmployeeDetails() {
     { Header: 'Status', accessor: 'status', Cell: ({ value }) => <span className={`px-2 py-1 rounded text-xs ${value==='paid'?'bg-green-100 text-green-800':'bg-yellow-100 text-yellow-800'}`}>{value}</span> },
     { Header: 'Paid Date', accessor: 'paidDate', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
     { Header: 'Notes', accessor: 'notes' },
+    { Header: 'Payment Mode', accessor: 'paymentMode' },
   ];
 
   return (
@@ -75,7 +77,7 @@ export default function EmployeeDetails() {
           { label: 'Employees', to: '/finance/employees' },
           { label: employee.name }
         ]}
-        right={<Button onClick={() => navigate(`/finance/employees/${id}/edit`)}>Edit</Button>}
+        right={<Button onClick={() => navigate(`/finance/employees/edit/${id}`)}>Edit</Button>}
       />
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -106,6 +108,38 @@ export default function EmployeeDetails() {
               </div>
             ))}
           </div>
+          {/* Bank Account Details Section */}
+          {(employee.bankAccountHolder || employee.bankName || employee.bankAccountNo || employee.ifsc || employee.branch || employee.bankNotes) && (
+            <div className="mt-8">
+              <h4 className="text-md font-semibold mb-4">Bank Account Details (for payments)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Account Holder</div>
+                  <div className="text-base font-medium text-gray-800">{employee.bankAccountHolder || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Bank Name</div>
+                  <div className="text-base font-medium text-gray-800">{employee.bankName || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Account Number</div>
+                  <div className="text-base font-medium text-gray-800">{employee.bankAccountNo || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">IFSC Code</div>
+                  <div className="text-base font-medium text-gray-800">{employee.ifsc || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Branch</div>
+                  <div className="text-base font-medium text-gray-800">{employee.branch || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Notes</div>
+                  <div className="text-base font-medium text-gray-800">{employee.bankNotes || '-'}</div>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
       )}
       {tab === 'advances' && (

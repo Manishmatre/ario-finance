@@ -61,10 +61,19 @@ const employeesMenu = [
   { to: '/finance/employee-transactions', label: 'Employee Transactions', icon: <FiList /> },
 ];
 
+const clientsMenu = [
+  { to: "/finance/clients", label: "All Clients", icon: <FiUsers /> },
+  { to: "/finance/clients/add", label: "Add Client", icon: <FiPlusCircle /> },
+];
+
 const navLinks = [
   { to: "/finance", label: "Dashboard", icon: <FiHome /> },
-  { to: "/finance/cash-advance", label: "Cash Advance To Employee", icon: <FiDollarSign /> },
   { to: "/finance/cash-reimburse", label: "Cash Reimbursement", icon: <FiDollarSign /> },
+];
+
+const projectsMenu = [
+  { to: "/finance/projects", label: "All Projects", icon: <FiBriefcase /> },
+  { to: "/finance/projects/add", label: "Add Project", icon: <FiPlusCircle /> },
 ];
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -77,6 +86,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const isAccountsActive = accountsMenu.some(link => location.pathname.startsWith(link.to));
   const isLoansActive = loansMenu.some(link => location.pathname.startsWith(link.to)) || location.pathname.startsWith('/finance/lenders');
   const isEmployeesActive = employeesMenu.some(link => location.pathname.startsWith(link.to));
+  const isProjectsActive = projectsMenu.some(link => location.pathname.startsWith(link.to));
+  const isClientsActive = clientsMenu.some(link => location.pathname.startsWith(link.to));
 
   // Dropdown open state: always open if active, else controlled by click
   const [payablesOpen, setPayablesOpen] = useState(isPayablesActive);
@@ -85,6 +96,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const [transactionsOpen, setTransactionsOpen] = useState(isTransactionsActive);
   const [accountsOpen, setAccountsOpen] = useState(isAccountsActive);
   const [employeesOpen, setEmployeesOpen] = useState(isEmployeesActive);
+  const [projectsOpen, setProjectsOpen] = useState(isProjectsActive);
+  const [clientsOpen, setClientsOpen] = useState(isClientsActive);
 
   useEffect(() => { setPayablesOpen(isPayablesActive); }, [isPayablesActive]);
   useEffect(() => { setExpensesOpen(isExpensesActive); }, [isExpensesActive]);
@@ -92,6 +105,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   useEffect(() => { setAccountsOpen(isAccountsActive); }, [isAccountsActive]);
   useEffect(() => { setLoansOpen(isLoansActive); }, [isLoansActive]);
   useEffect(() => { setEmployeesOpen(isEmployeesActive); }, [isEmployeesActive]);
+  useEffect(() => { setProjectsOpen(isProjectsActive); }, [isProjectsActive]);
+  useEffect(() => { setClientsOpen(isClientsActive); }, [isClientsActive]);
 
   // Helper to close all dropdowns except the one being opened
   const handleDropdown = (menu) => {
@@ -103,6 +118,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setAccountsOpen(false);
         setPayablesOpen(false);
         setEmployeesOpen(false);
+        setProjectsOpen(false);
+        setClientsOpen(false);
         break;
       case 'expenses':
         setExpensesOpen(!expensesOpen);
@@ -111,6 +128,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setAccountsOpen(false);
         setPayablesOpen(false);
         setEmployeesOpen(false);
+        setProjectsOpen(false);
+        setClientsOpen(false);
         break;
       case 'transactions':
         setTransactionsOpen(!transactionsOpen);
@@ -119,6 +138,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setAccountsOpen(false);
         setPayablesOpen(false);
         setEmployeesOpen(false);
+        setProjectsOpen(false);
+        setClientsOpen(false);
         break;
       case 'accounts':
         setAccountsOpen(!accountsOpen);
@@ -127,6 +148,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setTransactionsOpen(false);
         setPayablesOpen(false);
         setEmployeesOpen(false);
+        setProjectsOpen(false);
+        setClientsOpen(false);
         break;
       case 'payables':
         setPayablesOpen(!payablesOpen);
@@ -135,6 +158,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setTransactionsOpen(false);
         setAccountsOpen(false);
         setEmployeesOpen(false);
+        setProjectsOpen(false);
+        setClientsOpen(false);
         break;
       case 'employees':
         setEmployeesOpen(!employeesOpen);
@@ -143,6 +168,28 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         setTransactionsOpen(false);
         setAccountsOpen(false);
         setPayablesOpen(false);
+        setProjectsOpen(false);
+        setClientsOpen(false);
+        break;
+      case 'projects':
+        setProjectsOpen(!projectsOpen);
+        setLoansOpen(false);
+        setExpensesOpen(false);
+        setTransactionsOpen(false);
+        setAccountsOpen(false);
+        setPayablesOpen(false);
+        setEmployeesOpen(false);
+        setClientsOpen(false);
+        break;
+      case 'clients':
+        setClientsOpen(!clientsOpen);
+        setProjectsOpen(false);
+        setLoansOpen(false);
+        setExpensesOpen(false);
+        setTransactionsOpen(false);
+        setAccountsOpen(false);
+        setPayablesOpen(false);
+        setEmployeesOpen(false);
         break;
       default:
         break;
@@ -151,7 +198,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   return (
     <aside
-      className={`fixed md:static z-30 top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 shadow-lg p-4 border-r border-gray-800
+      className={`fixed md:static z-50 top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 shadow-lg p-4 border-r border-gray-800
         transition-transform duration-300 ease-in-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
     >
@@ -380,6 +427,72 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                       {sub.label}
                     </NavLink>
                   ))}
+              </div>
+            </div>
+            {/* Projects Dropdown */}
+            <div>
+              <button
+                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
+                  ${projectsOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
+                onClick={() => handleDropdown('projects')}
+              >
+                <FiBriefcase />
+                <span>Projects</span>
+                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${projectsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <div
+                className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
+                  ${projectsOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
+                style={{ transitionProperty: 'max-height, opacity, padding' }}
+              >
+                {projectsMenu.map(link => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={() =>
+                      location.pathname === link.to
+                        ? 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out bg-blue-600 text-white'
+                        : 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out text-gray-200 hover:bg-blue-800 hover:text-white'
+                    }
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    {link.icon}
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+            {/* Clients Dropdown */}
+            <div>
+              <button
+                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
+                  ${clientsOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
+                onClick={() => handleDropdown('clients')}
+              >
+                <FiUsers />
+                <span>Clients</span>
+                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${clientsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <div
+                className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
+                  ${clientsOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
+                style={{ transitionProperty: 'max-height, opacity, padding' }}
+              >
+                {clientsMenu.map(link => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={() =>
+                      location.pathname === link.to
+                        ? 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out bg-blue-600 text-white'
+                        : 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out text-gray-200 hover:bg-blue-800 hover:text-white'
+                    }
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    {link.icon}
+                    {link.label}
+                  </NavLink>
+                ))}
               </div>
             </div>
             {/* Profile Link */}

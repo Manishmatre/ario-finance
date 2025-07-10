@@ -59,6 +59,12 @@ import AdvanceToEmployee from './pages/finance/AdvanceToEmployee';
 import PayEmployeeSalary from './pages/finance/PayEmployeeSalary';
 import EmployeeTransactions from './pages/finance/EmployeeTransactions';
 import AddEmployeeTransaction from './pages/finance/AddEmployeeTransaction';
+import Projects from './pages/finance/Projects';
+import ProjectDetail from './pages/finance/ProjectDetail';
+import AddProject from './pages/finance/AddProject';
+import Clients from './pages/finance/Clients';
+import AddClient from './pages/finance/AddClient';
+import ClientDetails from './pages/finance/ClientDetails';
 
 export default function App() {
   return (
@@ -136,11 +142,24 @@ export default function App() {
               {/* Employee Management Routes */}
               <Route path="/finance/employees" element={<EmployeeList />} />
               <Route path="/finance/employees/add" element={<AddEmployee />} />
+              <Route path="/finance/employees/edit/:id" element={<AddEmployee />} />
               <Route path="/finance/employees/:id" element={<EmployeeDetails />} />
               <Route path="/finance/employees/:id/advance" element={<AdvanceToEmployee />} />
               <Route path="/finance/employees/:id/salary" element={<PayEmployeeSalary />} />
               <Route path="/finance/employee-transactions" element={<EmployeeTransactions />} />
               <Route path="/finance/employee-transactions/add" element={<AddEmployeeTransaction />} />
+              
+              {/* Project Management Routes */}
+              <Route path="/finance/projects" element={<Projects />} />
+              <Route path="/finance/projects/add" element={<AddProject />} />
+              <Route path="/finance/projects/:id" element={<ProjectDetail />} />
+              
+              {/* Client Management Routes */}
+              <Route path="/finance/clients" element={<Clients />} />
+              <Route path="/finance/clients/add" element={<AddClient />} />
+              <Route path="/finance/clients/edit/:id" element={<AddClient />} />
+              <Route path="/finance/clients/:id" element={<ClientDetails />} />
+
               <Route path="*" element={<Navigate to="/finance" />} />
             </Route>
           </Route>

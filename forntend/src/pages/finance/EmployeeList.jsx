@@ -75,7 +75,7 @@ export default function EmployeeList() {
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
         <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/employees/${row.original._id}`)}>View</Button>
-        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/employees/${row.original._id}/edit`)}>Edit</Button>
+        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/employees/edit/${row.original._id}`)}>Edit</Button>
         <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id)}>Delete</Button>
       </div>
     ) },

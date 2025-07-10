@@ -72,7 +72,7 @@ export default function EmployeeTransactions() {
   // Export helpers
   const downloadCSV = (rows) => {
     if (!rows || !rows.length) return;
-    const headers = ['Employee', 'Type', 'Amount', 'Date', 'Status', 'Notes'];
+    const headers = ['Employee', 'Type', 'Amount', 'Date', 'Status', 'Notes', 'Payment Mode'];
     const csvRows = [headers.join(',')];
     rows.forEach(row => {
       csvRows.push([
@@ -81,7 +81,8 @@ export default function EmployeeTransactions() {
         row.amount || '',
         row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
         row.status || '',
-        row.notes || ''
+        row.notes || '',
+        row.paymentMode || ''
       ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
     });
     const csvContent = csvRows.join('\n');
@@ -92,7 +93,7 @@ export default function EmployeeTransactions() {
   const downloadExcel = (rows) => {
     if (!rows || !rows.length) return;
     const wsData = [
-      ['Employee', 'Type', 'Amount', 'Date', 'Status', 'Notes']
+      ['Employee', 'Type', 'Amount', 'Date', 'Status', 'Notes', 'Payment Mode']
     ];
     rows.forEach(row => {
       wsData.push([
@@ -101,7 +102,8 @@ export default function EmployeeTransactions() {
         row.amount || '',
         row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
         row.status || '',
-        row.notes || ''
+        row.notes || '',
+        row.paymentMode || ''
       ]);
     });
     const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -117,14 +119,15 @@ export default function EmployeeTransactions() {
     doc.setFontSize(14);
     doc.text('Employee Transactions', 10, 10);
     autoTable(doc, {
-      head: [['Employee', 'Type', 'Amount', 'Date', 'Status', 'Notes']],
+      head: [['Employee', 'Type', 'Amount', 'Date', 'Status', 'Notes', 'Payment Mode']],
       body: rows.map(row => [
         row.employeeName || '',
         row.type || '',
         row.amount || '',
         row.date ? new Date(row.date).toLocaleDateString('en-IN') : '',
         row.status || '',
-        row.notes || ''
+        row.notes || '',
+        row.paymentMode || ''
       ]),
       startY: 18,
       styles: { fontSize: 9 },
@@ -140,7 +143,7 @@ export default function EmployeeTransactions() {
       <h2>Employee Transactions</h2>
       <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;">
         <thead><tr>
-          <th>Employee</th><th>Type</th><th>Amount</th><th>Date</th><th>Status</th><th>Notes</th>
+          <th>Employee</th><th>Type</th><th>Amount</th><th>Date</th><th>Status</th><th>Notes</th><th>Payment Mode</th>
         </tr></thead>
         <tbody>
           ${rows.map(row => `
@@ -151,6 +154,7 @@ export default function EmployeeTransactions() {
               <td>${row.date ? new Date(row.date).toLocaleDateString('en-IN') : ''}</td>
               <td>${row.status || ''}</td>
               <td>${row.notes || ''}</td>
+              <td>${row.paymentMode || ''}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -170,6 +174,7 @@ export default function EmployeeTransactions() {
     { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
     { Header: 'Status', accessor: 'status', Cell: ({ value }) => <span className={`px-2 py-1 rounded text-xs ${value==='paid'?'bg-green-100 text-green-800':value==='pending'?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800'}`}>{value}</span> },
     { Header: 'Notes', accessor: 'notes' },
+    { Header: 'Payment Mode', accessor: 'paymentMode' },
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
         <Button size="sm" variant="secondary">View</Button>

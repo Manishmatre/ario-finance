@@ -17,6 +17,8 @@ const grnRouter = require('./routes/grn');
 const purchaseOrderRouter = require('./routes/purchaseOrder');
 const productRouter = require('./routes/product');
 const loanRouter = require('./routes/loan');
+const projectRouter = require('./routes/projectRoutes');
+const clientRouter = require('./routes/clientRoutes');
 
 // Ensure required environment variables are set
 if (!process.env.JWT_SECRET) {
@@ -73,7 +75,9 @@ app.use('/api/finance/products', productRouter);
 app.use('/api/finance/purchase-orders', purchaseOrderRouter);
 app.use('/api/finance/grns', grnRouter);
 app.use('/api/finance/loans', loanRouter);
+app.use('/api/finance/projects', projectRouter);
 app.use('/api/finance/employees', require('./routes/employees'));
+app.use('/api/finance/clients', clientRouter);
 app.use('/api/auth', require('./routes/auth'));
 
 io.on('connection', (socket) => {

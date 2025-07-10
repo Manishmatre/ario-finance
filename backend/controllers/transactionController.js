@@ -1,6 +1,5 @@
 const TransactionLine = require('../models/TransactionLine');
 const BankAccount = require('../models/BankAccount');
-const AuditLog = require('../models/AuditLog'); // Assuming an AuditLog model exists or will be created
 const mongoose = require('mongoose');
 const { io } = require('../server');
 
@@ -62,18 +61,18 @@ exports.createTransaction = async (req, res) => {
     await creditAcc.save({ session });
 
     // Audit log
-    await AuditLog.create([{
-      tenantId: req.tenantId,
-      userId: req.user?.id,
-      action: 'CREATE_TRANSACTION',
-      details: {
-        transactionId: txn._id,
-        debitAccount: debitAccount,
-        creditAccount: creditAccount,
-        amount,
-        narration
-      }
-    }], { session });
+    // await AuditLog.create([{
+    //   tenantId: req.tenantId,
+    //   userId: req.user?.id,
+    //   action: 'CREATE_TRANSACTION',
+    //   details: {
+    //     transactionId: txn._id,
+    //     debitAccount: debitAccount,
+    //     creditAccount: creditAccount,
+    //     amount,
+    //     narration
+    //   }
+    // }], { session });
 
     await session.commitTransaction();
     session.endSession();
@@ -132,17 +131,17 @@ exports.approveTransaction = async (req, res) => {
     await txn.save({ session });
 
     // Audit log
-    await AuditLog.create([{
-      tenantId: req.tenantId,
-      userId: req.user?.id,
-      action: 'APPROVE_TRANSACTION',
-      details: {
-        transactionId: txn._id,
-        debitAccount: txn.debitAccount,
-        creditAccount: txn.creditAccount,
-        amount: txn.amount
-      }
-    }], { session });
+    // await AuditLog.create([{
+    //   tenantId: req.tenantId,
+    //   userId: req.user?.id,
+    //   action: 'APPROVE_TRANSACTION',
+    //   details: {
+    //     transactionId: txn._id,
+    //     debitAccount: txn.debitAccount,
+    //     creditAccount: txn.creditAccount,
+    //     amount: txn.amount
+    //   }
+    // }], { session });
 
     await session.commitTransaction();
     session.endSession();

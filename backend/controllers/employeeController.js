@@ -101,6 +101,7 @@ exports.listEmployeeTransactions = async (req, res) => {
           date: adv.date,
           status: adv.status || (adv.cleared ? 'paid' : 'pending'),
           notes: adv.reason || '',
+          paymentMode: adv.paymentMode || '',
         });
       });
       // Salaries
@@ -113,6 +114,7 @@ exports.listEmployeeTransactions = async (req, res) => {
           date: sal.paidDate || null,
           status: sal.status,
           notes: sal.notes || '',
+          paymentMode: sal.paymentMode || '',
         });
       });
     });

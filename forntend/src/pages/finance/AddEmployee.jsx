@@ -38,6 +38,21 @@ const DESIGNATION_OPTIONS = [
   { value: 'Intern', label: 'Intern' },
 ];
 
+const BANK_OPTIONS = [
+  { value: '', label: 'Select Bank' },
+  { value: 'SBI', label: 'State Bank of India' },
+  { value: 'HDFC', label: 'HDFC Bank' },
+  { value: 'ICICI', label: 'ICICI Bank' },
+  { value: 'Axis', label: 'Axis Bank' },
+  { value: 'Kotak', label: 'Kotak Mahindra Bank' },
+  { value: 'Yes Bank', label: 'Yes Bank' },
+  { value: 'PNB', label: 'Punjab National Bank' },
+  { value: 'Canara', label: 'Canara Bank' },
+  { value: 'Bank of Baroda', label: 'Bank of Baroda' },
+  { value: 'Union Bank', label: 'Union Bank of India' },
+  { value: 'Other', label: 'Other (Specify)' },
+];
+
 export default function AddEmployee() {
   const { id: employeeId } = useParams();
   const isEdit = !!employeeId;
@@ -51,6 +66,12 @@ export default function AddEmployee() {
       salary: '',
       joinDate: '',
       status: 'active',
+      bankAccountHolder: '',
+      bankName: '',
+      bankAccountNo: '',
+      ifsc: '',
+      branch: '',
+      bankNotes: '',
     }
   });
   const [success, setSuccess] = useState(false);
@@ -72,6 +93,12 @@ export default function AddEmployee() {
           setValue('salary', e.salary || '');
           setValue('joinDate', e.joinDate ? e.joinDate.slice(0, 10) : '');
           setValue('status', e.status || 'active');
+          setValue('bankAccountHolder', e.bankAccountHolder || '');
+          setValue('bankName', e.bankName || '');
+          setValue('bankAccountNo', e.bankAccountNo || '');
+          setValue('ifsc', e.ifsc || '');
+          setValue('branch', e.branch || '');
+          setValue('bankNotes', e.bankNotes || '');
         })
         .catch(() => setError('Failed to fetch employee'))
         .finally(() => setLoading(false));
@@ -100,7 +127,7 @@ export default function AddEmployee() {
   };
 
   return (
-    <div className="space-y-4 px-2 sm:px-8 max-w-4xl mx-auto">
+    <div className="space-y-4 px-2 sm:px-8">
       <PageHeading
         title={isEdit ? 'Edit Employee' : 'Add Employee'}
         breadcrumbs={[
@@ -113,7 +140,7 @@ export default function AddEmployee() {
         <div className="p-4 border-b border-gray-100">
           <h3 className="text-lg font-medium text-gray-800">Employee Details</h3>
         </div>
-        <div className="p-8">
+        <div className="p-6">
           {success && (
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
@@ -128,59 +155,100 @@ export default function AddEmployee() {
               <span>{error}</span>
             </div>
           )}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-            {/* Personal Information */}
-            <div>
-              <h4 className="text-md font-semibold mb-4">Personal Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                <Input {...register('name', { required: true })} placeholder="Enter employee name" />
+                {errors.name && <span className="text-red-500 text-xs">Name is required</span>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <Input type="email" {...register('email', { required: true })} placeholder="Enter email" />
+                {errors.email && <span className="text-red-500 text-xs">Email is required</span>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                <Input {...register('phone', { required: true })} placeholder="Enter phone number" />
+                {errors.phone && <span className="text-red-500 text-xs">Phone is required</span>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                <CreatableSelect
+                  options={DEPARTMENT_OPTIONS}
+                  value={watch('department') || ''}
+                  onChange={e => setValue('department', e.target.value)}
+                  placeholder="Select or type department"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Designation</label>
+                <CreatableSelect
+                  options={DESIGNATION_OPTIONS}
+                  value={watch('designation') || ''}
+                  onChange={e => setValue('designation', e.target.value)}
+                  placeholder="Select or type designation"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Salary *</label>
+                <Input type="number" min="0" {...register('salary', { required: true })} placeholder="Enter salary" />
+                {errors.salary && <span className="text-red-500 text-xs">Salary is required</span>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Join Date *</label>
+                <Input type="date" {...register('joinDate', { required: true })} />
+                {errors.joinDate && <span className="text-red-500 text-xs">Join date is required</span>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <Select options={STATUS_OPTIONS} {...register('status')} />
+              </div>
+            </div>
+            {/* Bank Account Details Section */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h4 className="text-md font-semibold mb-4">Bank Account Details (for payments)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-                  <Input {...register('name', { required: true })} placeholder="Enter employee name" />
-                  {errors.name && <span className="text-red-500 text-xs">Name is required</span>}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Account Holder</label>
+                  <Input {...register('bankAccountHolder')} placeholder="Enter account holder name" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                  <Input type="email" {...register('email', { required: true })} placeholder="Enter email" />
-                  {errors.email && <span className="text-red-500 text-xs">Email is required</span>}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
+                  <Select
+                    options={BANK_OPTIONS}
+                    {...register('bankName')}
+                    value={watch('bankName') || ''}
+                    onChange={e => setValue('bankName', e.target.value)}
+                    className="w-full"
+                  />
+                  {watch('bankName') === 'Other' && (
+                    <Input className="mt-2" {...register('customBankName')} placeholder="Enter bank name" />
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
-                  <Input {...register('phone', { required: true })} placeholder="Enter phone number" />
-                  {errors.phone && <span className="text-red-500 text-xs">Phone is required</span>}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
+                  <Input {...register('bankAccountNo')} placeholder="Enter account number" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">IFSC Code</label>
+                  <Input {...register('ifsc')} placeholder="Enter IFSC code" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+                  <Input {...register('branch')} placeholder="Enter branch name" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                  <Input {...register('bankNotes')} placeholder="Any notes (optional)" />
                 </div>
               </div>
             </div>
-            {/* Job Details */}
-            <div>
-              <h4 className="text-md font-semibold mb-4">Job Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                  <CreatableSelect options={DEPARTMENT_OPTIONS} value={watch('department')} onChange={e => setValue('department', e.target.value)} placeholder="Select or type department" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Designation</label>
-                  <CreatableSelect options={DESIGNATION_OPTIONS} value={watch('designation')} onChange={e => setValue('designation', e.target.value)} placeholder="Select or type designation" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Salary *</label>
-                  <Input type="number" min="0" {...register('salary', { required: true })} placeholder="Enter salary" />
-                  {errors.salary && <span className="text-red-500 text-xs">Salary is required</span>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Join Date *</label>
-                  <Input type="date" {...register('joinDate', { required: true })} />
-                  {errors.joinDate && <span className="text-red-500 text-xs">Join date is required</span>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <Select options={STATUS_OPTIONS} {...register('status')} />
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3 pt-4">
-              <Button type="submit" className="flex-1" disabled={isSubmitting || loading}>{isSubmitting || loading ? <Loader size="sm" /> : isEdit ? 'Update Employee' : 'Add Employee'}</Button>
-              <Button type="button" variant="secondary" className="flex-1" onClick={() => navigate('/finance/employees')} disabled={isSubmitting || loading}>Cancel</Button>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="secondary" onClick={() => navigate('/finance/employees')} disabled={isSubmitting || loading}>Cancel</Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={isSubmitting || loading}>
+                {isSubmitting || loading ? <Loader size="sm" /> : isEdit ? 'Update Employee' : 'Add Employee'}
+              </Button>
             </div>
           </form>
         </div>

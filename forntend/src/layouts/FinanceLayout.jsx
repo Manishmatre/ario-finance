@@ -14,7 +14,7 @@ export default function FinanceLayout() {
       <Header user={user} tenant={tenant} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="flex flex-1 h-[calc(100vh-64px)]">
         {/* Sidebar (fixed) */}
-        <div className={`fixed top-0 left-0 bottom-0 z-10 transform transition-transform duration-300 ease-in-out ${
+        <div className={`fixed top-0 left-0 bottom-0 z-30 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`} style={{ paddingTop: '64px' }}>
           <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -23,7 +23,7 @@ export default function FinanceLayout() {
         {/* Overlay for mobile sidebar */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-20 bg-black bg-opacity-20 md:hidden"
+            className="fixed inset-0 z-20  bg-opacity-10 md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}

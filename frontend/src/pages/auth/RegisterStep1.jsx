@@ -9,8 +9,8 @@ export default function RegisterStep1({ onNext }) {
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-4 p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
       <div className="flex flex-col items-center mb-4">
-        <img src="/logo.svg" alt="Ario Finance" className="h-10 mb-2" />
-        <h2 className="text-xl font-bold tracking-tight text-blue-700">Ario Finance Registration</h2>
+        <img src="/logo.svg" alt="SSK Finance" className="h-10 mb-2" />
+        <h2 className="text-xl font-bold tracking-tight text-blue-700">SSK Finance Registration</h2>
         <p className="text-gray-500 text-sm mt-1">Step 1: Admin Info</p>
       </div>
       <Input

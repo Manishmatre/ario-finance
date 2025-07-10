@@ -108,8 +108,8 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
           </button>
           <div className="flex items-center">
             <img 
-              src="/assets/arionextech-logo.png" 
-              alt="ArionexTech Logo" 
+              src="/logo.svg" 
+              alt="SSK Finance Logo" 
               className="h-8 w-auto mr-2 hidden md:block" 
               onError={e => { 
                 e.target.style.display='none'; 
@@ -117,7 +117,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
               }} 
             />
             <span className="logo-text hidden md:block font-bold text-xl text-blue-700 mr-3 tracking-tight" style={{display:'none'}}>
-              Arionex<span className="text-gray-900">Tech</span>
+              SSK <span className="text-gray-900">Finance</span>
             </span>
           </div>
         </div>

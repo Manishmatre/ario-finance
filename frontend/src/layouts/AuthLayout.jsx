@@ -8,7 +8,7 @@ export default function AuthLayout({ children, title, subtitle }) {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-blue-600">Ario</span>
+              <span className="text-2xl font-bold text-blue-600">SSK</span>
               <span className="text-2xl font-bold text-gray-800">Finance</span>
             </Link>
             <nav className="hidden md:flex space-x-8">
@@ -36,7 +36,7 @@ export default function AuthLayout({ children, title, subtitle }) {
       <footer className="bg-white py-6 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Ario Finance. All rights reserved.
+            &copy; {new Date().getFullYear()} SSK Finance. All rights reserved.
           </p>
         </div>
       </footer>

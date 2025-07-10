@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
 import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';

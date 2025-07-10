@@ -50,7 +50,7 @@ export default function EmployeeTransactions() {
 
   React.useEffect(() => {
     fetchTransactions(filters);
-    // eslint-disable-next-line
+     
   }, [filters]);
 
   // Filtering logic (search is now handled by backend filter)

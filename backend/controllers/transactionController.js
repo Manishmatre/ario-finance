@@ -1,4 +1,7 @@
 const TransactionLine = require('../models/TransactionLine');
+const BankAccount = require('../models/BankAccount');
+const AuditLog = require('../models/AuditLog'); // Assuming an AuditLog model exists or will be created
+const mongoose = require('mongoose');
 const { io } = require('../server');
 
 // List transactions (with pagination & filters)
@@ -20,21 +23,72 @@ exports.listTransactions = async (req, res) => {
   }
 };
 
-// Create a double-entry transaction (two docs)
 exports.createTransaction = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { date, debitAccount, creditAccount, amount, narration, projectId, costCode } = req.body;
-    const txn1 = await TransactionLine.create({
-      date, debitAccount, creditAccount, amount, narration, projectId, costCode,
-      tenantId: req.tenantId, createdBy: req.user?.id
+
+    if (!debitAccount || !creditAccount || !amount || amount <= 0) {
+      throw new Error('Invalid transaction data');
+    }
+
+    // Create transaction line with bankAccountId for debit and credit accounts
+    const txn = new TransactionLine({
+      date,
+      debitAccount,
+      creditAccount,
+      amount,
+      narration,
+      projectId,
+      costCode,
+      tenantId: req.tenantId,
+      createdBy: req.user?.id,
+      bankAccountId: debitAccount // Set bankAccountId to debitAccount for filtering in cashbook
     });
-    io.emit('transactionCreated', txn1);
-    res.status(201).json(txn1);
+
+    await txn.save({ session });
+
+    // Update debit account balance (subtract amount)
+    const debitAcc = await BankAccount.findOne({ _id: debitAccount, tenantId: req.tenantId }).session(session);
+    if (!debitAcc) throw new Error('Debit bank account not found');
+    debitAcc.currentBalance -= amount;
+    await debitAcc.save({ session });
+
+    // Update credit account balance (add amount)
+    const creditAcc = await BankAccount.findOne({ _id: creditAccount, tenantId: req.tenantId }).session(session);
+    if (!creditAcc) throw new Error('Credit bank account not found');
+    creditAcc.currentBalance += amount;
+    await creditAcc.save({ session });
+
+    // Audit log
+    await AuditLog.create([{
+      tenantId: req.tenantId,
+      userId: req.user?.id,
+      action: 'CREATE_TRANSACTION',
+      details: {
+        transactionId: txn._id,
+        debitAccount: debitAccount,
+        creditAccount: creditAccount,
+        amount,
+        narration
+      }
+    }], { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    io.emit('transactionCreated', txn);
+
+    res.status(201).json(txn);
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(400).json({ error: err.message });
   }
 };
 
+// Update transaction (simplified, no balance update here)
 exports.updateTransaction = async (req, res) => {
   try {
     const txn = await TransactionLine.findOneAndUpdate(
@@ -49,34 +103,73 @@ exports.updateTransaction = async (req, res) => {
   }
 };
 
+// Approve transaction and update balances if not already approved
 exports.approveTransaction = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const txn = await TransactionLine.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.tenantId },
-      { isApproved: true }, { new: true }
-    );
-    if (!txn) return res.status(404).json({ error: 'Not found' });
+    const txn = await TransactionLine.findOne({ _id: req.params.id, tenantId: req.tenantId }).session(session);
+    if (!txn) {
+      throw new Error('Transaction not found');
+    }
+    if (txn.isApproved) {
+      throw new Error('Transaction already approved');
+    }
+
+    // Update balances
+    const debitAcc = await BankAccount.findOne({ _id: txn.debitAccount, tenantId: req.tenantId }).session(session);
+    if (!debitAcc) throw new Error('Debit bank account not found');
+    debitAcc.currentBalance -= txn.amount;
+    await debitAcc.save({ session });
+
+    const creditAcc = await BankAccount.findOne({ _id: txn.creditAccount, tenantId: req.tenantId }).session(session);
+    if (!creditAcc) throw new Error('Credit bank account not found');
+    creditAcc.currentBalance += txn.amount;
+    await creditAcc.save({ session });
+
+    // Mark transaction approved
+    txn.isApproved = true;
+    await txn.save({ session });
+
+    // Audit log
+    await AuditLog.create([{
+      tenantId: req.tenantId,
+      userId: req.user?.id,
+      action: 'APPROVE_TRANSACTION',
+      details: {
+        transactionId: txn._id,
+        debitAccount: txn.debitAccount,
+        creditAccount: txn.creditAccount,
+        amount: txn.amount
+      }
+    }], { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
     io.emit('transactionApproved', txn);
+
     res.json(txn);
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(400).json({ error: err.message });
   }
 };
 
+// List bank account transactions with running balance
 exports.listBankAccountTransactions = async (req, res) => {
   try {
     const { bankAccountId } = req.query;
     if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId is required' });
-    const query = { tenantId: req.tenantId, bankAccountId };
+    const query = { tenantId: req.tenantId, $or: [{ debitAccount: bankAccountId }, { creditAccount: bankAccountId }] };
     const txns = await TransactionLine.find(query).sort({ date: 1 }); // ascending order
-    // Calculate running balance
+
     let balance = 0;
     const txnsWithBalance = txns.map(txn => {
-      // If vendorId is present, it's a payment (debit/outflow)
-      const isDebit = !!txn.vendorId;
-      const isCredit = !txn.vendorId;
+      const isDebit = txn.debitAccount.toString() === bankAccountId;
       const debit = isDebit ? txn.amount : 0;
-      const credit = isCredit ? txn.amount : 0;
+      const credit = !isDebit ? txn.amount : 0;
       balance += credit - debit;
       return {
         ...txn.toObject(),

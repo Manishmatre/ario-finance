@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Select from "../../components/ui/Select";
 import axios from "../../utils/axiosInstance";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { toast } from "react-toastify";
 import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";

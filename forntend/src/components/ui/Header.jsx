@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { useNavigate, Link, useLocation, NavLink } from "react-router-dom";
 import { FiSearch, FiBell, FiUser, FiSettings, FiLogOut, FiChevronDown, FiX } from "react-icons/fi";
 
 export default function Header({ sidebarOpen, setSidebarOpen }) {
-  const { token, logout, user: authUser, company } = useAuth();
+  const { token, logout, user: authUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'New invoice received', time: '2 min ago', read: false },
@@ -24,13 +23,12 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
 
   // Get user and tenant info
   const user = JSON.parse(localStorage.getItem("user")) || { name: authUser?.name || "User", email: authUser?.email || "" };
-  const tenant = JSON.parse(localStorage.getItem("tenant")) || { name: "Ario Finance" };
 
   // Handle clicks outside profile dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setIsProfileOpen(false);
+        // Removed: setIsProfileOpen(false);
       }
       if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
         setIsNotificationsOpen(false);

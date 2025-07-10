@@ -12,7 +12,6 @@ export default function Table({
   pageSize = 10,
   onSort = null,
   defaultSort = null,
-  ...props
 }) {
   const [sortState, setSortState] = React.useState(
     defaultSort || { column: "", direction: null }
@@ -48,14 +47,14 @@ export default function Table({
       <table className="w-full border border-gray-300 bg-white rounded-lg shadow-sm">
         {stickyHeader && (
           <colgroup>
-            {columns.map((col, index) => (
+            {columns.map((col) => (
               <col key={col.accessor || col.Header} />
             ))}
           </colgroup>
         )}
         <thead className={stickyHeader ? 'sticky top-0 z-10 bg-white' : ''}>
           <tr className="border-b border-gray-300 bg-gray-50">
-            {columns.map((col, index) => (
+            {columns.map((col) => (
               <th
                 key={col.accessor || col.Header}
                 className={`px-4 py-3 border-b text-left font-semibold text-gray-700 cursor-pointer ${
@@ -116,7 +115,7 @@ export default function Table({
                 }`}
                 onClick={() => onRowClick?.(row)}
               >
-                {columns.map((col, colIndex) => (
+                {columns.map((col) => (
                   <td
                     key={(row.id || row._id || i) + '-' + (col.accessor || col.Header)}
                     className={`px-4 py-3 border-b ${

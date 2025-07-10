@@ -2,7 +2,7 @@ import React from "react";
 import PageHeading from "../../components/ui/PageHeading";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 
 export default function Profile() {
   const { user } = useAuth();

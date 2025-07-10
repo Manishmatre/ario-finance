@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { FiHome, FiBook, FiCreditCard, FiUsers, FiFileText, FiTrendingUp, FiChevronDown, FiSettings, FiUser, FiLayers, FiList, FiDollarSign, FiBriefcase, FiLogOut, FiPlusCircle, FiCheckCircle, FiShoppingCart, FiDatabase, FiPieChart, FiDollarSign as FiDollarSignAlt, FiClipboard, FiTag } from "react-icons/fi";
 // import navLinks from '../../routes/financeNavLinks';
 
@@ -76,8 +76,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const isTransactionsActive = transactionsMenu.some(link => location.pathname.startsWith(link.to));
   const isAccountsActive = accountsMenu.some(link => location.pathname.startsWith(link.to));
   const isLoansActive = loansMenu.some(link => location.pathname.startsWith(link.to)) || location.pathname.startsWith('/finance/lenders');
-  const isVendorActive = isPayablesActive;
-  const isPurchaseActive = isPayablesActive;
   const isEmployeesActive = employeesMenu.some(link => location.pathname.startsWith(link.to));
 
   // Dropdown open state: always open if active, else controlled by click

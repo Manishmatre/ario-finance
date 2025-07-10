@@ -1,11 +1,12 @@
   import React, { useEffect, useState } from 'react';
-import Card from '../../components/ui/Card';
-import { useAuth } from '../../contexts/AuthContext';
+import StatCard from '../../components/ui/StatCard';
+import { useAuth } from '../../contexts/useAuth';
 import axios from '../../utils/axios';
 // Removed: import { io } from 'socket.io-client';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ArrowUpIcon, ArrowDownIcon, CurrencyRupeeIcon, BanknotesIcon, CreditCardIcon, ScaleIcon } from '@heroicons/react/24/outline';
 import PageHeading from "../../components/ui/PageHeading";
+import Card from "../../components/ui/Card";
 
 // Removed: const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:4000');
 

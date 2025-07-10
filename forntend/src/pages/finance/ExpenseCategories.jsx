@@ -9,7 +9,7 @@ import Input from '../../components/ui/Input';
 import PageHeading from '../../components/ui/PageHeading';
 import { Modal } from '../../components/ui/Modal';
 import EmptyState from '../../components/ui/EmptyState';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import Table from '../../components/ui/Table';
 import Loader from '../../components/ui/Loader';
 

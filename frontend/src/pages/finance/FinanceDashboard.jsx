@@ -8,7 +8,7 @@ import { ArrowUpIcon, ArrowDownIcon, CurrencyRupeeIcon, BanknotesIcon, CreditCar
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
 
-// Removed: const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:4000');
+// Removed: const socket = io(import.meta.env.VITE_API_URL || 'https://ariofinance-backend.onrender.com');
 
 export default function FinanceDashboard() {
   const [kpis, setKpis] = useState({

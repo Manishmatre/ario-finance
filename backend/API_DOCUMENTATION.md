@@ -5,7 +5,7 @@ The Bank Account API provides endpoints for managing bank accounts in the Ario F
 
 ## Base URL
 ```
-http://localhost:4000/api/finance/bank-accounts
+https://ariofinance-backend.onrender.com/api/finance/bank-accounts
 ```
 
 ## Authentication

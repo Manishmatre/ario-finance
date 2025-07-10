@@ -25,7 +25,7 @@ async function testBankAccountCreation() {
 
     console.log('Sending data:', JSON.stringify(testData, null, 2));
 
-    const response = await axios.post('http://localhost:4000/api/finance/bank-accounts', testData, {
+    const response = await axios.post('https://ariofinance-backend.onrender.com/api/finance/bank-accounts', testData, {
       headers: {
         'Content-Type': 'application/json'
       }

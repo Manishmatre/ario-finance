@@ -35,15 +35,18 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app/'],
+    origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app'],
     methods: ['GET', 'POST'],
     credentials: true
   }
 });
+// Set io instance globally using socket.js
+const { setIO } = require('./socket');
+setIO(io);
 
 // Enable CORS with specific options
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app/'],
+  origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -94,5 +97,3 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
   console.log('MongoDB connected');
   server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
-
-module.exports = { io };

@@ -4,7 +4,7 @@ const BankAccount = require('../models/BankAccount');
 const TransactionLine = require('../models/TransactionLine');
 const { uploadFile } = require('../utils/storage');
 const mongoose = require('mongoose');
-const { io } = require('../server');
+const { getIO } = require('../socket');
 
 exports.createExpense = async (req, res) => {
   try {
@@ -65,7 +65,8 @@ exports.createExpense = async (req, res) => {
       }
     }
     
-    io.emit('expenseCreated', expense);
+    const io = getIO();
+io.emit('expenseCreated', expense);
 
     res.status(201).json(expense);
   } catch (err) {
@@ -181,7 +182,8 @@ exports.updateExpense = async (req, res) => {
       return res.status(404).json({ error: 'Expense not found' });
     }
 
-    io.emit('expenseUpdated', expense);
+    const io = getIO();
+io.emit('expenseUpdated', expense);
     
     res.json(expense);
   } catch (err) {
@@ -216,7 +218,8 @@ exports.deleteExpense = async (req, res) => {
       }
     }
 
-    io.emit('expenseDeleted', { id: req.params.id });
+    const io = getIO();
+io.emit('expenseDeleted', { id: req.params.id });
 
     res.json({ 
       message: 'Expense deleted successfully',

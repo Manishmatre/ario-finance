@@ -1,5 +1,5 @@
 const Loan = require('../models/loan');
-const User = require('../models/user');
+const User = require('../models/User');
 const nodemailer = require('nodemailer');
 const schedule = require('node-schedule');
 

@@ -1,7 +1,7 @@
 const TransactionLine = require('../models/TransactionLine');
 const BankAccount = require('../models/BankAccount');
 const mongoose = require('mongoose');
-const { io } = require('../server');
+const { getIO } = require('../socket');
 
 // List transactions (with pagination & filters)
 exports.listTransactions = async (req, res) => {
@@ -77,7 +77,8 @@ exports.createTransaction = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    io.emit('transactionCreated', txn);
+    const io = getIO();
+io.emit('transactionCreated', txn);
 
     res.status(201).json(txn);
   } catch (err) {
@@ -95,7 +96,8 @@ exports.updateTransaction = async (req, res) => {
       req.body, { new: true }
     );
     if (!txn) return res.status(404).json({ error: 'Not found' });
-    io.emit('transactionUpdated', txn);
+    const io = getIO();
+io.emit('transactionUpdated', txn);
     res.json(txn);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -146,7 +148,8 @@ exports.approveTransaction = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    io.emit('transactionApproved', txn);
+    const io = getIO();
+io.emit('transactionApproved', txn);
 
     res.json(txn);
   } catch (err) {

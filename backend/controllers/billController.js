@@ -3,7 +3,7 @@ const { uploadFile } = require('../utils/storage');
 const TransactionLine = require('../models/TransactionLine');
 const BankAccount = require('../models/BankAccount');
 const Vendor = require('../models/Vendor');
-const { io } = require('../server');
+const { getIO } = require('../socket');
 
 exports.uploadBill = async (req, res) => {
   try {
@@ -41,7 +41,8 @@ exports.uploadBill = async (req, res) => {
       fileUrl, tenantId: req.tenantId, createdBy: req.user?.id
     });
     const populatedBill = await PurchaseBill.findById(bill._id).populate('vendorId', 'name');
-    io.emit('billCreated', populatedBill);
+    const io = getIO();
+io.emit('billCreated', populatedBill);
     res.status(201).json(populatedBill);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -167,7 +168,8 @@ exports.updateBill = async (req, res) => {
       { new: true }
     ).populate('vendorId', 'name');
     if (!bill) return res.status(404).json({ error: 'Not found' });
-    io.emit('billUpdated', bill);
+    const io = getIO();
+io.emit('billUpdated', bill);
     res.json(bill);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -179,7 +181,8 @@ exports.deleteBill = async (req, res) => {
     if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
     const bill = await PurchaseBill.findOneAndDelete({ _id: req.params.id, tenantId: req.tenantId });
     if (!bill) return res.status(404).json({ error: 'Not found' });
-    io.emit('billDeleted', { id: req.params.id });
+    const io = getIO();
+io.emit('billDeleted', { id: req.params.id });
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });

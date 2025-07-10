@@ -196,7 +196,7 @@ export default function EmployeeTransactions() {
         ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {getTransactionsSummary(transactions).map((item, idx) => (
           <Card key={item.title} className="flex items-center gap-4 p-4">
             <div>{item.icon}</div>

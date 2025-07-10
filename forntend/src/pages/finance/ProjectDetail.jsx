@@ -109,7 +109,7 @@ export default function ProjectDetail() {
         ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
           <Card key={idx} title={card.title} value={card.title.includes('Paid') || card.title === 'Balance' || card.title === 'Budget' ? `₹${card.value?.toLocaleString()}` : card.value} icon={card.icon} />
         ))}

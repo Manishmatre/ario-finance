@@ -99,7 +99,7 @@ export default function Projects() {
         ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {getProjectsSummary(projects).map((item) => (
           <Card key={item.title} className="flex items-center gap-4 p-4">
             <div>{item.icon}</div>

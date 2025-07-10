@@ -182,7 +182,7 @@ export default function ExpenseCategories() {
         ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {summary.map((item, idx) => (
           <Card key={idx} title={item.title} value={item.value} icon={<span className={`inline-block w-3 h-3 rounded-full bg-${item.color}-500`} />} />
         ))}

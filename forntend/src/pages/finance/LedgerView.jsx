@@ -183,7 +183,7 @@ export default function LedgerView() {
 
       {/* Summary Cards */}
       {account && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {accountSummary.map((summary, index) => (
             <Card
               key={index}

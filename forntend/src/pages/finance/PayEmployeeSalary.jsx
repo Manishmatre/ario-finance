@@ -41,7 +41,7 @@ export default function PayEmployeeSalary() {
         ]}
       />
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Month *</label>
             <Input type="number" min="1" max="12" {...register('month', { required: true })} />

@@ -87,7 +87,7 @@ export default function ClientDetails() {
         ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
           <Card key={idx} title={card.title} value={card.value} icon={card.icon} />
         ))}

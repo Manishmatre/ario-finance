@@ -94,7 +94,7 @@ export default function EmployeeList() {
         ]}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {getEmployeesSummary(employees).map((item, idx) => (
           <Card key={item.title} className="flex items-center gap-4 p-4">
             <div>{item.icon}</div>

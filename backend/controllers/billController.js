@@ -41,8 +41,16 @@ exports.uploadBill = async (req, res) => {
       fileUrl, tenantId: req.tenantId, createdBy: req.user?.id
     });
     const populatedBill = await PurchaseBill.findById(bill._id).populate('vendorId', 'name');
+    // Create and emit a real notification
+    const Notification = require('../models/Notification');
     const io = getIO();
-io.emit('billCreated', populatedBill);
+    const notification = await Notification.create({
+      userId: null, // or set to a specific user if needed
+      type: 'billCreated',
+      message: `A new bill (${bill.billNo}) was created for vendor ${populatedBill.vendorId?.name || ''}`,
+      data: { billId: bill._id, vendor: populatedBill.vendorId?.name },
+    });
+    io.emit('notification', notification);
     res.status(201).json(populatedBill);
   } catch (err) {
     res.status(400).json({ error: err.message });

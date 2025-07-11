@@ -11,6 +11,7 @@ import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
 import Loader from '../../components/ui/Loader';
 import EmptyState from '../../components/ui/EmptyState';
+import StatCard from '../../components/ui/StatCard';
 
 export default function Expenses() {
   const [filters, setFilters] = useState({
@@ -145,7 +146,7 @@ export default function Expenses() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
-          <Card key={idx} title={card.title} value={card.value} icon={card.icon} />
+          <StatCard key={idx} title={card.title} value={card.value} icon={card.icon} />
         ))}
       </div>
       {/* Filters and Actions Bar */}

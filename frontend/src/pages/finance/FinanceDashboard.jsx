@@ -124,33 +124,25 @@ export default function FinanceDashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card 
-          title="Total Balance" 
-          value={`₹${(kpis.cashInHand ?? 0).toLocaleString()}`} 
+        <StatCard
+          title="Total Balance"
+          value={`₹${(kpis.cashInHand ?? 0).toLocaleString()}`}
           icon={<CurrencyRupeeIcon className="h-6 w-6 text-blue-500" />}
-          trend="up"
-          trendValue="12.5%"
         />
-        <Card 
-          title="Total Income" 
-          value={`₹${(kpis.totalIncome ?? 0).toLocaleString()}`} 
+        <StatCard
+          title="Total Income"
+          value={`₹${(kpis.totalIncome ?? 0).toLocaleString()}`}
           icon={<ArrowUpIcon className="h-6 w-6 text-green-500" />}
-          trend="up"
-          trendValue="8.2%"
         />
-        <Card 
-          title="Total Expenses" 
-          value={`₹${(kpis.totalExpense ?? 0).toLocaleString()}`} 
+        <StatCard
+          title="Total Expenses"
+          value={`₹${(kpis.totalExpense ?? 0).toLocaleString()}`}
           icon={<ArrowDownIcon className="h-6 w-6 text-red-500" />}
-          trend="down"
-          trendValue="3.4%"
         />
-        <Card 
-          title="Budget vs Actual" 
-          value={`${((kpis.budgetVsActual ?? 0) * 100).toFixed(1)}%`} 
+        <StatCard
+          title="Budget vs Actual"
+          value={`${((kpis.budgetVsActual ?? 0) * 100).toFixed(1)}%`}
           icon={<ScaleIcon className="h-6 w-6 text-purple-500" />}
-          trend={kpis.budgetVsActual >= 0.8 ? "up" : "down"}
-          trendValue={`${(((kpis.budgetVsActual ?? 0) - 0.8) * 100).toFixed(1)}%`}
         />
       </div>
 

@@ -13,6 +13,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import StatCard from '../../components/ui/StatCard';
 
 const PAGE_SIZE = 10;
 
@@ -190,7 +191,7 @@ const VendorLedger = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {vendorSummary.map((summary, index) => (
-          <Card
+          <StatCard
             key={index}
             title={summary.title}
             value={summary.title.includes('Amount') || summary.title.includes('Outstanding')

@@ -5,6 +5,7 @@ import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
+import StatCard from '../../components/ui/StatCard';
 import { FiFileText, FiDollarSign, FiCalendar, FiCheckCircle } from "react-icons/fi";
 import axiosInstance from '../../utils/axiosInstance';
 import { useForm } from 'react-hook-form';
@@ -222,7 +223,7 @@ export default function PurchaseBills() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {getBillsSummary(bills).map((summary, index) => (
-          <Card
+          <StatCard
             key={index}
             title={summary.title}
             value={summary.title.includes('Amount') 

@@ -10,6 +10,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import Table from '../../components/ui/Table';
 import { FiPlus, FiEdit2, FiTrash2, FiDatabase, FiUsers, FiDollarSign, FiMapPin, FiPhone, FiSearch } from 'react-icons/fi';
 import Pagination from '../../components/ui/Pagination';
+import StatCard from '../../components/ui/StatCard';
 
 const lenderSummary = [
   { title: 'Total Lenders', value: 0, icon: <FiUsers className="h-6 w-6 text-blue-500" /> },
@@ -117,15 +118,7 @@ const Lenders = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {lenderSummary.map((item, index) => (
-          <Card key={index} className="p-4">
-            <div className="flex items-center">
-              {item.icon}
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">{item.title}</p>
-                <p className="text-2xl font-semibold text-gray-900">{item.value}</p>
-              </div>
-            </div>
-          </Card>
+          <StatCard key={index} title={item.title} value={item.value} icon={item.icon} />
         ))}
       </div>
       {/* Filters and Actions Bar */}

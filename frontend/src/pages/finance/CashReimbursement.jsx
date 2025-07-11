@@ -9,6 +9,7 @@ import Card from "../../components/ui/Card";
 import { FiDollarSign, FiUsers, FiCalendar, FiCheckCircle } from "react-icons/fi";
 import Select from "../../components/ui/Select";
 import Pagination from "../../components/ui/Pagination";
+import StatCard from '../../components/ui/StatCard';
 
 // Mock data
 const employees = [
@@ -238,7 +239,7 @@ export default function CashReimbursement() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {reimbursementSummary.map((summary, index) => (
-          <Card
+          <StatCard
             key={index}
             title={summary.title}
             value={summary.title.includes('Amount') || summary.title.includes('Reimbursements')

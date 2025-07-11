@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import StatCard from '../../components/ui/StatCard';
 
 const PAGE_SIZE = 10;
 
@@ -166,13 +167,7 @@ const VendorPayments = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
         {getSummary(payments).map((item, idx) => (
-          <Card key={item.title} className="flex items-center gap-4 p-4">
-            <div>{item.icon}</div>
-            <div>
-              <div className="text-sm text-gray-500">{item.title}</div>
-              <div className="text-xl font-bold">{item.value}</div>
-            </div>
-          </Card>
+          <StatCard key={item.title} title={item.title} value={item.value} icon={item.icon} />
         ))}
       </div>
       {/* Vendor Filter and Export */}

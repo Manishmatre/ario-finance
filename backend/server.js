@@ -82,6 +82,7 @@ app.use('/api/finance/projects', projectRouter);
 app.use('/api/finance/employees', require('./routes/employees'));
 app.use('/api/finance/clients', clientRouter);
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

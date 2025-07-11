@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import PageHeading from '../../components/ui/PageHeading';
 import { FiEdit2, FiArrowLeft, FiMail, FiPhone, FiMapPin, FiDatabase, FiDollarSign } from 'react-icons/fi';
 import Loader from '../../components/ui/Loader';
+import StatCard from '../../components/ui/StatCard';
 
 const LenderDetails = () => {
   const { id } = useParams();
@@ -83,7 +84,7 @@ const LenderDetails = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
-          <Card key={idx} title={card.title} value={card.value} icon={card.icon} />
+          <StatCard key={idx} title={card.title} value={card.value} icon={card.icon} />
         ))}
       </div>
       <Card>

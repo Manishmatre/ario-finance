@@ -1,21 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/useAuth";
 import { useNavigate, Link, useLocation, NavLink } from "react-router-dom";
-import { FiSearch, FiBell, FiUser, FiSettings, FiLogOut, FiChevronDown, FiX } from "react-icons/fi";
+import { FiSearch, FiUser, FiSettings, FiLogOut, FiChevronDown, FiX } from "react-icons/fi";
+import NotificationDropdown from "../notifications/NotificationDropdown";
 
 export default function Header({ sidebarOpen, setSidebarOpen }) {
   const { token, logout, user: authUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'New invoice received', time: '2 min ago', read: false },
-    { id: 2, text: 'Payment received from Client X', time: '1 hour ago', read: true },
-    { id: 3, text: 'System update available', time: '1 day ago', read: true },
-  ]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const profileRef = useRef(null);
-  const notificationsRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -41,11 +34,6 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
     };
   }, []);
 
-  // Update unread count when notifications change
-  useEffect(() => {
-    const unread = notifications.filter(n => !n.read).length;
-    setUnreadCount(unread);
-  }, [notifications]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -153,57 +141,8 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
         <div className="flex items-center space-x-3 md:space-x-4 ml-auto">
           {token ? (
             <>
-              {/* Notifications */}
-              <div className="relative" ref={notificationsRef}>
-                <button 
-                  className="p-1 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 relative"
-                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                >
-                  <FiBell className="h-6 w-6" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-                  )}
-                </button>
-                {/* Notifications Dropdown */}
-                {isNotificationsOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                    <div className="py-1">
-                      <div className="flex justify-between items-center px-4 py-2 border-b">
-                        <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
-                        <button 
-                          onClick={clearAllNotifications}
-                          className="text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          Mark all as read
-                        </button>
-                      </div>
-                      <div className="max-h-96 overflow-y-auto">
-                        {notifications.length > 0 ? (
-                          notifications.map((notification) => (
-                            <div 
-                              key={notification.id} 
-                              className={`px-4 py-3 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
-                              onClick={() => markAsRead(notification.id)}
-                            >
-                              <p className="text-sm text-gray-900">{notification.text}</p>
-                              <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="px-4 py-3 text-center text-sm text-gray-500">
-                            No new notifications
-                          </div>
-                        )}
-                      </div>
-                      <div className="border-t px-4 py-2 text-center">
-                        <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-                          View all notifications
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Real-time Notifications */}
+              <NotificationDropdown />
               {/* Profile Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button

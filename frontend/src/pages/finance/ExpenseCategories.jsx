@@ -12,6 +12,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { useAuth } from '../../contexts/useAuth';
 import Table from '../../components/ui/Table';
 import Loader from '../../components/ui/Loader';
+import StatCard from '../../components/ui/StatCard';
 
 export default function ExpenseCategories() {
   const [categories, setCategories] = useState([]);
@@ -184,7 +185,7 @@ export default function ExpenseCategories() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {summary.map((item, idx) => (
-          <Card key={idx} title={item.title} value={item.value} icon={<span className={`inline-block w-3 h-3 rounded-full bg-${item.color}-500`} />} />
+          <StatCard key={idx} title={item.title} value={item.value} icon={<span className={`inline-block w-3 h-3 rounded-full bg-${item.color}-500`} />} />
         ))}
       </div>
       {/* Filters and Actions Bar */}

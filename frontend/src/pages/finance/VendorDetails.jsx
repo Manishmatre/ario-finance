@@ -12,6 +12,7 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FiDownload } from 'react-icons/fi';
+import StatCard from '../../components/ui/StatCard';
 
 const TABS = [
   { key: 'info', label: 'Vendor Info', icon: <FiUser /> },
@@ -206,7 +207,7 @@ export default function VendorDetails() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
-          <Card key={idx} title={card.title} value={card.title.includes('Amount') || card.title === 'Outstanding' ? `₹${card.value?.toLocaleString()}` : card.value} icon={card.icon} />
+          <StatCard key={idx} title={card.title} value={card.title.includes('Amount') || card.title === 'Outstanding' ? `₹${card.value?.toLocaleString()}` : card.value} icon={card.icon} />
         ))}
       </div>
       {/* Tabs */}

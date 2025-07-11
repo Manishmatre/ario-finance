@@ -80,11 +80,18 @@ exports.login = async (req, res) => {
       role: user.role,
       tenantId: user.tenantId
     };
-    
+
+    // Fetch company info
+    let company = null;
+    if (user.tenantId) {
+      company = await Company.findById(user.tenantId).lean();
+    }
+
     res.json({ 
       success: true,
       token,
       user: userData,
+      company,
       message: 'Login successful'
     });
     
@@ -122,10 +129,20 @@ exports.register = async (req, res) => {
   try {
     // Create company
     const newCompany = new Company({
-      ...company,
-      contactPerson: admin.name,
-      contactEmail: admin.email,
-      contactPhone: admin.phone
+      name: company.name || '',
+      companyType: company.companyType || '',
+      pan: company.pan || '',
+      gstNo: company.gstNo || '',
+      contactPerson: admin.name || '',
+      contactEmail: admin.email || '',
+      contactPhone: admin.phone || '',
+      address: {
+        addressLine1: company.address?.addressLine1 || '',
+        addressLine2: company.address?.addressLine2 || '',
+        city: company.address?.city || '',
+        state: company.address?.state || '',
+        pincode: company.address?.pincode || ''
+      }
     });
     
     await newCompany.save({ session });
@@ -163,12 +180,10 @@ exports.register = async (req, res) => {
         email: newUser.email, 
         name: newUser.name, 
         tenantId: newUser.tenantId,
-        role: 'admin'
+        role: 'admin',
+        phone: newUser.phone || ''
       },
-      company: { 
-        id: newCompany._id, 
-        name: newCompany.name 
-      }
+      company: newCompany.toObject()
     });
     
   } catch (err) {
@@ -204,5 +219,32 @@ exports.register = async (req, res) => {
       error: 'Registration failed',
       message: 'An error occurred during registration. Please try again.'
     });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const { currentPassword, newPassword } = req.body;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new password are required.' });
+    }
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Current password is incorrect.' });
+    }
+    user.password = newPassword;
+    await user.save();
+    res.json({ success: true, message: 'Password updated successfully.' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Failed to update password.' });
   }
 };

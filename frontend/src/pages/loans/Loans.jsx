@@ -10,6 +10,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Responsi
 import Loader from '../../components/ui/Loader';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
+import StatCard from '../../components/ui/StatCard';
 
 const Loans = () => {
   const navigate = useNavigate();
@@ -195,33 +196,25 @@ const Loans = () => {
 
       {/* Loan Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <Card 
+        <StatCard 
           title="Total Loans" 
           value={loanStats.totalLoans}
           icon={<FiPieChart className="h-6 w-6 text-blue-500" />}
-          trend="up"
-          trendValue="12.5%"
         />
-        <Card 
+        <StatCard 
           title="Total Amount" 
           value={`₹${loanStats.totalAmount.toLocaleString()}`}
           icon={<FiTrendingUp className="h-6 w-6 text-green-500" />}
-          trend="up"
-          trendValue="8.2%"
         />
-        <Card 
+        <StatCard 
           title="Active Loans" 
           value={loanStats.activeLoans}
           icon={<FiTrendingDown className="h-6 w-6 text-red-500" />}
-          trend="down"
-          trendValue="3.4%"
         />
-        <Card 
+        <StatCard 
           title="Overdue Loans" 
           value={loanStats.overdueLoans}
           icon={<FiFileText className="h-6 w-6 text-yellow-500" />}
-          trend="up"
-          trendValue="1.2%"
         />
       </div>
 

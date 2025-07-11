@@ -219,3 +219,36 @@ exports.getProjectPaymentById = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch payment details' });
   }
 };
+
+// Update a project
+exports.updateProject = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    // Update fields
+    Object.assign(project, req.body);
+    await project.save();
+    res.json(project);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Delete a project
+exports.deleteProject = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    // Optionally: delete related payments and transactions
+    await ProjectPayment.deleteMany({ projectId: project._id });
+    // You may also want to delete related TransactionLines if needed
+    await project.deleteOne();
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};

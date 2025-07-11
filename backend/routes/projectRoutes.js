@@ -14,7 +14,9 @@ router.route('/')
   .post(projectController.createProject);
 
 router.route('/:id')
-  .get(projectController.getProject);
+  .get(projectController.getProject)
+  .put(projectController.updateProject)
+  .delete(projectController.deleteProject);
 
 // Payment routes
 router.route('/payments').get(projectController.getPaymentsByClient);

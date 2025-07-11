@@ -9,6 +9,8 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const profileRef = useRef(null);
+  const notificationsRef = useRef(null); // FIX: define notificationsRef
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false); // FIX: define isNotificationsOpen
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -142,7 +144,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
           {token ? (
             <>
               {/* Real-time Notifications */}
-              <NotificationDropdown />
+              <NotificationDropdown notificationsRef={notificationsRef} isOpen={isNotificationsOpen} setIsOpen={setIsNotificationsOpen} />
               {/* Profile Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button

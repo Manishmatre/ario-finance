@@ -23,6 +23,7 @@ router.route('/:id/payments')
   .post(projectController.recordPayment);
 
 router.route('/payments/:paymentId')
+  .get(projectController.getProjectPaymentById)
   .delete(projectController.deletePayment);
 
 module.exports = router;

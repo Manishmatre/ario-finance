@@ -65,6 +65,8 @@ import AddProject from './pages/finance/AddProject';
 import Clients from './pages/finance/Clients';
 import AddClient from './pages/finance/AddClient';
 import ClientDetails from './pages/finance/ClientDetails';
+import RecordProjectPayment from './pages/finance/RecordProjectPayment';
+import ProjectPaymentDetails from './pages/finance/ProjectPaymentDetails';
 
 export default function App() {
   return (
@@ -152,7 +154,10 @@ export default function App() {
               {/* Project Management Routes */}
               <Route path="/finance/projects" element={<Projects />} />
               <Route path="/finance/projects/add" element={<AddProject />} />
+              <Route path="/finance/projects/edit/:id" element={<AddProject />} />
               <Route path="/finance/projects/:id" element={<ProjectDetail />} />
+              <Route path="/finance/projects/:id/record-payment" element={<RecordProjectPayment />} />
+              <Route path="/finance/projects/payments/:id" element={<ProjectPaymentDetails />} />
               
               {/* Client Management Routes */}
               <Route path="/finance/clients" element={<Clients />} />

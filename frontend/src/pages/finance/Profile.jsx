@@ -51,7 +51,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="px-2 sm:px-6 md:px-10 py-6 w-full">
+    <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
         title="Profile"
         subtitle="Manage your personal and company information"

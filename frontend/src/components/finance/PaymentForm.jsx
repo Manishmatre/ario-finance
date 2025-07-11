@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { FiCheckCircle } from 'react-icons/fi';
@@ -15,7 +15,7 @@ const PAYMENT_METHODS = [
 
 export default function PaymentForm({ projectId, payment, onSuccess, onCancel }) {
   const isEdit = !!payment;
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, reset, control, formState: { errors } } = useForm({
     defaultValues: {
       amount: '',
       paymentDate: '',
@@ -37,9 +37,10 @@ export default function PaymentForm({ projectId, payment, onSuccess, onCancel })
         const { data } = await axios.get('/api/finance/bank-accounts', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setBankAccounts(data);
-        if (data.length === 1) {
-          setValue('bankAccountId', data[0]._id);
+        // If data.bankAccounts exists, use it; else fallback to array or empty
+        setBankAccounts(Array.isArray(data.bankAccounts) ? data.bankAccounts : (Array.isArray(data) ? data : []));
+        if (Array.isArray(data.bankAccounts) && data.bankAccounts.length === 1) {
+          setValue('bankAccountId', data.bankAccounts[0]._id);
         }
       } catch {}
     };
@@ -63,6 +64,10 @@ export default function PaymentForm({ projectId, payment, onSuccess, onCancel })
     setLoading(true);
     setError(null);
     try {
+      // Remove bankAccountId if empty string
+      if (data.bankAccountId === "") {
+        delete data.bankAccountId;
+      }
       const url = isEdit
         ? `/api/finance/projects/payments/${payment._id}`
         : `/api/finance/projects/${projectId}/payments`;
@@ -84,6 +89,8 @@ export default function PaymentForm({ projectId, payment, onSuccess, onCancel })
       setLoading(false);
     }
   };
+
+  const paymentMethod = useWatch({ control, name: 'paymentMethod' });
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100">
@@ -121,23 +128,47 @@ export default function PaymentForm({ projectId, payment, onSuccess, onCancel })
               <select {...register('paymentMethod', { required: true })} className="border rounded px-3 py-2 w-full">
                 {PAYMENT_METHODS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
+              {errors.paymentMethod && <span className="text-red-500 text-sm">Payment method is required</span>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Reference Number</label>
               <Input {...register('referenceNumber')} placeholder="e.g. Check #, UPI Ref, etc." />
             </div>
           </div>
-          {bankAccounts.length > 0 && (
+          {/* Dynamic fields based on payment method */}
+          {paymentMethod === 'bank_transfer' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account</label>
-              <select {...register('bankAccountId')} className="border rounded px-3 py-2 w-full">
-                <option value="">Select Bank Account</option>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account *</label>
+              <select
+                {...register('bankAccountId', { required: true })}
+                className="border rounded px-3 py-2 w-full"
+                disabled={bankAccounts.length === 0}
+              >
+                <option value="">{bankAccounts.length === 0 ? 'No bank accounts available' : 'Select Bank Account'}</option>
                 {bankAccounts.map((account) => (
                   <option key={account._id} value={account._id}>
                     {account.name} - {account.accountNumber} ({account.bankName})
                   </option>
                 ))}
               </select>
+              {bankAccounts.length === 0 && (
+                <div className="text-red-500 text-sm mt-1">No bank accounts found. Please add a bank account first.</div>
+              )}
+              {errors.bankAccountId && <span className="text-red-500 text-sm">Bank account is required</span>}
+            </div>
+          )}
+          {paymentMethod === 'upi' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">UPI ID *</label>
+              <Input {...register('upiId', { required: true })} placeholder="Enter UPI ID" className="w-full" />
+              {errors.upiId && <span className="text-red-500 text-sm">UPI ID is required</span>}
+            </div>
+          )}
+          {paymentMethod === 'check' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cheque Number *</label>
+              <Input {...register('chequeNo', { required: true })} placeholder="Enter Cheque Number" className="w-full" />
+              {errors.chequeNo && <span className="text-red-500 text-sm">Cheque number is required</span>}
             </div>
           )}
           <div>

@@ -72,7 +72,7 @@ export default function Projects() {
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
         <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/projects/${row.original._id}`)}>View</Button>
-        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/projects/${row.original._id}/edit`)}>Edit</Button>
+        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/projects/edit/${row.original._id}`)}>Edit</Button>
       </div>
     ) }
   ];

@@ -82,6 +82,7 @@ exports.recordPayment = async (req, res) => {
     // 3. Create accounting transaction
     const txn = new TransactionLine({
       date: paymentDate || new Date(),
+      bankAccountId, // FIX: set required bankAccountId field
       debitAccount: bankAccountId, // Bank account receiving money
       creditAccount: 'income:project', // Income account for project payments
       amount,
@@ -193,5 +194,28 @@ exports.deletePayment = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     res.status(400).json({ error: err.message });
+  }
+};
+
+// Get a single project payment by ID
+exports.getProjectPaymentById = async (req, res) => {
+  try {
+    const payment = await ProjectPayment.findById(req.params.paymentId)
+      .populate({ path: 'projectId', populate: { path: 'client' } })
+      .populate('bankAccountId')
+      .lean();
+    if (!payment) return res.status(404).json({ error: 'Payment not found' });
+    // Optionally fetch transaction info
+    let transaction = null;
+    if (payment.transactionId) {
+      transaction = await TransactionLine.findById(payment.transactionId).lean();
+    }
+    res.json({
+      ...payment,
+      project: payment.projectId,
+      transaction
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch payment details' });
   }
 };

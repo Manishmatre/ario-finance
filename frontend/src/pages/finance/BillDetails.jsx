@@ -9,6 +9,7 @@ import Select from '../../components/ui/Select';
 import axiosInstance from '../../utils/axiosInstance';
 import { FiFileText, FiDollarSign, FiCalendar, FiCheckCircle, FiPlus } from 'react-icons/fi';
 import { Modal } from '../../components/ui/Modal';
+import StatCard from '../../components/ui/StatCard';
 
 export default function BillDetails() {
   const { id } = useParams();
@@ -163,10 +164,10 @@ export default function BillDetails() {
         // Removed actions prop to eliminate Add New Bill button
       />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <Card title="Vendor" value={bill.vendorName} icon={<FiFileText className="h-6 w-6 text-blue-500" />} />
-        <Card title="Amount" value={`₹${bill.amount?.toLocaleString()}`} icon={<FiDollarSign className="h-6 w-6 text-green-500" />} />
-        <Card title="Bill Date" value={bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'} icon={<FiCalendar className="h-6 w-6 text-yellow-500" />} />
-        <Card title="Status" value={bill.isPaid ? 'Paid' : 'Pending'} icon={<FiCheckCircle className={`h-6 w-6 ${bill.isPaid ? 'text-green-500' : 'text-yellow-500'}`} />} />
+        <StatCard title="Vendor" value={bill.vendorName} icon={<FiFileText className="h-6 w-6 text-blue-500" />} />
+        <StatCard title="Amount" value={`₹${bill.amount?.toLocaleString()}`} icon={<FiDollarSign className="h-6 w-6 text-green-500" />} valueColor="text-green-600" />
+        <StatCard title="Bill Date" value={bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'} icon={<FiCalendar className="h-6 w-6 text-yellow-500" />} />
+        <StatCard title="Status" value={bill.isPaid ? 'Paid' : 'Pending'} icon={<FiCheckCircle className={`h-6 w-6 ${bill.isPaid ? 'text-green-500' : 'text-yellow-500'}`} />} valueColor={bill.isPaid ? 'text-green-600' : 'text-yellow-600'} />
       </div>
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-medium text-gray-800 mb-4">Bill Information</h3>

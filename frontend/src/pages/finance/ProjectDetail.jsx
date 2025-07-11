@@ -6,11 +6,11 @@ import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import { Modal } from '../../components/ui/Modal';
-import PaymentForm from '../../components/finance/PaymentForm';
 import { useAuth } from '../../contexts/useAuth';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import axios from '../../utils/axios';
 import { FiFileText, FiDollarSign, FiTrendingUp, FiCheckCircle, FiArrowLeft, FiPlus, FiLayers, FiUser, FiDownload } from 'react-icons/fi';
+import StatCard from '../../components/ui/StatCard';
 
 const TABS = [
   { key: 'info', label: 'Project Info', icon: <FiUser /> },
@@ -26,8 +26,6 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('info');
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
   const { token } = useAuth();
 
   const fetchProject = async () => {
@@ -64,20 +62,31 @@ export default function ProjectDetail() {
     }
   };
 
-  const handlePaymentSuccess = () => {
-    setIsPaymentModalOpen(false);
-    fetchProject();
+  const handleDeleteProject = async () => {
+    if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+    try {
+      setLoading(true);
+      await axios.delete(`/api/finance/projects/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setLoading(false);
+      navigate('/finance/projects');
+    } catch (err) {
+      setError(err.message || 'Failed to delete project');
+      setLoading(false);
+    }
   };
 
   // Summary stats
   const totalPayments = payments.length;
-  const totalPaid = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const balance = (project?.budget || 0) - (project?.receivedAmount || 0);
+  const totalPaid = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const budget = typeof project?.budget === 'number' ? project.budget : Number(project?.budget) || 0;
+  const balance = budget - totalPaid;
   const summaryCards = [
     { title: 'Total Payments', value: totalPayments, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
-    { title: 'Total Paid', value: totalPaid, icon: <FiDollarSign className="h-6 w-6 text-green-500" /> },
-    { title: 'Budget', value: project?.budget || 0, icon: <FiTrendingUp className="h-6 w-6 text-purple-500" /> },
-    { title: 'Balance', value: balance, icon: <FiCheckCircle className="h-6 w-6 text-red-500" /> },
+    { title: 'Budget', value: formatCurrency(budget), icon: <FiTrendingUp className="h-6 w-6 text-purple-500" /> },
+    { title: 'Received', value: formatCurrency(totalPaid), icon: <FiDollarSign className="h-6 w-6 text-green-600" /> },
+    { title: 'Balance', value: formatCurrency(balance), icon: <FiCheckCircle className="h-6 w-6 text-red-500" /> },
   ];
 
   // Payments table columns
@@ -88,7 +97,8 @@ export default function ProjectDetail() {
     { Header: 'Reference', accessor: 'referenceNumber', Cell: ({ value }) => value || '-' },
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
-        <Button size="sm" variant="primary" onClick={() => { setSelectedPayment(row.original); setIsPaymentModalOpen(true); }}>Edit</Button>
+        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/projects/payments/${row.original._id}`)}>View</Button>
+        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/projects/${id}/record-payment`)}>Edit</Button>
         <Button size="sm" variant="danger" onClick={() => handleDeletePayment(row.original._id)}>Delete</Button>
       </div>
     ) }
@@ -111,7 +121,7 @@ export default function ProjectDetail() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
-          <Card key={idx} title={card.title} value={card.title.includes('Paid') || card.title === 'Balance' || card.title === 'Budget' ? `₹${card.value?.toLocaleString()}` : card.value} icon={card.icon} />
+          <StatCard key={idx} title={card.title} value={card.value} icon={card.icon} />
         ))}
       </div>
       {/* Tabs */}
@@ -128,18 +138,22 @@ export default function ProjectDetail() {
             {tab === 'payments' && `Payments for ${project.name}`}
           </h3>
           {tab === 'payments' && (
-            <Button size="sm" variant="primary" icon={<FiPlus />} onClick={() => { setSelectedPayment(null); setIsPaymentModalOpen(true); }}>Record Payment</Button>
+            <Button size="sm" variant="primary" icon={<FiPlus />} onClick={() => navigate(`/finance/projects/${id}/record-payment`)}>Record Payment</Button>
           )}
         </div>
         <div className="p-2">
           {tab === 'info' && (
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center gap-2 mb-4 md:col-span-2">
+                <Button size="sm" variant="primary" onClick={() => navigate(`/finance/projects/edit/${project._id || project.id}`)}>Edit Project</Button>
+                <Button size="sm" variant="danger" onClick={handleDeleteProject}>Delete Project</Button>
+              </div>
               <div><strong>Name:</strong> {project.name}</div>
               <div><strong>Client:</strong> {project.client}</div>
               <div><strong>Type:</strong> {project.type}</div>
               <div><strong>Status:</strong> <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' : project.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{project.status.replace('_', ' ')}</span></div>
-              <div><strong>Budget:</strong> {formatCurrency(project.budget)}</div>
-              <div><strong>Received:</strong> {formatCurrency(project.receivedAmount)}</div>
+              <div><strong>Budget:</strong> {formatCurrency(budget)}</div>
+              <div><strong>Received:</strong> {formatCurrency(totalPaid)}</div>
               <div><strong>Balance:</strong> <span className={balance > 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{formatCurrency(balance)}</span></div>
               <div><strong>Period:</strong> {formatDate(project.startDate)} {project.endDate ? ` - ${formatDate(project.endDate)}` : ' - Present'}</div>
               {project.description && <div className="md:col-span-2"><strong>Description:</strong> {project.description}</div>}
@@ -159,15 +173,6 @@ export default function ProjectDetail() {
           )}
         </div>
       </div>
-      {/* Payment Modal */}
-      <Modal open={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)}>
-        <PaymentForm
-          projectId={id}
-          payment={selectedPayment}
-          onSuccess={handlePaymentSuccess}
-          onCancel={() => setIsPaymentModalOpen(false)}
-        />
-      </Modal>
     </div>
   );
 }

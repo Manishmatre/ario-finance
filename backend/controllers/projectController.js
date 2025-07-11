@@ -122,21 +122,31 @@ exports.recordPayment = async (req, res) => {
     await payment.save({ session });
     await txn.save({ session });
 
-    // 5. Recalculate and persist receivedAmount as sum of all payments for this project
+    // 5. If payment is bank transfer and bankAccountId is provided, update bank balance
+    if (paymentMethod === 'bank_transfer' && bankAccountId) {
+      const BankAccount = require('../models/BankAccount');
+      const bankAcc = await BankAccount.findOne({ _id: bankAccountId, tenantId: req.tenantId }).session(session);
+      if (bankAcc) {
+        bankAcc.currentBalance = (bankAcc.currentBalance || 0) + Number(amount);
+        await bankAcc.save({ session });
+      }
+    }
+
+    // 6. Recalculate and persist receivedAmount as sum of all payments for this project
     const payments = await ProjectPayment.find({ projectId: project._id, tenantId: req.tenantId }).session(session);
     const sum = payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
     project.receivedAmount = sum;
     await project.save({ session });
 
-    // 6. Update payment with transaction ID
+    // 7. Update payment with transaction ID
     payment.transactionId = txn._id;
     await payment.save({ session });
     
-    // 7. Commit transaction
+    // 8. Commit transaction
     await session.commitTransaction();
     session.endSession();
 
-    // 8. Emit real-time update
+    // 9. Emit real-time update
     // io.emit('projectPaymentReceived', { projectId, amount });
     
     res.status(201).json(payment);
@@ -201,6 +211,15 @@ exports.deletePayment = async (req, res) => {
     await ProjectPayment.deleteOne({ _id: payment._id }).session(session);
     if (txn) {
       await TransactionLine.deleteOne({ _id: txn._id }).session(session);
+    }
+    // 4. If payment was bank transfer and bankAccountId is present, subtract from bank balance
+    if (payment.paymentMethod === 'bank_transfer' && payment.bankAccountId) {
+      const BankAccount = require('../models/BankAccount');
+      const bankAcc = await BankAccount.findOne({ _id: payment.bankAccountId, tenantId: req.tenantId }).session(session);
+      if (bankAcc) {
+        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - Number(payment.amount);
+        await bankAcc.save({ session });
+      }
     }
     if (project) {
       const payments = await ProjectPayment.find({ projectId: project._id, tenantId: req.tenantId }).session(session);

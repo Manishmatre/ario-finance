@@ -164,21 +164,34 @@ exports.listBankAccountTransactions = async (req, res) => {
   try {
     const { bankAccountId } = req.query;
     if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId is required' });
-    const query = { tenantId: req.tenantId, $or: [{ debitAccount: bankAccountId }, { creditAccount: bankAccountId }] };
-    const txns = await TransactionLine.find(query).sort({ date: 1 }); // ascending order
+    const query = {
+      tenantId: req.tenantId,
+      $or: [
+        { debitAccount: bankAccountId },
+        { creditAccount: bankAccountId },
+        { bankAccountId: bankAccountId }
+      ]
+    };
+    const txns = await require('../models/TransactionLine').find(query)
+      .sort({ date: 1 })
+      .populate('projectId', 'name')
+      .populate('vendorId', 'name')
+      .lean();
 
     let balance = 0;
     const txnsWithBalance = txns.map(txn => {
-      const isDebit = txn.debitAccount.toString() === bankAccountId;
+      const isDebit = txn.debitAccount?.toString() === bankAccountId;
       const debit = isDebit ? txn.amount : 0;
       const credit = !isDebit ? txn.amount : 0;
       balance += credit - debit;
       return {
-        ...txn.toObject(),
+        ...txn,
         type: isDebit ? 'Debit' : 'Credit',
         debit,
         credit,
-        balance
+        balance,
+        projectName: txn.projectId?.name,
+        vendorName: txn.vendorId?.name,
       };
     });
     res.json(txnsWithBalance);

@@ -78,7 +78,7 @@ exports.addAdvance = async (req, res) => {
           debitAccount: bankAcc._id,
           creditAccount: null,
           employeeId: emp._id,
-          amount: req.body.amount,
+          amount: -Math.abs(req.body.amount), // Always negative for outflows
           narration: `Advance to employee: ${emp.name}`,
           tenantId: req.tenantId,
           createdBy: req.user?.id
@@ -88,6 +88,16 @@ exports.addAdvance = async (req, res) => {
         await bankAcc.save();
       }
     }
+    // Emit notification for advance
+    const { getIO } = require('../socket');
+    const io = getIO();
+    io.emit('notification', {
+      type: 'employee',
+      message: `Advance of ₹${req.body.amount} paid to employee: ${emp.name}`,
+      data: { employeeId: emp._id },
+      createdAt: new Date(),
+      read: false
+    });
     res.json(emp);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -112,7 +122,7 @@ exports.addSalary = async (req, res) => {
           debitAccount: bankAcc._id,
           creditAccount: null,
           employeeId: emp._id,
-          amount: req.body.amount,
+          amount: -Math.abs(req.body.amount), // Always negative for outflows
           narration: `Salary payment to employee: ${emp.name}`,
           tenantId: req.tenantId,
           createdBy: req.user?.id
@@ -122,6 +132,16 @@ exports.addSalary = async (req, res) => {
         await bankAcc.save();
       }
     }
+    // Emit notification for salary
+    const { getIO } = require('../socket');
+    const io = getIO();
+    io.emit('notification', {
+      type: 'employee',
+      message: `Salary of ₹${req.body.amount} paid to employee: ${emp.name}`,
+      data: { employeeId: emp._id },
+      createdAt: new Date(),
+      read: false
+    });
     res.json(emp);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -147,7 +167,7 @@ exports.addOtherExpense = async (req, res) => {
           debitAccount: bankAcc._id,
           creditAccount: null,
           employeeId: emp._id,
-          amount: req.body.amount,
+          amount: -Math.abs(req.body.amount), // Always negative for outflows
           narration: `Other employee expense: ${emp.name}`,
           tenantId: req.tenantId,
           createdBy: req.user?.id
@@ -157,6 +177,16 @@ exports.addOtherExpense = async (req, res) => {
         await bankAcc.save();
       }
     }
+    // Emit notification for other expense
+    const { getIO } = require('../socket');
+    const io = getIO();
+    io.emit('notification', {
+      type: 'employee',
+      message: `Other expense of ₹${req.body.amount} paid for employee: ${emp.name}`,
+      data: { employeeId: emp._id },
+      createdAt: new Date(),
+      read: false
+    });
     res.json(emp);
   } catch (err) {
     res.status(400).json({ error: err.message });

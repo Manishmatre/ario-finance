@@ -30,16 +30,12 @@ export default function ClientDetails() {
     axios.get(`/api/finance/clients/${id}`)
       .then(clientRes => {
         setClient(clientRes.data);
-        console.log('Loaded client:', clientRes.data);
-        console.log('Payments API URL:', `/api/finance/payments?clientId=${clientRes.data.name}`);
-        return Promise.all([
-          axios.get(`/api/finance/projects?clientId=${id}`),
-          axios.get(`/api/finance/payments?clientId=${clientRes.data.name}`)
-        ]);
+        // Only fetch projects, not payments (since /api/finance/payments does not exist)
+        return axios.get(`/api/finance/projects?clientId=${id}`);
       })
-      .then(([projectsRes, paymentsRes]) => {
+      .then((projectsRes) => {
         setProjects(projectsRes.data);
-        setPayments(paymentsRes.data);
+        setPayments([]); // No payments for now
         setLoading(false);
       })
       .catch(err => {

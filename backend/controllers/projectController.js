@@ -146,8 +146,16 @@ exports.recordPayment = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    // 9. Emit real-time update
-    // io.emit('projectPaymentReceived', { projectId, amount });
+    // 9. Emit real-time update and notification
+    const { getIO } = require('../socket');
+    const io = getIO();
+    io.emit('notification', {
+      type: 'project',
+      message: `Payment of ₹${amount} received for project: ${project.name}`,
+      data: { projectId: project._id, paymentId: payment._id },
+      createdAt: new Date(),
+      read: false
+    });
     
     res.status(201).json(payment);
     

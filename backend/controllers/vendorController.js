@@ -200,6 +200,16 @@ exports.createVendorPayment = async (req, res) => {
         tenantId: req.tenantId,
         createdBy: req.user?.id
       });
+      // Emit notification for advance
+      const { getIO } = require('../socket');
+      const io = getIO();
+      io.emit('notification', {
+        type: 'vendor',
+        message: `Advance of ₹${amount} paid to vendor`,
+        data: { vendorId },
+        createdAt: new Date(),
+        read: false
+      });
       return res.status(201).json({ message: 'Advance payment recorded', advance: adv });
     } else if (type === 'bill') {
       if (!Array.isArray(bills) || bills.length === 0) {
@@ -239,6 +249,16 @@ exports.createVendorPayment = async (req, res) => {
           remaining -= toPay;
         }
       }
+      // Emit notification for bill payment
+      const { getIO } = require('../socket');
+      const io = getIO();
+      io.emit('notification', {
+        type: 'vendor',
+        message: `Bill payment of ₹${amount} made to vendor`,
+        data: { vendorId, bills },
+        createdAt: new Date(),
+        read: false
+      });
       return res.status(201).json({ message: 'Bill payment(s) recorded', updatedBills });
     } else {
       return res.status(400).json({ error: 'Invalid payment type' });

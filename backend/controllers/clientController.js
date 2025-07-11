@@ -11,10 +11,13 @@ exports.listClients = async (req, res) => {
 
 exports.getClient = async (req, res) => {
   try {
+    console.log('getClient called with:', req.params.id, 'tenantId:', req.tenantId);
     const client = await Client.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    console.log('Client found:', client);
     if (!client) return res.status(404).json({ error: 'Client not found' });
     res.json(client);
   } catch (err) {
+    console.error('getClient error:', err);
     res.status(500).json({ error: err.message });
   }
 };

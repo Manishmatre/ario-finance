@@ -107,7 +107,7 @@ exports.payBill = async (req, res) => {
       debitAccount: bankAccountDoc._id,
       creditAccount: null,
       vendorId: vendor._id,
-      amount: paymentAmount,
+      amount: -Math.abs(paymentAmount), // Always negative for bill payments
       narration: narrationText,
       tenantId: req.tenantId,
       createdBy: req.user?.id

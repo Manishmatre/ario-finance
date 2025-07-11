@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from 'react-dom';
 import { useAuth } from "../../contexts/useAuth";
 import { useNavigate, Link, useLocation, NavLink } from "react-router-dom";
 import { FiSearch, FiUser, FiSettings, FiLogOut, FiChevronDown, FiX } from "react-icons/fi";
 import NotificationDropdown from "../notifications/NotificationDropdown";
+import axiosInstance from '../../utils/axiosInstance';
 
 export default function Header({ sidebarOpen, setSidebarOpen }) {
   const { token, logout, user: authUser } = useAuth();
@@ -15,6 +17,12 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const searchTimeout = useRef(null);
+  const searchInputRef = useRef(null);
+  const [dropdownStyle, setDropdownStyle] = useState({});
 
   // Get user and tenant info
   const user = JSON.parse(localStorage.getItem("user")) || { name: authUser?.name || "User", email: authUser?.email || "" };
@@ -47,6 +55,85 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
     if (dropdownOpen) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [dropdownOpen]);
+
+  // Universal search handler (debounced)
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      setSearchError(null);
+      return;
+    }
+    setSearchLoading(true);
+    setSearchError(null);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await axiosInstance.get('/api/finance/dashboard/search', { params: { query: searchQuery } });
+        setSearchResults(res.data);
+        setSearchLoading(false);
+      } catch (err) {
+        setSearchError('Error searching');
+        setSearchLoading(false);
+      }
+    }, 350);
+    return () => clearTimeout(searchTimeout.current);
+  }, [searchQuery]);
+
+  // Update dropdown position when search bar is focused or query changes
+  useEffect(() => {
+    if (isSearchFocused && searchInputRef.current) {
+      const rect = searchInputRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'absolute',
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        zIndex: 2147483647
+      });
+    }
+  }, [isSearchFocused, searchQuery]);
+
+  // Handle result click
+  const handleResultClick = (type, id) => {
+    setSearchQuery('');
+    setSearchResults(null);
+    setIsSearchFocused(false);
+    switch (type) {
+      case 'client':
+        console.log('Navigating to client:', id);
+        navigate(`/finance/clients/${id}`);
+        break;
+      case 'vendor':
+        navigate(`/finance/vendors/${id}`); break;
+      case 'project':
+        navigate(`/finance/projects/${id}`); break;
+      case 'product':
+        navigate(`/finance/products/${id}`); break;
+      case 'expense':
+        navigate(`/finance/expenses/${id}`); break;
+      case 'transaction':
+        navigate(`/finance/transactions/${id}`); break;
+      case 'loan':
+        navigate(`/loans/${id}`); break;
+      case 'grn':
+        navigate(`/finance/grns/${id}`); break;
+      case 'purchaseOrder':
+        navigate(`/finance/purchase-orders/${id}`); break;
+      case 'employee':
+        navigate(`/finance/employees/${id}`); break;
+      case 'bill':
+        console.log('Navigating to bill:', id);
+        navigate(`/finance/bills/${id}`);
+        break;
+      case 'bankAccount':
+        console.log('Navigating to bank account:', id);
+        navigate(`/finance/accounts/${id}`);
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -119,13 +206,14 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                 <FiSearch className="h-5 w-5 text-gray-400" />
               </div>
               <input
+                ref={searchInputRef}
                 type="text"
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Search transactions, reports, etc..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
               />
               {searchQuery && (
                 <button
@@ -137,6 +225,39 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                 </button>
               )}
             </div>
+            {/* Universal Search Dropdown (Portal) */}
+            {isSearchFocused && searchQuery && ReactDOM.createPortal(
+              <div style={dropdownStyle} className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                {searchLoading && (
+                  <div className="p-4 text-gray-500 text-center">Searching...</div>
+                )}
+                {searchError && (
+                  <div className="p-4 text-red-500 text-center">{searchError}</div>
+                )}
+                {searchResults && Object.values(searchResults).every(arr => arr.length === 0) && !searchLoading && !searchError && (
+                  <div className="p-4 text-gray-500 text-center">No results found</div>
+                )}
+                {searchResults && Object.entries(searchResults).map(([group, items]) => (
+                  items.length > 0 && (
+                    <div key={group}>
+                      <div className="px-4 pt-3 pb-1 text-xs font-semibold text-gray-500 uppercase">{group.replace(/([A-Z])/g, ' $1')}</div>
+                      {items.map(item => (
+                        <button
+                          key={item.id}
+                          className="w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-100 transition flex items-center gap-2"
+                          onClick={() => handleResultClick(item.type, item.id)}
+                          tabIndex={0}
+                        >
+                          <span className="font-medium text-gray-800">{item.label}</span>
+                          {item.extra && <span className="ml-2 text-xs text-gray-500">{item.extra}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )
+                ))}
+              </div>,
+              document.body
+            )}
           </form>
         </div>
         {/* Right: Profile & Notifications */}

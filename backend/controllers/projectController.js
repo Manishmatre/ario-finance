@@ -21,8 +21,17 @@ exports.createProject = async (req, res) => {
 // Get all projects
 exports.getProjects = async (req, res) => {
   try {
-    const projects = await Project.find({ tenantId: req.tenantId })
+    let projects = await Project.find({ tenantId: req.tenantId })
       .sort({ createdAt: -1 });
+
+    // Sanitize receivedAmount to ensure it's a number
+    projects = projects.map(project => {
+      const projObj = project.toObject();
+      projObj.receivedAmount = Number(projObj.receivedAmount) || 0;
+      projObj.budget = Number(projObj.budget) || 0;
+      return projObj;
+    });
+
     res.json(projects);
   } catch (err) {
     res.status(500).json({ error: err.message });

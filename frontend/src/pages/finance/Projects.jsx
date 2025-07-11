@@ -17,13 +17,13 @@ import { formatCurrency, formatDate } from '../../utils/helpers';
 // Compute summary stats for projects
 const getProjectsSummary = (projects) => {
   const totalProjects = projects.length;
-  const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
-  const totalReceived = projects.reduce((sum, p) => sum + (p.receivedAmount || 0), 0);
+  const totalBudget = projects.reduce((sum, p) => sum + (Number(p.budget) || 0), 0);
+  const totalReceived = projects.reduce((sum, p) => sum + (Number(p.receivedAmount) || 0), 0);
   const completed = projects.filter(p => p.status === 'completed').length;
   return [
     { title: 'Total Projects', value: totalProjects, icon: <FiBriefcase className="h-6 w-6 text-blue-500" /> },
-    { title: 'Total Budget', value: totalBudget, icon: <FiDollarSign className="h-6 w-6 text-green-500" /> },
-    { title: 'Total Received', value: totalReceived, icon: <FiUser className="h-6 w-6 text-purple-500" /> },
+    { title: 'Total Budget', value: formatCurrency(totalBudget), icon: <FiDollarSign className="h-6 w-6 text-green-500" /> },
+    { title: 'Total Received', value: formatCurrency(totalReceived), icon: <FiUser className="h-6 w-6 text-purple-500" /> },
     { title: 'Completed', value: completed, icon: <FiCheckCircle className="h-6 w-6 text-green-600" /> },
   ];
 };
@@ -62,10 +62,10 @@ export default function Projects() {
     { Header: 'Project Name', accessor: 'name', Cell: ({ value, row }) => (<Link to={`/finance/projects/${row.original._id}`} className="font-medium text-blue-600 hover:underline">{value}</Link>) },
     { Header: 'Client', accessor: 'client', Cell: ({ value }) => <span>{value}</span> },
     { Header: 'Type', accessor: 'type', Cell: ({ value }) => <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${value === 'software' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`}>{value}</span> },
-    { Header: 'Budget', accessor: 'budget', Cell: ({ value }) => <span>{formatCurrency(value)}</span> },
-    { Header: 'Received', accessor: 'receivedAmount', Cell: ({ value }) => <span>{formatCurrency(value)}</span> },
-    { Header: 'Balance', accessor: row => (row.original.budget || 0) - (row.original.receivedAmount || 0), id: 'balance', Cell: ({ row }) => {
-      const balance = (row.original.budget || 0) - (row.original.receivedAmount || 0);
+    { Header: 'Budget', accessor: 'budget', Cell: ({ value }) => <span>{formatCurrency(Number(value) || 0)}</span> },
+    { Header: 'Received', accessor: 'receivedAmount', Cell: ({ value }) => <span>{formatCurrency(Number(value) || 0)}</span> },
+    { Header: 'Balance', accessor: row => (Number(row.original.budget) || 0) - (Number(row.original.receivedAmount) || 0), id: 'balance', Cell: ({ row }) => {
+      const balance = (Number(row.original.budget) || 0) - (Number(row.original.receivedAmount) || 0);
       return <span className={balance > 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{formatCurrency(balance)}</span>;
     } },
     { Header: 'Status', accessor: 'status', Cell: ({ value }) => <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${value === 'completed' ? 'bg-green-100 text-green-800' : value === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{value.replace('_', ' ')}</span> },
@@ -105,7 +105,7 @@ export default function Projects() {
             <div>{item.icon}</div>
             <div>
               <div className="text-sm text-gray-500">{item.title}</div>
-              <div className="text-xl font-bold">{item.title === 'Total Budget' || item.title === 'Total Received' ? `₹${item.value?.toLocaleString()}` : item.value}</div>
+              <div className="text-xl font-bold">{item.value}</div>
             </div>
           </Card>
         ))}

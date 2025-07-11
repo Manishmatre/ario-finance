@@ -44,6 +44,7 @@ const accountsSubMenu = [
   { to: "/finance/bankbook", label: "Bankbook", icon: <FiCreditCard /> },
   { to: "/finance/cashbook", label: "Cashbook", icon: <FiDollarSign /> },
   { to: "/finance/petty-cash", label: "Petty Cash Register", icon: <FiBriefcase /> },
+  { to: "/finance/ledger", label: "Ledger View", icon: <FiLayers /> },
 ];
 
 
@@ -59,6 +60,7 @@ const employeesMenu = [
   { to: '/finance/employees', label: 'All Employees', icon: <FiUsers /> },
   { to: '/finance/employees/add', label: 'Add Employee', icon: <FiPlusCircle /> },
   { to: '/finance/employee-transactions', label: 'Employee Transactions', icon: <FiList /> },
+  { to: '/finance/employee-transactions/add', label: 'Add Employee Transaction', icon: <FiPlusCircle /> },
 ];
 
 const clientsMenu = [
@@ -363,39 +365,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 ))}
               </div>
             </div>
-            {/* Transactions Dropdown */}
-            <div>
-              <button
-                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
-                  ${transactionsOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
-                onClick={() => handleDropdown(transactionsOpen ? '' : 'transactions')}
-              >
-                <FiDatabase />
-                <span>Transactions</span>
-                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${transactionsOpen ? 'rotate-180' : ''}`} />
-              </button>
-              <div
-                className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
-                  ${transactionsOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
-                style={{ transitionProperty: 'max-height, opacity, padding' }}
-              >
-                {transactionsMenu.map(sub => (
-                  <NavLink
-                    key={sub.to}
-                    to={sub.to}
-                    className={() =>
-                      location.pathname === sub.to
-                        ? 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out bg-blue-600 text-white'
-                        : 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out text-gray-200 hover:bg-blue-800 hover:text-white'
-                    }
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    {sub.icon}
-                    {sub.label}
-                  </NavLink>
-                ))}
-              </div>
-            </div>
             {/* Accounts Dropdown */}
             <div>
               <button
@@ -427,39 +396,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                       {sub.label}
                     </NavLink>
                   ))}
-              </div>
-            </div>
-            {/* Projects Dropdown */}
-            <div>
-              <button
-                className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
-                  ${projectsOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
-                onClick={() => handleDropdown('projects')}
-              >
-                <FiBriefcase />
-                <span>Projects</span>
-                <FiChevronDown className={`w-4 h-4 ml-auto transition-transform ${projectsOpen ? 'rotate-180' : ''}`} />
-              </button>
-              <div
-                className={`ml-4 mt-1 flex flex-col gap-1 rounded-lg shadow-lg bg-gray-800/90 transition-all duration-300 ease-in-out overflow-hidden
-                  ${projectsOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
-                style={{ transitionProperty: 'max-height, opacity, padding' }}
-              >
-                {projectsMenu.map(link => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    className={() =>
-                      location.pathname === link.to
-                        ? 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out bg-blue-600 text-white'
-                        : 'flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out text-gray-200 hover:bg-blue-800 hover:text-white'
-                    }
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    {link.icon}
-                    {link.label}
-                  </NavLink>
-                ))}
               </div>
             </div>
             {/* Clients Dropdown */}

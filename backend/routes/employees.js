@@ -15,6 +15,7 @@ router.delete('/:id', employeeController.deleteEmployee);
 // Advances & Salary
 router.post('/:id/advance', employeeController.addAdvance);
 router.post('/:id/salary', employeeController.addSalary);
+router.post('/:id/other', employeeController.addOtherExpense);
 router.get('/transactions/all', employeeController.listEmployeeTransactions);
 
 module.exports = router; 

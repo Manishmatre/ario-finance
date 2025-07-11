@@ -26,6 +26,18 @@ const SalarySchema = new mongoose.Schema({
   chequeNo: { type: String },
 }, { _id: false });
 
+const OtherExpenseSchema = new mongoose.Schema({
+  amount: { type: Number, required: true },
+  date: { type: Date, required: true },
+  description: { type: String, required: true },
+  status: { type: String, enum: ['pending', 'approved', 'paid'], default: 'pending' },
+  paymentMode: { type: String },
+  companyBankId: { type: String },
+  employeeBankName: { type: String },
+  upiId: { type: String },
+  chequeNo: { type: String },
+}, { _id: false });
+
 const EmployeeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -37,6 +49,7 @@ const EmployeeSchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'inactive', 'terminated'], default: 'active' },
   advances: [AdvanceSchema],
   salaries: [SalarySchema],
+  otherExpenses: [OtherExpenseSchema],
   bankAccountHolder: { type: String },
   bankName: { type: String },
   customBankName: { type: String },

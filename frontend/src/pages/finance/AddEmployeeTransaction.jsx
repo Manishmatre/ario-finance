@@ -7,7 +7,7 @@ import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import Loader from '../../components/ui/Loader';
 import axiosInstance from '../../utils/axiosInstance';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FiCheckCircle } from 'react-icons/fi';
 import { useWatch } from 'react-hook-form';
 
@@ -30,6 +30,25 @@ export default function AddEmployeeTransaction() {
   const paymentMode = useWatch({ control, name: 'paymentMode' });
   const selectedEmployeeId = useWatch({ control, name: 'employeeId' });
   const selectedEmployee = employees.find(e => e._id === selectedEmployeeId);
+  const location = useLocation();
+
+  const statusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'paid', label: 'Paid' }
+  ];
+
+  // Read query params for employeeId and type
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const employeeId = params.get('employeeId');
+    const type = params.get('type');
+    if (employeeId) setValue('employeeId', employeeId);
+    if (type) {
+      setTransactionType(type);
+      setValue('type', type);
+    }
+  }, [location.search, setValue]);
 
   useEffect(() => {
     setLoading(true);
@@ -51,6 +70,9 @@ export default function AddEmployeeTransaction() {
       if (type === 'advance') {
         payload = { amount, date, status, reason: notes, paymentMode, companyBankId, employeeBankName, upiId, chequeNo };
         endpoint = `/api/finance/employees/${employeeId}/advance`;
+      } else if (type === 'other') {
+        payload = { amount, date, status, description: notes, paymentMode, companyBankId, employeeBankName, upiId, chequeNo };
+        endpoint = `/api/finance/employees/${employeeId}/other`;
       } else {
         payload = { amount, status, paidDate: date, notes, month: Number(month), year: Number(year), paymentMode, companyBankId, employeeBankName, upiId, chequeNo };
         endpoint = `/api/finance/employees/${employeeId}/salary`;
@@ -100,6 +122,8 @@ export default function AddEmployeeTransaction() {
                 <Select
                   {...register('employeeId', { required: true })}
                   options={employees.map(e => ({ value: e._id, label: e.name }))}
+                  value={selectedEmployeeId || ''}
+                  onChange={e => setValue('employeeId', e.target.value)}
                   className="w-full"
                   required
                 />
@@ -112,8 +136,9 @@ export default function AddEmployeeTransaction() {
                   value={transactionType}
                   onChange={e => { setTransactionType(e.target.value); setValue('type', e.target.value); }}
                   options={[
-                    { value: 'salary', label: 'Salary' },
-                    { value: 'advance', label: 'Advance' },
+                    { value: 'salary', label: 'Salary Payment' },
+                    { value: 'advance', label: 'Advance Salary' },
+                    { value: 'other', label: 'Other Employee Expense' },
                   ]}
                   className="w-full"
                   required
@@ -147,15 +172,14 @@ export default function AddEmployeeTransaction() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Employee Bank *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Employee Bank</label>
                   <Select
-                    {...register('employeeBankName', { required: true })}
+                    {...register('employeeBankName')}
                     options={selectedEmployee ? [
                       { value: selectedEmployee.bankName, label: selectedEmployee.bankName },
                       selectedEmployee.customBankName ? { value: selectedEmployee.customBankName, label: selectedEmployee.customBankName } : null
                     ].filter(Boolean) : []}
                     className="w-full"
-                    required
                   />
                 </div>
               </div>
@@ -172,6 +196,30 @@ export default function AddEmployeeTransaction() {
                 <Input {...register('chequeNo', { required: true })} placeholder="Enter Cheque Number" className="w-full" />
               </div>
             )}
+            {/* In the form, add status select and reason/description for advance/other */}
+            {(transactionType === 'advance' || transactionType === 'other') && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Reason / Description *</label>
+                  <Input
+                    {...register('notes', { required: true })}
+                    placeholder={transactionType === 'advance' ? 'Reason for advance' : 'Description of expense'}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                  <Select
+                    {...register('status', { required: true })}
+                    options={statusOptions}
+                    className="w-full"
+                    required
+                  />
+                  {errors.status && <span className="text-red-500 text-sm">Status is required</span>}
+                </div>
+              </div>
+            )}
+            {/* For salary, keep existing fields */}
             {transactionType === 'salary' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -199,15 +247,22 @@ export default function AddEmployeeTransaction() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Year *</label>
-                  <Input
-                    type="number"
-                    min={2000}
-                    max={2100}
-                    {...register('year', { required: true })}
+                  <Input {...register('year', { required: true })} placeholder="Year" className="w-full" />
+                  {errors.year && <span className="text-red-500 text-sm">Year is required</span>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                  <Input {...register('notes')} placeholder="Notes (optional)" className="w-full" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                  <Select
+                    {...register('status', { required: true })}
+                    options={statusOptions}
                     className="w-full"
                     required
                   />
-                  {errors.year && <span className="text-red-500 text-sm">Year is required</span>}
+                  {errors.status && <span className="text-red-500 text-sm">Status is required</span>}
                 </div>
               </div>
             )}
@@ -233,35 +288,6 @@ export default function AddEmployeeTransaction() {
                   required
                 />
                 {errors.date && <span className="text-red-500 text-sm">Date is required</span>}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                <Select
-                  {...register('status', { required: true })}
-                  options={transactionType === 'advance'
-                    ? [
-                      { value: 'pending', label: 'Pending' },
-                      { value: 'approved', label: 'Approved' },
-                      { value: 'rejected', label: 'Rejected' },
-                    ]
-                    : [
-                      { value: 'paid', label: 'Paid' },
-                      { value: 'unpaid', label: 'Unpaid' },
-                    ]}
-                  className="w-full"
-                  required
-                />
-                {errors.status && <span className="text-red-500 text-sm">Status is required</span>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                <Input
-                  {...register('notes')}
-                  className="w-full"
-                  placeholder="Optional notes"
-                />
               </div>
             </div>
             <div className="flex justify-end gap-2">

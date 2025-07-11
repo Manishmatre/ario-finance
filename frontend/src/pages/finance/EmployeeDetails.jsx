@@ -6,21 +6,41 @@ import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
-import { FiUser, FiTrendingUp, FiDollarSign, FiCheckCircle, FiPlus } from 'react-icons/fi';
+import StatCard from '../../components/ui/StatCard';
+import { FiUser, FiTrendingUp, FiDollarSign, FiCheckCircle, FiPlus, FiLayers, FiCreditCard, FiDownload } from 'react-icons/fi';
+
+const TABS = [
+  { key: 'info', label: 'Employee Info', icon: <FiUser /> },
+  { key: 'bank', label: 'Bank Account', icon: <FiCreditCard /> },
+  { key: 'advances', label: 'Advances', icon: <FiTrendingUp /> },
+  { key: 'salary', label: 'Salary', icon: <FiDollarSign /> },
+  { key: 'ledger', label: 'Ledger', icon: <FiLayers /> },
+];
 
 export default function EmployeeDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [employee, setEmployee] = useState(null);
+  const [ledger, setLedger] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('profile');
+  const [tab, setTab] = useState('info');
 
   useEffect(() => {
     setLoading(true);
-    axiosInstance.get(`/api/finance/employees/${id}`)
-      .then(res => setEmployee(res.data))
-      .catch(() => setEmployee(null))
-      .finally(() => setLoading(false));
+    Promise.all([
+      axiosInstance.get(`/api/finance/employees/${id}`),
+      axiosInstance.get(`/api/finance/employees/${id}/ledger`).catch(() => ({ data: [] }))
+    ])
+      .then(([empRes, ledgerRes]) => {
+        setEmployee(empRes.data);
+        setLedger(ledgerRes.data || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setEmployee(null);
+        setLedger([]);
+        setLoading(false);
+      });
   }, [id]);
 
   if (loading) return <Loader />;
@@ -67,11 +87,31 @@ export default function EmployeeDetails() {
     { Header: 'Payment Mode', accessor: 'paymentMode' },
   ];
 
+  // Ledger columns (if ledger endpoint exists)
+  const ledgerColumns = [
+    { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
+    { Header: 'Type', accessor: 'type' },
+    { Header: 'Note', accessor: 'note' },
+    { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+    { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+    { Header: 'Ref', accessor: 'ref' },
+    { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => value !== undefined ? `₹${value.toLocaleString()}` : '-' },
+  ];
+
+  // Add running balance to ledger
+  const addRunningBalance = (rows) => {
+    let balance = 0;
+    return rows.map(row => {
+      balance += (row.debit || 0) - (row.credit || 0);
+      return { ...row, balance };
+    });
+  };
+
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
         title={`Employee Details: ${employee.name}`}
-        subtitle="View all information, advances, and salary for this employee"
+        subtitle="View all information, advances, salary, and ledger for this employee"
         breadcrumbs={[
           { label: 'Finance', to: '/finance' },
           { label: 'Employees', to: '/finance/employees' },
@@ -80,86 +120,68 @@ export default function EmployeeDetails() {
         right={<Button onClick={() => navigate(`/finance/employees/edit/${id}`)}>Edit</Button>}
       />
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {summaryCards.map((item, idx) => (
-          <Card key={item.title} className="flex items-center gap-4 p-4">
-            <div>{item.icon}</div>
-            <div>
-              <div className="text-sm text-gray-500">{item.title}</div>
-              <div className="text-xl font-bold">{item.value}</div>
-            </div>
-          </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        {summaryCards.map((card, idx) => (
+          <StatCard key={idx} title={card.title} value={card.value} icon={card.icon} />
         ))}
       </div>
       {/* Tabs */}
-      <div className="flex gap-4 border-b mb-4 mt-4">
-        <button className={`px-4 py-2 ${tab==='profile'?'border-b-2 border-blue-600 font-bold':''}`} onClick={() => setTab('profile')}>Profile</button>
-        <button className={`px-4 py-2 ${tab==='advances'?'border-b-2 border-blue-600 font-bold':''}`} onClick={() => setTab('advances')}>Advances</button>
-        <button className={`px-4 py-2 ${tab==='salary'?'border-b-2 border-blue-600 font-bold':''}`} onClick={() => setTab('salary')}>Salary</button>
+      <div className="flex gap-2 mb-4">
+        {TABS.map(t => (
+          <Button key={t.key} variant={tab === t.key ? 'primary' : 'outline'} onClick={() => setTab(t.key)} icon={t.icon}>{t.label}</Button>
+        ))}
       </div>
-      {tab === 'profile' && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {profileFields.map((f, i) => (
-              <div key={i}>
-                <div className="text-xs text-gray-500 mb-1">{f.label}</div>
-                <div className="text-base font-medium text-gray-800">{f.value}</div>
-              </div>
-            ))}
-          </div>
-          {/* Bank Account Details Section */}
-          {(employee.bankAccountHolder || employee.bankName || employee.bankAccountNo || employee.ifsc || employee.branch || employee.bankNotes) && (
-            <div className="mt-8">
-              <h4 className="text-md font-semibold mb-4">Bank Account Details (for payments)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Account Holder</div>
-                  <div className="text-base font-medium text-gray-800">{employee.bankAccountHolder || '-'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Bank Name</div>
-                  <div className="text-base font-medium text-gray-800">{employee.bankName || '-'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Account Number</div>
-                  <div className="text-base font-medium text-gray-800">{employee.bankAccountNo || '-'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">IFSC Code</div>
-                  <div className="text-base font-medium text-gray-800">{employee.ifsc || '-'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Branch</div>
-                  <div className="text-base font-medium text-gray-800">{employee.branch || '-'}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Notes</div>
-                  <div className="text-base font-medium text-gray-800">{employee.bankNotes || '-'}</div>
-                </div>
-              </div>
+      {/* Tab Content */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-800">
+            {tab === 'info' && `Employee Information`}
+            {tab === 'bank' && `Bank Account`}
+            {tab === 'advances' && `Advances for ${employee.name}`}
+            {tab === 'salary' && `Salary for ${employee.name}`}
+            {tab === 'ledger' && `Ledger for ${employee.name}`}
+          </h3>
+          {tab === 'advances' && (
+            <Button size="sm" variant="primary" icon={<FiPlus />} onClick={() => navigate(`/finance/employee-transactions/add?employeeId=${id}&type=advance`)}>Add Advance</Button>
+          )}
+          {tab === 'salary' && (
+            <Button size="sm" variant="primary" icon={<FiPlus />} onClick={() => navigate(`/finance/employee-transactions/add?employeeId=${id}&type=salary`)}>Add Salary</Button>
+          )}
+        </div>
+        <div className="p-2">
+          {tab === 'info' && (
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {profileFields.map((f, i) => (
+                <div key={i}><strong>{f.label}:</strong> {f.value}</div>
+              ))}
+              {employee.createdBy && <div><strong>Created By:</strong> {employee.createdBy}</div>}
+              {employee.createdAt && <div><strong>Created At:</strong> {new Date(employee.createdAt).toLocaleString()}</div>}
+              {employee.updatedAt && <div><strong>Updated At:</strong> {new Date(employee.updatedAt).toLocaleString()}</div>}
             </div>
           )}
-        </Card>
-      )}
-      {tab === 'advances' && (
-        <Card className="p-6">
-          <div className="flex justify-between mb-2 items-center">
-            <h3 className="text-lg font-semibold">Advances</h3>
-            <Button onClick={() => navigate(`/finance/employees/${id}/advance`)}><FiPlus className="inline mr-1" /> Add Advance</Button>
-          </div>
-          <Table columns={advanceColumns} data={employee.advances || []} />
-        </Card>
-      )}
-      {tab === 'salary' && (
-        <Card className="p-6">
-          <div className="flex justify-between mb-2 items-center">
-            <h3 className="text-lg font-semibold">Salary History</h3>
-            <Button onClick={() => navigate(`/finance/employees/${id}/salary`)}><FiPlus className="inline mr-1" /> Add Salary</Button>
-          </div>
-          <Table columns={salaryColumns} data={employee.salaries || []} />
-        </Card>
-      )}
+          {tab === 'bank' && (
+            <div className="p-4">
+              <Card className="p-4">
+                <div className="font-medium text-blue-700 mb-1">{employee.bankName || 'Bank'}</div>
+                <div><strong>Account Holder:</strong> {employee.bankAccountHolder || '-'}</div>
+                <div><strong>Account Number:</strong> {employee.bankAccountNo || '-'}</div>
+                <div><strong>IFSC:</strong> {employee.ifsc || '-'}</div>
+                <div><strong>Branch:</strong> {employee.branch || '-'}</div>
+                {employee.bankNotes && <div><strong>Notes:</strong> {employee.bankNotes}</div>}
+              </Card>
+            </div>
+          )}
+          {tab === 'advances' && (
+            <Table columns={advanceColumns} data={employee.advances || []} />
+          )}
+          {tab === 'salary' && (
+            <Table columns={salaryColumns} data={employee.salaries || []} />
+          )}
+          {tab === 'ledger' && (
+            <Table columns={ledgerColumns} data={addRunningBalance(ledger)} />
+          )}
+        </div>
+      </div>
     </div>
   );
 } 

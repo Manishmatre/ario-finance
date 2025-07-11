@@ -10,5 +10,7 @@ const TransactionLineSchema = new mongoose.Schema({
   isApproved: { type: Boolean, default: false, index: true },
   tenantId: { type: String, required: true, index: true },
   createdBy: String,
+  debitAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'BankAccount' },
+  creditAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'BankAccount' },
 }, { timestamps: true });
 module.exports = mongoose.model('TransactionLine', TransactionLineSchema);

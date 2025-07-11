@@ -1,4 +1,6 @@
 const Employee = require('../models/Employee');
+const TransactionLine = require('../models/TransactionLine');
+const BankAccount = require('../models/BankAccount');
 
 // Add new employee
 exports.addEmployee = async (req, res) => {
@@ -65,6 +67,27 @@ exports.addAdvance = async (req, res) => {
     if (!emp) return res.status(404).json({ error: 'Not found' });
     emp.advances.push(req.body);
     await emp.save();
+    // Bank transaction logic
+    if (req.body.paymentMode === 'bank_transfer' && req.body.companyBankId) {
+      const bankAcc = await BankAccount.findOne({ _id: req.body.companyBankId, tenantId: req.tenantId });
+      if (bankAcc) {
+        // Create transaction line
+        await TransactionLine.create({
+          date: req.body.date || new Date(),
+          bankAccountId: bankAcc._id,
+          debitAccount: bankAcc._id,
+          creditAccount: null,
+          employeeId: emp._id,
+          amount: req.body.amount,
+          narration: `Advance to employee: ${emp.name}`,
+          tenantId: req.tenantId,
+          createdBy: req.user?.id
+        });
+        // Update bank balance (debit)
+        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - Number(req.body.amount);
+        await bankAcc.save();
+      }
+    }
     res.json(emp);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -78,6 +101,62 @@ exports.addSalary = async (req, res) => {
     if (!emp) return res.status(404).json({ error: 'Not found' });
     emp.salaries.push(req.body);
     await emp.save();
+    // Bank transaction logic
+    if (req.body.paymentMode === 'bank_transfer' && req.body.companyBankId) {
+      const bankAcc = await BankAccount.findOne({ _id: req.body.companyBankId, tenantId: req.tenantId });
+      if (bankAcc) {
+        // Create transaction line
+        await TransactionLine.create({
+          date: req.body.paidDate || new Date(),
+          bankAccountId: bankAcc._id,
+          debitAccount: bankAcc._id,
+          creditAccount: null,
+          employeeId: emp._id,
+          amount: req.body.amount,
+          narration: `Salary payment to employee: ${emp.name}`,
+          tenantId: req.tenantId,
+          createdBy: req.user?.id
+        });
+        // Update bank balance (debit)
+        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - Number(req.body.amount);
+        await bankAcc.save();
+      }
+    }
+    res.json(emp);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Add other expense to employee
+exports.addOtherExpense = async (req, res) => {
+  try {
+    const emp = await Employee.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    if (!emp) return res.status(404).json({ error: 'Not found' });
+    if (!emp.otherExpenses) emp.otherExpenses = [];
+    emp.otherExpenses.push(req.body);
+    await emp.save();
+    // Bank transaction logic
+    if (req.body.paymentMode === 'bank_transfer' && req.body.companyBankId) {
+      const bankAcc = await BankAccount.findOne({ _id: req.body.companyBankId, tenantId: req.tenantId });
+      if (bankAcc) {
+        // Create transaction line
+        await TransactionLine.create({
+          date: req.body.date || new Date(),
+          bankAccountId: bankAcc._id,
+          debitAccount: bankAcc._id,
+          creditAccount: null,
+          employeeId: emp._id,
+          amount: req.body.amount,
+          narration: `Other employee expense: ${emp.name}`,
+          tenantId: req.tenantId,
+          createdBy: req.user?.id
+        });
+        // Update bank balance (debit)
+        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - Number(req.body.amount);
+        await bankAcc.save();
+      }
+    }
     res.json(emp);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -115,6 +194,19 @@ exports.listEmployeeTransactions = async (req, res) => {
           status: sal.status,
           notes: sal.notes || '',
           paymentMode: sal.paymentMode || '',
+        });
+      });
+      // Other Expenses
+      (emp.otherExpenses || []).forEach(oth => {
+        transactions.push({
+          employeeId: emp._id,
+          employeeName: emp.name,
+          type: 'other',
+          amount: oth.amount,
+          date: oth.date,
+          status: oth.status,
+          notes: oth.description || '',
+          paymentMode: oth.paymentMode || '',
         });
       });
     });

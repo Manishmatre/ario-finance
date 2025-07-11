@@ -55,8 +55,6 @@ import MakeBillPaid from './pages/finance/MakeBillPaid';
 import EmployeeList from './pages/finance/EmployeeList';
 import AddEmployee from './pages/finance/AddEmployee';
 import EmployeeDetails from './pages/finance/EmployeeDetails';
-import AdvanceToEmployee from './pages/finance/AdvanceToEmployee';
-import PayEmployeeSalary from './pages/finance/PayEmployeeSalary';
 import EmployeeTransactions from './pages/finance/EmployeeTransactions';
 import AddEmployeeTransaction from './pages/finance/AddEmployeeTransaction';
 import Projects from './pages/finance/Projects';
@@ -149,8 +147,6 @@ export default function App() {
               <Route path="/finance/employees/add" element={<AddEmployee />} />
               <Route path="/finance/employees/edit/:id" element={<AddEmployee />} />
               <Route path="/finance/employees/:id" element={<EmployeeDetails />} />
-              <Route path="/finance/employees/:id/advance" element={<AdvanceToEmployee />} />
-              <Route path="/finance/employees/:id/salary" element={<PayEmployeeSalary />} />
               <Route path="/finance/employee-transactions" element={<EmployeeTransactions />} />
               <Route path="/finance/employee-transactions/add" element={<AddEmployeeTransaction />} />
               

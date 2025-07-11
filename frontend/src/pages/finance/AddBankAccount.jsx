@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import Button from "../../components/ui/Button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
 import { FiCheckCircle } from "react-icons/fi";
@@ -45,6 +45,7 @@ const BANK_OPTIONS = [
 
 
 export default function AddBankAccount() {
+  const { id } = useParams();
   const { register, handleSubmit, reset, formState: { errors }, watch } = useForm();
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,6 +53,36 @@ export default function AddBankAccount() {
 
   const watchBankName = watch("bankName");
   const watchAccountType = watch("type");
+
+  React.useEffect(() => {
+    if (id) {
+      setLoading(true);
+      api.get(`/api/finance/bank-accounts/${id}`)
+        .then(res => {
+          const data = res.data;
+          reset({
+            bankName: data.bankName || '',
+            type: data.type || '',
+            accountHolder: data.accountHolder || '',
+            bankAccountNo: data.bankAccountNo || '',
+            ifsc: data.ifsc || '',
+            branchName: data.branchName || '',
+            currentBalance: data.currentBalance || '',
+            status: data.status || '',
+            interestRate: data.interestRate || '',
+            features: {
+              internetBanking: data.features?.internetBanking || false,
+              mobileBanking: data.features?.mobileBanking || false,
+              debitCard: data.features?.debitCard || false,
+              chequeBook: data.features?.chequeBook || false
+            },
+            notes: data.notes || ''
+          });
+        })
+        .catch(() => alert('Failed to load account'))
+        .finally(() => setLoading(false));
+    }
+  }, [id, reset]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -81,18 +112,25 @@ export default function AddBankAccount() {
       console.log('Prepared data for API:', bankAccountData);
 
       // Make API call using axios
+      if (id) {
+        await api.patch(`/api/finance/bank-accounts/${id}`, bankAccountData);
+        setSuccess(true);
+        setTimeout(() => {
+          navigate('/finance/accounts');
+        }, 1200);
+      } else {
       const response = await api.post('/api/finance/bank-accounts', bankAccountData);
-      
       setSuccess(true);
       setTimeout(() => {
         navigate('/finance/accounts');
       }, 1200);
       reset();
+      }
     } catch (error) {
       console.error('Failed to add account:', error);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create bank account';
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to save bank account';
       alert(errorMessage);
     } finally {
       setLoading(false);
@@ -102,7 +140,7 @@ export default function AddBankAccount() {
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Add Bank Account"
+        title={id ? 'Edit Bank Account' : 'Add Bank Account'}
         subtitle="Create new bank account with opening balance"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
@@ -307,7 +345,7 @@ export default function AddBankAccount() {
 
             <div className="flex gap-3 pt-4">
               <Button type="submit" className="flex-1" disabled={loading}>
-                {loading ? 'Adding Account...' : 'Add Bank Account'}
+                {loading ? (id ? 'Updating...' : 'Adding Account...') : (id ? 'Update Bank Account' : 'Add Bank Account')}
               </Button>
               <Button 
                 type="button" 

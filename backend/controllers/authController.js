@@ -86,7 +86,7 @@ exports.login = async (req, res) => {
     if (user.tenantId) {
       company = await Company.findById(user.tenantId).lean();
     }
-
+    
     res.json({ 
       success: true,
       token,

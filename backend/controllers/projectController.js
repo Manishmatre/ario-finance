@@ -24,10 +24,19 @@ exports.getProjects = async (req, res) => {
     let projects = await Project.find({ tenantId: req.tenantId })
       .sort({ createdAt: -1 });
 
-    // Sanitize receivedAmount to ensure it's a number
+    // For each project, recalculate receivedAmount from payments
+    const projectIds = projects.map(p => p._id);
+    const payments = await ProjectPayment.find({ projectId: { $in: projectIds }, tenantId: req.tenantId });
+    const paymentsByProject = {};
+    payments.forEach(p => {
+      const pid = p.projectId.toString();
+      if (!paymentsByProject[pid]) paymentsByProject[pid] = [];
+      paymentsByProject[pid].push(p);
+    });
     projects = projects.map(project => {
       const projObj = project.toObject();
-      projObj.receivedAmount = Number(projObj.receivedAmount) || 0;
+      const sum = (paymentsByProject[project._id.toString()] || []).reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+      projObj.receivedAmount = sum;
       projObj.budget = Number(projObj.budget) || 0;
       return projObj;
     });
@@ -45,14 +54,17 @@ exports.getProject = async (req, res) => {
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-    
     const payments = await ProjectPayment.find({ 
       projectId: req.params.id,
       tenantId: req.tenantId 
     }).sort({ paymentDate: -1 });
-    
+    // Recalculate receivedAmount
+    const receivedAmount = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const projObj = project.toObject();
+    projObj.receivedAmount = receivedAmount;
+    projObj.budget = Number(projObj.budget) || 0;
     res.json({
-      ...project.toObject(),
+      ...projObj,
       payments
     });
   } catch (err) {
@@ -106,14 +118,16 @@ exports.recordPayment = async (req, res) => {
       }
     });
 
-    // 4. Update project's received amount
-    project.receivedAmount = (project.receivedAmount || 0) + amount;
-    
-    // 5. Save all changes in a transaction
+    // 4. Save payment and transaction
     await payment.save({ session });
     await txn.save({ session });
+
+    // 5. Recalculate and persist receivedAmount as sum of all payments for this project
+    const payments = await ProjectPayment.find({ projectId: project._id, tenantId: req.tenantId }).session(session);
+    const sum = payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+    project.receivedAmount = sum;
     await project.save({ session });
-    
+
     // 6. Update payment with transaction ID
     payment.transactionId = txn._id;
     await payment.save({ session });
@@ -181,17 +195,18 @@ exports.deletePayment = async (req, res) => {
     // 1. Get related transaction
     const txn = await TransactionLine.findById(payment.transactionId).session(session);
     
-    // 2. Get project and update received amount
+    // 2. Get project and recalculate receivedAmount after deleting payment
     const project = await Project.findById(payment.projectId).session(session);
-    if (project) {
-      project.receivedAmount = Math.max(0, (project.receivedAmount || 0) - payment.amount);
-      await project.save({ session });
-    }
-    
     // 3. Delete payment and transaction
     await ProjectPayment.deleteOne({ _id: payment._id }).session(session);
     if (txn) {
       await TransactionLine.deleteOne({ _id: txn._id }).session(session);
+    }
+    if (project) {
+      const payments = await ProjectPayment.find({ projectId: project._id, tenantId: req.tenantId }).session(session);
+      const sum = payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+      project.receivedAmount = sum;
+      await project.save({ session });
     }
     
     await session.commitTransaction();
@@ -236,8 +251,9 @@ exports.updateProject = async (req, res) => {
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-    // Update fields
-    Object.assign(project, req.body);
+    // Exclude receivedAmount from being updated by user input
+    const { receivedAmount, ...rest } = req.body;
+    Object.assign(project, rest);
     await project.save();
     res.json(project);
   } catch (err) {

@@ -125,23 +125,23 @@ export default function FinanceDashboard() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Balance"
-          value={`₹${(kpis.cashInHand ?? 0).toLocaleString()}`}
+          title="Total Balance" 
+          value={`₹${(kpis.cashInHand ?? 0).toLocaleString()}`} 
           icon={<CurrencyRupeeIcon className="h-6 w-6 text-blue-500" />}
         />
         <StatCard
-          title="Total Income"
-          value={`₹${(kpis.totalIncome ?? 0).toLocaleString()}`}
+          title="Total Income" 
+          value={`₹${(kpis.totalIncome ?? 0).toLocaleString()}`} 
           icon={<ArrowUpIcon className="h-6 w-6 text-green-500" />}
         />
         <StatCard
-          title="Total Expenses"
-          value={`₹${(kpis.totalExpense ?? 0).toLocaleString()}`}
+          title="Total Expenses" 
+          value={`₹${(kpis.totalExpense ?? 0).toLocaleString()}`} 
           icon={<ArrowDownIcon className="h-6 w-6 text-red-500" />}
         />
         <StatCard
-          title="Budget vs Actual"
-          value={`${((kpis.budgetVsActual ?? 0) * 100).toFixed(1)}%`}
+          title="Budget vs Actual" 
+          value={`${((kpis.budgetVsActual ?? 0) * 100).toFixed(1)}%`} 
           icon={<ScaleIcon className="h-6 w-6 text-purple-500" />}
         />
       </div>

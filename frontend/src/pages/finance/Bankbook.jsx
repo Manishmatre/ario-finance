@@ -7,6 +7,7 @@ import PageHeading from "../../components/ui/PageHeading";
 import Card from "../../components/ui/Card";
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiCreditCard } from "react-icons/fi";
 import axiosInstance from '../../utils/axiosInstance';
+import axios from '../../utils/axiosInstance';
 
 function addRunningBalance(rows) {
   let balanceMap = {};
@@ -15,9 +16,12 @@ function addRunningBalance(rows) {
   return sorted.map(row => {
     const bankId = row.bankAccountId?._id || row.bankAccountId;
     if (!balanceMap[bankId]) balanceMap[bankId] = 0;
-    // If vendorId is present, it's a payment (debit/outflow)
-    const isDebit = !!row.vendorId;
-    const isCredit = !row.vendorId;
+    // Use debitAccount/creditAccount to determine direction
+    const debitAccount = row.debitAccount?._id || row.debitAccount;
+    const creditAccount = row.creditAccount?._id || row.creditAccount;
+    // If this bank is the debit side, it's an outflow; if credit, it's an inflow
+    const isDebit = debitAccount === bankId;
+    const isCredit = creditAccount === bankId;
     const debit = isDebit ? row.amount : 0;
     const credit = isCredit ? row.amount : 0;
     balanceMap[bankId] += credit - debit;
@@ -36,28 +40,38 @@ export default function Bankbook() {
   const [page, setPage] = useState(1);
   const [bankbook, setBankbook] = useState([]);
   const [accountSummary, setAccountSummary] = useState([]);
+  const [allAccounts, setAllAccounts] = useState([]);
   const PAGE_SIZE = 20;
 
   useEffect(() => {
     setLoading(true);
-    axiosInstance.get('/api/finance/cash/cashbook?type=bank')
-      .then(res => {
-        const withBalance = addRunningBalance(res.data);
+    Promise.all([
+      axiosInstance.get('/api/finance/cash/cashbook?type=bank'),
+      axios.get('/api/finance/bank-accounts')
+    ])
+      .then(([txnRes, accRes]) => {
+        const withBalance = addRunningBalance(txnRes.data);
         setBankbook(withBalance);
-        // Build account summary from transactions
+        const accounts = accRes.data.bankAccounts || [];
+        setAllAccounts(accounts);
+        // Build account summary: always show all accounts
         const summaryMap = {};
+        // First, fill with all accounts
+        accounts.forEach(acc => {
+          summaryMap[acc._id] = {
+            name: acc.bankName || '-',
+            balance: acc.currentBalance || 0,
+            accountNo: acc.bankAccountNo || '-',
+            color: 'blue',
+          };
+        });
+        // Then, update with running balance if available
         withBalance.forEach(txn => {
           const acc = txn.bankAccountId;
           const bankId = acc?._id || acc;
-          if (!summaryMap[bankId]) {
-            summaryMap[bankId] = {
-              name: acc?.bankName || '-',
-              balance: 0,
-              accountNo: acc?.bankAccountNo || '-',
-              color: 'blue',
-            };
-          }
+          if (summaryMap[bankId]) {
           summaryMap[bankId].balance = txn.balance;
+          }
         });
         setAccountSummary(Object.values(summaryMap));
         setLoading(false);
@@ -65,6 +79,7 @@ export default function Bankbook() {
       .catch(() => {
         setBankbook([]);
         setAccountSummary([]);
+        setAllAccounts([]);
         setLoading(false);
       });
   }, []);
@@ -128,6 +143,9 @@ export default function Bankbook() {
     },
   ];
 
+  // Determine grid columns for summary cards
+  const summaryColCount = Math.min(4, accountSummary.length);
+
   if (loading) {
     return <Loader />;
   }
@@ -144,22 +162,23 @@ export default function Bankbook() {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-2 md:grid-cols-${summaryColCount} gap-4`}>
         {accountSummary.map((account, index) => (
-          <Card
-            key={index}
-            title={account.name}
-            value={`₹${account.balance.toLocaleString()}`}
-            subtitle={account.accountNo}
-            icon={<FiCreditCard className={`h-6 w-6 text-${account.color}-500`} />}
-          />
+          <Card key={index} className="flex items-center gap-4 p-4">
+            <div><FiCreditCard className="h-6 w-6 text-blue-500" /></div>
+            <div>
+              <div className="text-sm text-gray-500">{account.name}</div>
+              <div className="text-xl font-bold">₹{account.balance.toLocaleString()}</div>
+              <div className="text-xs text-gray-400">{account.accountNo}</div>
+            </div>
+          </Card>
         ))}
       </div>
 
       {/* Bankbook Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Transaction History</h3>
+          <h3 className="text-lg font-medium text-gray-800">Bankbook Directory</h3>
         </div>
         {bankbook.length === 0 ? (
         <EmptyState message="No bankbook entries found." />

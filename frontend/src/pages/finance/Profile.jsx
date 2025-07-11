@@ -62,11 +62,11 @@ export default function Profile() {
       />
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         <Card className="flex flex-col items-center">
-          <img src={avatar} alt="Avatar" className="w-24 h-24 rounded-full mb-4 shadow" />
-          <div className="text-xl font-bold text-gray-800 mb-1">{user?.name || 'User'}</div>
-          <div className="text-gray-500 mb-1">{user?.email || '-'}</div>
+        <img src={avatar} alt="Avatar" className="w-24 h-24 rounded-full mb-4 shadow" />
+        <div className="text-xl font-bold text-gray-800 mb-1">{user?.name || 'User'}</div>
+        <div className="text-gray-500 mb-1">{user?.email || '-'}</div>
           <div className="text-gray-500 mb-1">{company?.contactPhone || '-'}</div>
-          <div className="text-blue-700 font-medium">{user?.role || ''}</div>
+        <div className="text-blue-700 font-medium">{user?.role || ''}</div>
         </Card>
         <Card title="Company Information" icon={<FiBriefcase className="text-blue-600 w-6 h-6" />}> 
           <div className="space-y-1">

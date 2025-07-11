@@ -67,6 +67,7 @@ import AddClient from './pages/finance/AddClient';
 import ClientDetails from './pages/finance/ClientDetails';
 import RecordProjectPayment from './pages/finance/RecordProjectPayment';
 import ProjectPaymentDetails from './pages/finance/ProjectPaymentDetails';
+import BankAccountDetails from './pages/finance/BankAccountDetails';
 
 export default function App() {
   return (
@@ -96,7 +97,9 @@ export default function App() {
           <Route element={<FinanceLayout />}>
               <Route path="/finance" element={<Dashboard />} />
               <Route path="/finance/accounts" element={<AllBankAccounts />} />
+              <Route path="/finance/accounts/:id" element={<BankAccountDetails />} />
               <Route path="/finance/add-bank-account" element={<AddBankAccount />} />
+              <Route path="/finance/edit-bank-account/:id" element={<AddBankAccount />} />
               
               {/* Expense Management Routes */}
               <Route path="/finance/expenses" element={<Expenses />} />

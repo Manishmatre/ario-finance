@@ -45,7 +45,6 @@ const BankAccountSchema = new mongoose.Schema({
   currentBalance: { 
     type: Number, 
     required: true,
-    min: 0,
     default: 0
   },
   

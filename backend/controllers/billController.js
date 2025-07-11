@@ -104,6 +104,8 @@ exports.payBill = async (req, res) => {
     const txn = await TransactionLine.create({
       date: new Date(),
       bankAccountId: bankAccountDoc._id,
+      debitAccount: bankAccountDoc._id,
+      creditAccount: null,
       vendorId: vendor._id,
       amount: paymentAmount,
       narration: narrationText,
@@ -111,12 +113,33 @@ exports.payBill = async (req, res) => {
       createdBy: req.user?.id
     });
 
-    // 4. Update bill
-    bill.isPaid = true;
+    // 4. Add payment record to bill
+    bill.payments = bill.payments || [];
+    bill.payments.push({
+      amount: paymentAmount,
+      date: new Date(),
+      paymentMode,
+      bankAccount: bankAccountDoc._id,
+      transactionId: txn._id,
+      vendorBankAccount: req.body.vendorBankAccount || undefined
+    });
+
+    // 5. Update bill payment status
+    const totalPaid = bill.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    if (totalPaid >= bill.amount) {
+      bill.isPaid = true;
+      bill.paymentStatus = 'paid';
+    } else if (totalPaid > 0) {
+      bill.isPaid = false;
+      bill.paymentStatus = 'partial';
+    } else {
+      bill.isPaid = false;
+      bill.paymentStatus = 'pending';
+    }
     bill.relatedTxnId = txn._id;
     await bill.save();
 
-    // 5. Update bank account balance
+    // 6. Update bank account balance
     bankAccountDoc.currentBalance = (bankAccountDoc.currentBalance || 0) - paymentAmount;
     await bankAccountDoc.save();
 

@@ -99,12 +99,12 @@ export default function AdvanceToVendor() {
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
-        title="Advance To Vendor"
-        subtitle="Manage vendor advances and track settlements"
+        title="Vendor Payments"
+        subtitle="Manage all payments to vendors: advances and bill payments"
         breadcrumbs={[
           { label: "Finance", to: "/finance" },
           { label: "Vendor and Purchase", to: "/finance/vendors" },
-          { label: "Advance To Vendor" }
+          { label: "Vendor Payments" }
         ]}
       />
       {/* Summary Cards */}
@@ -113,7 +113,7 @@ export default function AdvanceToVendor() {
           <Card key={item.title} className="flex items-center gap-4 p-4">
             <div>{item.icon}</div>
             <div>
-              <div className="text-sm text-gray-500">{item.title}</div>
+              <div className="text-sm text-gray-500">{item.title.replace('Advance', 'Payment')}</div>
               <div className="text-xl font-bold">{item.value}</div>
             </div>
           </Card>
@@ -131,18 +131,18 @@ export default function AdvanceToVendor() {
           />
         </div>
         <div className="flex gap-2 mt-2 md:mt-0">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2" onClick={() => navigate('/finance/advance-vendor/add')}>
-            <FiPlus className="w-4 h-4" /> Add Advance
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2" onClick={() => navigate('/finance/vendor-payments/add')}>
+            <FiPlus className="w-4 h-4" /> Add Payment
           </Button>
         </div>
       </div>
       {/* Advances Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-800">Advance Payments</h3>
+          <h3 className="text-lg font-medium text-gray-800">Vendor Payments</h3>
         </div>
         {paginated.length === 0 ? (
-          <EmptyState message="No advances found." />
+          <EmptyState message="No payments found." />
         ) : (
           <>
             <Table columns={columns} data={paginated} />

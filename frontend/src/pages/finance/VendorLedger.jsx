@@ -159,23 +159,28 @@ const VendorLedger = () => {
     });
   }, [selectedVendor]);
 
+  // Calculate running balance in frontend if not present
   const ledgerWithBalance = addRunningBalance(ledger);
   const paginated = ledgerWithBalance.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Summary for selected vendor
-  const totalBills = ledger.filter(e => e.type === 'Bill').length;
-  const totalAdvances = ledger.filter(e => e.type === 'Advance').length;
   const totalBillAmount = ledger.filter(e => e.type === 'Bill').reduce((sum, e) => sum + (e.amount || 0), 0);
+  const totalPaidAmount = ledger.filter(e => e.type === 'Payment').reduce((sum, e) => sum + (e.amount || 0), 0);
+  const totalPendingAmount = totalBillAmount - totalPaidAmount;
   const totalAdvanceAmount = ledger.filter(e => e.type === 'Advance').reduce((sum, e) => sum + (e.amount || 0), 0);
-  const outstanding = totalBillAmount - totalAdvanceAmount;
-  const lastBillDate = ledger.filter(e => e.type === 'Bill').reduce((latest, e) => e.date && new Date(e.date) > new Date(latest) ? e.date : latest, null);
+  const advanceExcess = totalAdvanceAmount > totalBillAmount ? totalAdvanceAmount - totalBillAmount : 0;
+  const outstanding = totalBillAmount - totalPaidAmount - totalAdvanceAmount;
 
   const vendorSummary = [
-    { title: 'Total Bills', value: totalBills, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
-    { title: 'Total Advances', value: totalAdvances, icon: <FiTrendingUp className="h-6 w-6 text-purple-500" /> },
+    { title: 'Total Bill Amount', value: totalBillAmount, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
+    { title: 'Total Paid Amount', value: totalPaidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
+    { title: 'Total Advance Paid', value: totalAdvanceAmount, icon: <FiTrendingUp className="h-6 w-6 text-purple-500" /> },
     { title: 'Outstanding', value: outstanding, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
-    { title: 'Last Bill Date', value: lastBillDate ? new Date(lastBillDate).toLocaleDateString('en-IN') : '-', icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
   ];
+
+  // Optionally show excess advance as a separate card
+  // if (advanceExcess > 0) {
+  //   vendorSummary.push({ title: 'Advance Exceeds Bills', value: advanceExcess, icon: <FiDollarSign className="h-6 w-6 text-orange-500" /> });
+  // }
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
@@ -194,9 +199,7 @@ const VendorLedger = () => {
           <StatCard
             key={index}
             title={summary.title}
-            value={summary.title.includes('Amount') || summary.title.includes('Outstanding')
-              ? `₹${summary.value?.toLocaleString()}`
-              : summary.value?.toString()}
+            value={`\u20b9${summary.value?.toLocaleString()}`}
             icon={summary.icon}
           />
         ))}

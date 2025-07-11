@@ -5,24 +5,52 @@ import Button from '../../components/ui/Button';
 import PageHeading from '../../components/ui/PageHeading';
 import Card from '../../components/ui/Card';
 import { FiCheckCircle } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 import Select from '../../components/ui/Select';
+import { useWatch } from 'react-hook-form';
 
 export default function AddPurchaseBill() {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const { register, handleSubmit, reset, formState: { errors }, setValue, control, watch } = useForm();
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [vendors, setVendors] = useState([]);
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [paymentStatus, setPaymentStatus] = useState('pending');
+  const [payments, setPayments] = useState([]);
   const navigate = useNavigate();
+  const paymentMode = useWatch({ control, name: 'paymentMode' });
 
-  // Fetch vendors for dropdown
+  // Fetch vendors and bank accounts for dropdowns
   useEffect(() => {
     axiosInstance.get('/api/finance/vendors')
       .then(res => setVendors(res.data))
       .catch(() => setVendors([]));
+    axiosInstance.get('/api/finance/bank-accounts')
+      .then(res => setBankAccounts(res.data.bankAccounts || []))
+      .catch(() => setBankAccounts([]));
   }, []);
+
+  // Fetch bill data if editing
+  useEffect(() => {
+    if (!isEditMode) return;
+    setLoading(true);
+    axiosInstance.get(`/api/finance/bills/${id}`)
+      .then(res => {
+        const bill = res.data;
+        setValue('vendor', bill.vendorId?._id || bill.vendorId || '');
+        setValue('billNo', bill.billNo || '');
+        setValue('billDate', bill.billDate ? bill.billDate.slice(0, 10) : '');
+        setValue('amount', bill.amount || '');
+        setPaymentStatus(bill.paymentStatus || (bill.isPaid ? 'paid' : 'pending'));
+        setPayments(bill.payments || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [isEditMode, id, setValue]);
 
   const onSubmit = async data => {
     setLoading(true);
@@ -36,16 +64,25 @@ export default function AddPurchaseBill() {
       if (data.file && data.file[0]) {
         formData.append('file', data.file[0]);
       }
-      await axiosInstance.post('/api/finance/bills', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      let res;
+      if (isEditMode) {
+        res = await axiosInstance.put(`/api/finance/bills/${id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        res = await axiosInstance.post('/api/finance/bills', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
       setSuccess(true);
+      setPaymentStatus(res.data.paymentStatus || 'pending');
+      setPayments(res.data.payments || []);
       setTimeout(() => {
         navigate('/finance/bills');
       }, 1200);
       reset();
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to add bill');
+      setError(err.response?.data?.error || err.message || 'Failed to save bill');
     } finally {
       setLoading(false);
     }
@@ -119,6 +156,11 @@ export default function AddPurchaseBill() {
           </form>
         </div>
       </div>
+      {success && (
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-blue-800 font-medium">Payment Status: {paymentStatus}</span>
+        </div>
+      )}
     </div>
   );
 } 

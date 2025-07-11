@@ -115,12 +115,14 @@ export default function App() {
               <Route path="/finance/bills/add" element={<AddPurchaseBill />} />
               <Route path="/finance/bills/:id" element={<BillDetails />} />
               <Route path="/finance/bills/:id/pay" element={<MakeBillPaid />} />
+              <Route path="/finance/bills/edit/:id" element={<AddPurchaseBill />} />
               <Route path="/finance/vendors" element={<Vendors />} />
               <Route path="/finance/vendor-ledger" element={<VendorLedger />} />
               <Route path="/finance/advance-vendor" element={<AdvanceToVendor />} />
               <Route path="/finance/advance-vendor/add" element={<AddAdvanceToVendor />} />
               <Route path="/finance/advance-vendor/edit/:id" element={<AddAdvanceToVendor />} />
               <Route path="/finance/vendor-payments" element={<VendorPayments />} />
+              <Route path="/finance/vendor-payments/add" element={<AddAdvanceToVendor />} />
               <Route path="/finance/cashbook" element={<Cashbook />} />
               <Route path="/finance/petty-cash" element={<PettyCashRegister />} />
               <Route path="/finance/cash-reimburse" element={<CashReimbursement />} />

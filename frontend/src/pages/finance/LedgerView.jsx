@@ -93,11 +93,11 @@ const addRunningBalance = (rows, accountId) => {
   // Sort by date ascending for running balance
   const sorted = [...rows].sort((a, b) => new Date(a.date) - new Date(b.date));
   return sorted.map(row => {
-    // If vendorId is present, it's a payment (debit/outflow)
-    const isDebit = !!row.vendorId;
-    const isCredit = !row.vendorId;
+    // For expenses, always treat as debit
+    const isExpense = row.narration && row.narration.toLowerCase().includes('expense');
+    const isDebit = isExpense || (!!row.vendorId);
     const debit = isDebit ? row.amount : 0;
-    const credit = isCredit ? row.amount : 0;
+    const credit = !isDebit ? row.amount : 0;
     balance += credit - debit;
     return {
       ...row,

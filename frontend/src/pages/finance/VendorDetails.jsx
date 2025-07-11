@@ -55,20 +55,24 @@ export default function VendorDetails() {
       });
   }, [id]);
 
-  // Summary stats
-  const totalBills = bills.length;
-  const totalAdvances = advances.length;
-  const totalBillAmount = bills.reduce((sum, b) => sum + (b.amount || 0), 0);
-  const totalAdvanceAmount = advances.reduce((sum, a) => sum + (a.amount || 0), 0);
-  const paidAmount = bills.filter(b => b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
-  const pendingAmount = bills.filter(b => !b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
-  const outstanding = totalBillAmount - totalAdvanceAmount - paidAmount;
+  // Summary stats (from ledger for consistency)
+  const ledgerWithBalance = (() => {
+    let balance = 0;
+    return ledger.map(row => {
+      balance += (row.debit || 0) - (row.credit || 0);
+      return { ...row, balance };
+    });
+  })();
+  const totalBillAmount = ledger.filter(e => e.type === 'Bill').reduce((sum, e) => sum + (e.amount || 0), 0);
+  const totalPaidAmount = ledger.filter(e => e.type === 'Payment').reduce((sum, e) => sum + (e.amount || 0), 0);
+  const totalPendingAmount = totalBillAmount - totalPaidAmount;
+  const outstanding = ledgerWithBalance.length > 0 ? ledgerWithBalance[ledgerWithBalance.length - 1].balance : 0;
 
   const summaryCards = [
-    { title: 'Total Bills', value: totalBills, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
-    { title: 'Total Advances', value: totalAdvances, icon: <FiTrendingUp className="h-6 w-6 text-purple-500" /> },
+    { title: 'Total Bill Amount', value: totalBillAmount, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
+    { title: 'Total Paid Amount', value: totalPaidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
+    { title: 'Total Pending Amount', value: totalPendingAmount, icon: <FiDollarSign className="h-6 w-6 text-yellow-500" /> },
     { title: 'Outstanding', value: outstanding, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
-    { title: 'Paid Amount', value: paidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
   ];
 
   const billColumns = [

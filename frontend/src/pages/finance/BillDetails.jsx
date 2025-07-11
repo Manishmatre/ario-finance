@@ -16,10 +16,6 @@ export default function BillDetails() {
   const [bill, setBill] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editMode, setEditMode] = useState(false);
-  const [vendors, setVendors] = useState([]);
-  const [form, setForm] = useState({});
-  const [file, setFile] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,35 +39,6 @@ export default function BillDetails() {
           vendorName = vendorMap[billRes.data.vendorId];
         }
         setBill({ ...billRes.data, vendorName });
-        setForm({
-          vendorId: billRes.data.vendor?._id || billRes.data.vendorId || '',
-          billNo: billRes.data.billNo || '',
-          billDate: billRes.data.billDate ? billRes.data.billDate.slice(0, 10) : '',
-          amount: billRes.data.amount || '',
-          isPaid: billRes.data.isPaid || false,
-        });
-        setVendors(vendorsRes.data);
-        // Always fetch vendor details in parallel
-        let vId = '';
-        if (billRes.data.vendor && typeof billRes.data.vendor === 'object' && billRes.data.vendor._id) {
-          vId = billRes.data.vendor._id;
-        } else if (typeof billRes.data.vendorId === 'string') {
-          vId = billRes.data.vendorId;
-        }
-        console.log('DEBUG: vendorId for details fetch:', vId);
-        if (vId) {
-          vendorDetailsPromise = axiosInstance.get(`/api/finance/vendors/${vId}`)
-            .then(vendorRes => {
-              console.log('DEBUG: vendorDetails response:', vendorRes.data);
-              // setVendorDetails(vendorRes.data); // This state is no longer needed
-            })
-            .catch((err) => {
-              console.log('DEBUG: vendorDetails fetch error', err);
-              // setVendorDetails(null); // This state is no longer needed
-            });
-        } else {
-          // setVendorDetails(null); // This state is no longer needed
-        }
         setLoading(false);
       })
       .catch(err => {
@@ -80,60 +47,7 @@ export default function BillDetails() {
       });
   }, [id]);
 
-  const handleEdit = () => setEditMode(true);
-  const handleCancelEdit = () => setEditMode(false);
-  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-
-  const handleUpdate = async e => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      let res;
-      if (file) {
-        // If a new file is selected, use FormData and POST to the same endpoint as add
-        const formData = new FormData();
-        formData.append('vendorId', form.vendorId);
-        formData.append('billNo', form.billNo);
-        formData.append('billDate', form.billDate);
-        formData.append('amount', form.amount);
-        formData.append('isPaid', form.isPaid === true || form.isPaid === 'true');
-        formData.append('file', file);
-        // Use POST to /api/finance/bills to create a new bill with file, or PATCH/PUT to update with file
-        res = await axiosInstance.post(`/api/finance/bills`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      } else {
-        // No new file, just update fields
-        const updateData = {
-          vendorId: form.vendorId,
-          billNo: form.billNo,
-          billDate: form.billDate,
-          amount: form.amount,
-          isPaid: form.isPaid === true || form.isPaid === 'true',
-        };
-        res = await axiosInstance.put(`/api/finance/bills/${bill._id || bill.id}`, updateData);
-      }
-      setBill(res.data);
-      // Map vendorName from vendors list if available
-      if (vendors.length > 0) {
-        const vendorMap = {};
-        vendors.forEach(v => { vendorMap[v._id] = v.name; });
-        let vendorName = res.data.vendorId?.name || res.data.vendorId || res.data.vendor || '-';
-        if (typeof res.data.vendorId === 'string' && vendorMap[res.data.vendorId]) {
-          vendorName = vendorMap[res.data.vendorId];
-        }
-        setBill({ ...res.data, vendorName });
-      } else {
-        setBill(res.data);
-      }
-      setEditMode(false);
-    } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to update bill');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleEdit = () => navigate(`/finance/bills/edit/${bill._id || bill.id}`);
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this bill?')) return;
@@ -167,67 +81,16 @@ export default function BillDetails() {
         <StatCard title="Vendor" value={bill.vendorName} icon={<FiFileText className="h-6 w-6 text-blue-500" />} />
         <StatCard title="Amount" value={`₹${bill.amount?.toLocaleString()}`} icon={<FiDollarSign className="h-6 w-6 text-green-500" />} valueColor="text-green-600" />
         <StatCard title="Bill Date" value={bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'} icon={<FiCalendar className="h-6 w-6 text-yellow-500" />} />
-        <StatCard title="Status" value={bill.isPaid ? 'Paid' : 'Pending'} icon={<FiCheckCircle className={`h-6 w-6 ${bill.isPaid ? 'text-green-500' : 'text-yellow-500'}`} />} valueColor={bill.isPaid ? 'text-green-600' : 'text-yellow-600'} />
+        <StatCard title="Status" value={bill.paymentStatus ? bill.paymentStatus.charAt(0).toUpperCase() + bill.paymentStatus.slice(1) : (bill.isPaid ? 'Paid' : 'Pending')} icon={<FiCheckCircle className={`h-6 w-6 ${bill.paymentStatus === 'paid' || bill.isPaid ? 'text-green-500' : bill.paymentStatus === 'partial' ? 'text-yellow-500' : 'text-yellow-500'}`} />} valueColor={bill.paymentStatus === 'paid' || bill.isPaid ? 'text-green-600' : bill.paymentStatus === 'partial' ? 'text-yellow-600' : 'text-yellow-600'} />
       </div>
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-medium text-gray-800 mb-4">Bill Information</h3>
-        {editMode ? (
-          <form onSubmit={handleUpdate} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Vendor *</label>
-                <Select
-                  options={vendors.map(v => ({ value: v._id, label: v.name }))}
-                  name="vendorId"
-                  value={form.vendorId}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bill No *</label>
-                <Input name="billNo" value={form.billNo} onChange={handleChange} required />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bill Date *</label>
-                <Input type="date" name="billDate" value={form.billDate} onChange={handleChange} required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Amount *</label>
-                <Input type="number" min="1" name="amount" value={form.amount} onChange={handleChange} required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                <select
-                  name="isPaid"
-                  value={form.isPaid === true || form.isPaid === 'true' ? 'true' : 'false'}
-                  onChange={e => setForm(f => ({ ...f, isPaid: e.target.value === 'true' }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="false">Pending</option>
-                  <option value="true">Paid</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-8">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bill File (PDF/JPG/PNG)</label>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files[0])} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <Button type="button" variant="secondary" onClick={handleCancelEdit}>Cancel</Button>
-              <Button type="submit" variant="primary">Save Changes</Button>
-            </div>
-          </form>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div><strong>Vendor:</strong> {bill.vendorName}</div>
             <div><strong>Bill No:</strong> {bill.billNo}</div>
             <div><strong>Bill Date:</strong> {bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'}</div>
             <div><strong>Amount:</strong> ₹{bill.amount?.toLocaleString()}</div>
-            <div><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs font-medium ${bill.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{bill.isPaid ? 'Paid' : 'Pending'}</span></div>
+            <div><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs font-medium ${bill.paymentStatus === 'paid' || bill.isPaid ? 'bg-green-100 text-green-800' : bill.paymentStatus === 'partial' ? 'bg-yellow-100 text-yellow-800' : 'bg-yellow-100 text-yellow-800'}`}>{bill.paymentStatus ? bill.paymentStatus.charAt(0).toUpperCase() + bill.paymentStatus.slice(1) : (bill.isPaid ? 'Paid' : 'Pending')}</span></div>
             {bill.fileUrl && /^https?:\/\//.test(bill.fileUrl) && (
               <div><strong>Bill File:</strong> <a href={bill.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View/Download</a></div>
             )}
@@ -239,9 +102,8 @@ export default function BillDetails() {
             {bill.createdAt && <div><strong>Created At:</strong> {new Date(bill.createdAt).toLocaleString()}</div>}
             {bill.updatedAt && <div><strong>Updated At:</strong> {new Date(bill.updatedAt).toLocaleString()}</div>}
           </div>
-        )}
         {/* After the main bill info, add payment details if bill.isPaid */}
-        {!editMode && bill.isPaid && (
+        {!bill.isPaid && (
           <div className="mt-8">
             <h3 className="text-lg font-semibold text-green-700 mb-2">Payment Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -263,15 +125,49 @@ export default function BillDetails() {
             )}
           </div>
         )}
+        {/* Payment History Section */}
+        {bill.payments && bill.payments.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold text-blue-700 mb-2">Payment History</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-200 rounded-lg">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Date</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Mode</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Bank</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Vendor Bank Account</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bill.payments.map((p, idx) => (
+                    <tr key={idx} className="border-t">
+                      <td className="px-4 py-2">₹{p.amount?.toLocaleString()}</td>
+                      <td className="px-4 py-2">{p.date ? new Date(p.date).toLocaleDateString('en-IN') : '-'}</td>
+                      <td className="px-4 py-2">{p.paymentMode || '-'}</td>
+                      <td className="px-4 py-2">{p.bankAccount || '-'}</td>
+                      <td className="px-4 py-2">
+                        {p.vendorBankAccount ?
+                          `${p.vendorBankAccount.bankName || ''} (${p.vendorBankAccount.accountNumber || ''})${p.vendorBankAccount.accountHolder ? ' - ' + p.vendorBankAccount.accountHolder : ''}`
+                          : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         <div className="flex gap-2 mt-8">
           <Button variant="secondary" onClick={() => navigate('/finance/bills')}>Back</Button>
-          {!editMode && <Button variant="primary" onClick={handleEdit}>Edit</Button>}
-          {!bill.isPaid && !editMode && (
+          <Button variant="primary" onClick={handleEdit}>Edit</Button>
+          {!bill.isPaid && (
             <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => navigate(`/finance/bills/${bill._id || bill.id}/pay`)}>
               Mark as Paid
             </Button>
           )}
-          {!editMode && <Button variant="danger" onClick={handleDelete}>Delete</Button>}
+          <Button variant="danger" onClick={handleDelete}>Delete</Button>
         </div>
       </div>
     </div>

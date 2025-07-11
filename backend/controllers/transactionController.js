@@ -180,7 +180,9 @@ exports.listBankAccountTransactions = async (req, res) => {
 
     let balance = 0;
     const txnsWithBalance = txns.map(txn => {
-      const isDebit = txn.debitAccount?.toString() === bankAccountId;
+      // For expenses, always treat as debit for the bank account
+      const isExpense = txn.narration && txn.narration.toLowerCase().includes('expense');
+      const isDebit = isExpense || txn.debitAccount?.toString() === bankAccountId;
       const debit = isDebit ? txn.amount : 0;
       const credit = !isDebit ? txn.amount : 0;
       balance += credit - debit;

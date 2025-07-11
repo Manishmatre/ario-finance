@@ -83,7 +83,7 @@ export default function PurchaseBills() {
   };
 
   const handleEditBill = (bill) => {
-    navigate(`/finance/bills/${bill._id || bill.id}?edit=1`);
+    navigate(`/finance/bills/edit/${bill._id || bill.id}`);
   };
 
   const handlePayBill = async (bill) => {
@@ -136,7 +136,7 @@ export default function PurchaseBills() {
           <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/bills/${row.original._id || row.original.id}`)}>View</Button>
           <Button size="sm" variant="primary" onClick={() => handleEditBill(row.original)}>Edit</Button>
           {!row.original.isPaid && (
-            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handlePayBill(row.original)}>Pay</Button>
+            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => navigate(`/finance/bills/${row.original._id || row.original.id}/pay`)}>Pay</Button>
           )}
           <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id || row.original.id)}>Delete</Button>
         </div>

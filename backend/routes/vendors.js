@@ -16,6 +16,7 @@ router.get('/summary', vendorController.getVendorSummary);
 router.get('/:id/bills', vendorController.getVendorBills);
 router.get('/:id/advances', advanceVendorController.getVendorAdvances);
 router.get('/:id/payments', vendorController.getVendorPayments);
+router.post('/payments', vendorController.createVendorPayment);
 router.get('/:id/ledger', vendorController.getVendorLedger);
 // --- General routes after ---
 router.get('/', vendorController.listVendors);

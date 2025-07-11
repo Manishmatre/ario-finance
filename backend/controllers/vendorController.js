@@ -136,8 +136,8 @@ exports.getVendorLedger = async (req, res) => {
         type: 'Bill',
         date: bill.billDate || bill.createdAt,
         amount: bill.amount,
-        debit: bill.amount,
-        credit: 0,
+        debit: 0,
+        credit: bill.amount,
         ref: bill.billNo || '',
         note: 'Purchase Bill',
       })),
@@ -146,12 +146,24 @@ exports.getVendorLedger = async (req, res) => {
         type: 'Advance',
         date: adv.date || adv.createdAt,
         amount: adv.amount,
-        debit: 0,
-        credit: adv.amount,
+        debit: adv.amount, // CHANGED: advances are now debit
+        credit: 0,         // CHANGED: advances are not credit
         ref: '',
         note: adv.cleared ? 'Advance (Cleared)' : 'Advance',
       })),
-      // ...payments.map(payment => ({ ... }))
+      // Add bill payments as debit entries
+      ...bills.flatMap(bill =>
+        (bill.payments || []).map((payment, idx) => ({
+          _id: `${bill._id}-payment-${idx}`,
+          type: 'Payment',
+          date: payment.date || bill.updatedAt || bill.createdAt,
+          amount: payment.amount,
+          debit: payment.amount,
+          credit: 0,
+          ref: bill.billNo || '',
+          note: 'Bill Payment',
+        }))
+      ),
     ];
 
     // Sort by date ascending
@@ -167,5 +179,71 @@ exports.getVendorLedger = async (req, res) => {
     res.json(ledgerEntries);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+// Unified vendor payment endpoint
+exports.createVendorPayment = async (req, res) => {
+  try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
+    const { vendorId, amount, date, type, bills } = req.body;
+    if (!vendorId || !amount || !date || !type) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if (type === 'advance') {
+      // Create an advance
+      const adv = await AdvanceVendor.create({
+        vendorId,
+        amount,
+        date,
+        cleared: false,
+        tenantId: req.tenantId,
+        createdBy: req.user?.id
+      });
+      return res.status(201).json({ message: 'Advance payment recorded', advance: adv });
+    } else if (type === 'bill') {
+      if (!Array.isArray(bills) || bills.length === 0) {
+        return res.status(400).json({ error: 'No bills selected for payment' });
+      }
+      // Pay bills in order until amount is exhausted
+      let remaining = amount;
+      const updatedBills = [];
+      for (const billId of bills) {
+        if (remaining <= 0) break;
+        const bill = await PurchaseBill.findOne({ _id: billId, vendorId, tenantId: req.tenantId });
+        if (!bill) continue;
+        const paidSoFar = (bill.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+        const toPay = Math.min(remaining, bill.amount - paidSoFar);
+        if (toPay > 0) {
+          bill.payments = bill.payments || [];
+          bill.payments.push({
+            amount: toPay,
+            date: new Date(date),
+            paymentMode: 'manual',
+            // Add more fields as needed
+          });
+          // Update payment status
+          const totalPaid = paidSoFar + toPay;
+          if (totalPaid >= bill.amount) {
+            bill.isPaid = true;
+            bill.paymentStatus = 'paid';
+          } else if (totalPaid > 0) {
+            bill.isPaid = false;
+            bill.paymentStatus = 'partial';
+          } else {
+            bill.isPaid = false;
+            bill.paymentStatus = 'pending';
+          }
+          await bill.save();
+          updatedBills.push(bill);
+          remaining -= toPay;
+        }
+      }
+      return res.status(201).json({ message: 'Bill payment(s) recorded', updatedBills });
+    } else {
+      return res.status(400).json({ error: 'Invalid payment type' });
+    }
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 };

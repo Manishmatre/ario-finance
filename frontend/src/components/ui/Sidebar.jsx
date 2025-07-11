@@ -12,9 +12,8 @@ const payablesMenu = [
   { to: "/finance/vendors", label: "Vendors", icon: <FiUsers /> },
   { to: "/finance/vendors/add", label: "Add Vendor", icon: <FiPlusCircle /> },
   { to: "/finance/vendor-ledger", label: "Vendor Ledger", icon: <FiLayers /> },
-  { to: "/finance/advance-vendor", label: "Advance To Vendor", icon: <FiTrendingUp /> },
-  { to: "/finance/advance-vendor/add", label: "Add Advance To Vendor", icon: <FiPlusCircle /> },
   { to: "/finance/vendor-payments", label: "Vendor Payments", icon: <FiCreditCard /> },
+  { to: "/finance/vendor-payments/add", label: "Add Payment", icon: <FiPlusCircle /> },
 ];
 
 const loansMenu = [

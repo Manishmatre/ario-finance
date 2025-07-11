@@ -46,14 +46,16 @@ exports.createExpense = async (req, res) => {
     const expense = await Expense.create(expenseData);
 
     // If payment method is bank_transfer and bankAccount is provided, create transaction and update balance
-    if (expense.paymentMethod === 'bank_transfer' && expense.bankAccount) {
+    if (expense.paymentMethod === 'bank_transfer' && req.body.bankAccount) {
       // Find the bank account
-      const bankAcc = await BankAccount.findOne({ _id: expense.bankAccount, tenantId: req.tenantId });
+      const bankAcc = await BankAccount.findOne({ _id: req.body.bankAccount, tenantId: req.tenantId });
       if (bankAcc) {
         // Always create a TransactionLine for the expense
         await TransactionLine.create({
           date: expense.date,
           bankAccountId: bankAcc._id, // Bank account involved
+          debitAccount: bankAcc._id,
+          creditAccount: null,
           amount: expense.amount,
           narration: `Expense: ${expense.description}`,
           tenantId: req.tenantId,

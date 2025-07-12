@@ -471,6 +471,44 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               <FiSettings />
               Settings
             </NavLink>
+            {/* Pricing Link */}
+            <NavLink
+              to="/finance/pricing"
+              className={({ isActive }) =>
+                `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2
+                  transition-all duration-200 ease-in-out transform
+                  relative group
+                  ${
+                    isActive
+                      ? "bg-blue-700 text-white shadow scale-105 border-l-4 border-blue-400"
+                      : "text-gray-200 hover:bg-gray-800 hover:text-white hover:scale-105"
+                  }
+                `
+              }
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FiCreditCard />
+              Pricing
+            </NavLink>
+            {/* Subscription Link */}
+            <NavLink
+              to="/finance/subscription"
+              className={({ isActive }) =>
+                `flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2
+                  transition-all duration-200 ease-in-out transform
+                  relative group
+                  ${
+                    isActive
+                      ? "bg-blue-700 text-white shadow scale-105 border-l-4 border-blue-400"
+                      : "text-gray-200 hover:bg-gray-800 hover:text-white hover:scale-105"
+                  }
+                `
+              }
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FiTrendingUp />
+              Subscription
+            </NavLink>
           </>
         ) : (
           <>

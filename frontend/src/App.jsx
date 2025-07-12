@@ -66,6 +66,10 @@ import ClientDetails from './pages/finance/ClientDetails';
 import RecordProjectPayment from './pages/finance/RecordProjectPayment';
 import ProjectPaymentDetails from './pages/finance/ProjectPaymentDetails';
 import BankAccountDetails from './pages/finance/BankAccountDetails';
+import Pricing from './pages/finance/Pricing';
+import SubscriptionManagement from './pages/finance/SubscriptionManagement';
+import PlanCreator from './pages/finance/PlanCreator';
+import SubscriptionConfirmation from './pages/finance/SubscriptionConfirmation';
 
 export default function App() {
   return (
@@ -165,6 +169,12 @@ export default function App() {
               <Route path="/finance/clients/add" element={<AddClient />} />
               <Route path="/finance/clients/edit/:id" element={<AddClient />} />
               <Route path="/finance/clients/:id" element={<ClientDetails />} />
+
+              {/* Subscription Management Routes */}
+              <Route path="/finance/pricing" element={<Pricing />} />
+              <Route path="/finance/subscription" element={<SubscriptionManagement />} />
+              <Route path="/finance/subscription-confirmation" element={<SubscriptionConfirmation />} />
+              <Route path="/finance/plan-creator" element={<PlanCreator />} />
 
               <Route path="*" element={<Navigate to="/finance" />} />
             </Route>

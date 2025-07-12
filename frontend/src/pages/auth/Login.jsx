@@ -133,7 +133,7 @@ export default function Login() {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">New to SSK Finance?</span>
+            <span className="px-2 bg-white text-gray-500">New to Ario Finance?</span>
           </div>
         </div>
 

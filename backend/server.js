@@ -11,6 +11,7 @@ const vendorsRouter = require('./routes/vendors');
 const billsRouter = require('./routes/bills');
 const expensesRouter = require('./routes/expenses');
 const dashboardRouter = require('./routes/dashboard');
+const subscriptionRouter = require('./routes/subscription');
 const cashRouter = require('./routes/cash');
 const pettyCashRouter = require('./routes/pettyCash');
 const grnRouter = require('./routes/grn');
@@ -19,6 +20,7 @@ const productRouter = require('./routes/product');
 const loanRouter = require('./routes/loan');
 const projectRouter = require('./routes/projectRoutes');
 const clientRouter = require('./routes/clientRoutes');
+const plansRouter = require('./routes/plans');
 
 // Ensure required environment variables are set
 if (!process.env.JWT_SECRET) {
@@ -35,7 +37,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app' , 'https://sskfinance.netlify.app'],
+    origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app' , 'https://ariofinance.netlify.app'],
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -46,7 +48,7 @@ setIO(io);
 
 // Enable CORS with specific options
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app', 'https://sskfinance.netlify.app'],
+  origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app', 'https://ariofinance.netlify.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -83,6 +85,8 @@ app.use('/api/finance/employees', require('./routes/employees'));
 app.use('/api/finance/clients', clientRouter);
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/subscription', subscriptionRouter);
+app.use('/api/plans', plansRouter);
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

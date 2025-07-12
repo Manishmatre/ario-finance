@@ -183,20 +183,16 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="flex items-center">
-            <img 
-              src="/logo.svg" 
-              alt="SSK Finance Logo" 
-              className="h-8 w-auto mr-2 hidden md:block" 
-              onError={e => { 
-                e.target.style.display='none'; 
-                e.target.parentNode.querySelector('.logo-text').style.display='block'; 
-              }} 
-            />
-            <span className="logo-text hidden md:block font-bold text-xl text-blue-700 mr-3 tracking-tight" style={{display:'none'}}>
-              SSK <span className="text-gray-900">Finance</span>
-            </span>
-          </div>
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+              <span className="text-white font-bold text-lg">A</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-gray-900">Ario</span>
+              <span className="text-sm font-medium text-gray-600">Finance Management</span>
+            </div>
+          </Link>
         </div>
         {/* Center: Search Bar */}
         <div className={`flex-1 max-w-2xl mx-4 transition-all duration-200 ${isSearchFocused ? 'md:ml-8' : ''}`}> 

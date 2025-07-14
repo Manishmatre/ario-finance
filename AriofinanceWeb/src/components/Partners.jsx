@@ -10,7 +10,7 @@ const partners = [
 
 export default function Partners() {
   return (
-    <section className="max-w-7xl mx-auto px-4 py-16">
+    <section className="max-w-7xl mx-auto px-4 py-16 fade-in-up">
       <h2 className="text-2xl font-bold text-center mb-8">Trusted by Leading Banks & Partners</h2>
       <div className="flex flex-wrap justify-center items-center gap-10">
         {partners.map((p, i) => (

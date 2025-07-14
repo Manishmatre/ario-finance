@@ -52,9 +52,9 @@ export default function Pricing() {
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-16">
         <h1 className="text-4xl font-bold mb-8 text-center">Pricing</h1>
-        <div className="grid md:grid-cols-3 gap-8 mb-10">
+        <div className="grid md:grid-cols-3 gap-8 mb-10 fade-in-up">
           {plans.map((plan, i) => (
-            <div key={i} className={`bg-white rounded-2xl shadow-lg p-8 text-center border-2 ${plan.popular ? 'border-primary scale-105 z-10' : 'border-transparent'} relative transition-transform`}>
+            <div key={i} className={`bg-white rounded-2xl shadow-lg p-8 text-center border-2 ${plan.popular ? 'border-primary scale-105 z-10' : 'border-transparent'} relative transition-transform card-hover`}>
               {plan.popular && <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-xs font-bold shadow">Most Popular</span>}
               <h2 className="font-bold text-2xl mb-2">{plan.name}</h2>
               <div className="text-3xl font-bold text-primary mb-2">{plan.price}</div>
@@ -64,14 +64,14 @@ export default function Pricing() {
                   <li key={j} className="flex items-center gap-2"><span className="text-green-500">✔</span> {f}</li>
                 ))}
               </ul>
-              <a href="/app/register" className="inline-block px-6 py-2 rounded bg-primary text-white font-semibold hover:bg-primary-dark transition shadow">Start Free</a>
+              <a href="/app/register" className="inline-block px-6 py-2 rounded bg-primary text-white font-semibold hover:bg-primary-dark transition shadow button-hover">Start Free</a>
             </div>
           ))}
         </div>
-        <div className="text-center mt-6 mb-16">
+        <div className="text-center mt-6 mb-16 fade-in-up">
           <span className="inline-block bg-blue-100 text-blue-700 font-semibold px-3 py-1 rounded-full">🎉 1 Year Free on All Plans! Use code <b>1YEARFREE</b></span>
         </div>
-        <div className="max-w-3xl mx-auto mb-16">
+        <div className="max-w-3xl mx-auto mb-16 fade-in-up">
           <h2 className="text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h2>
           <div className="space-y-6">
             {faqs.map((faq, i) => (
@@ -82,8 +82,8 @@ export default function Pricing() {
             ))}
           </div>
         </div>
-        <div className="text-center">
-          <a href="/app/register" className="inline-block px-10 py-4 rounded-xl bg-primary text-white font-bold text-xl shadow-lg hover:bg-primary-dark transition-all duration-200">Start Your Free Year</a>
+        <div className="text-center fade-in-up">
+          <a href="/app/register" className="inline-block px-10 py-4 rounded-xl bg-primary text-white font-bold text-xl shadow-lg hover:bg-primary-dark transition-all duration-200 button-hover">Start Your Free Year</a>
         </div>
       </div>
       <Footer />

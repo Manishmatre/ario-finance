@@ -140,9 +140,6 @@ exports.payBill = async (req, res) => {
     await bill.save();
 
     // 6. Update bank account balance
-    bankAccountDoc.currentBalance = (bankAccountDoc.currentBalance || 0) - paymentAmount;
-    await bankAccountDoc.save();
-
     res.json({ bill, txn });
   } catch (err) {
     res.status(400).json({ error: err.message });

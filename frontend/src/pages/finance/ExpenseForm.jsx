@@ -205,7 +205,7 @@ export default function ExpenseForm() {
               {showBankDropdown && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account *</label>
-                  <Select options={bankAccountOptions} {...register('bankAccount', { required: showBankDropdown })} />
+                  <Select options={bankAccountOptions} {...register('bankAccount', { required: showBankDropdown })} value={bankAccounts.length === 1 ? bankAccounts[0]._id : undefined} />
                   {errors.bankAccount && <span className="text-red-500 text-xs">Bank account is required for bank transfer</span>}
                   </div>
                 )}

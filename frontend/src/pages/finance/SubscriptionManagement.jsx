@@ -196,52 +196,52 @@ export default function SubscriptionManagement() {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Plan Details</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Plan:</span>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Plan Details</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Plan:</span>
                   <span className="font-medium">{subscription?.planName || subscription?.plan}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Billing Cycle:</span>
-                  <span className="font-medium capitalize">{subscription?.billingCycle}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Amount:</span>
-                  <span className="font-medium">{formatCurrency(subscription?.amount)}</span>
-                </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Billing Cycle:</span>
+                    <span className="font-medium capitalize">{subscription?.billingCycle}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-medium">{formatCurrency(subscription?.amount)}</span>
+                  </div>
                 {subscription?.trialDays > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Trial:</span>
                     <span className="font-medium text-blue-600">{subscription.trialDays} days</span>
-                  </div>
+                </div>
                 )}
               </div>
             </div>
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Billing Period</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Started:</span>
-                  <span className="font-medium">{formatDate(subscription?.currentPeriodStart)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Ends:</span>
-                  <span className="font-medium">{formatDate(subscription?.currentPeriodEnd)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Days Remaining:</span>
-                  <span className="font-medium">
-                    {subscription?.getRemainingDays ? subscription.getRemainingDays() : 
-                      subscription?.currentPeriodEnd ? 
-                      Math.ceil((new Date(subscription.currentPeriodEnd) - new Date()) / (1000 * 60 * 60 * 24)) : 
-                      'N/A'}
-                  </span>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Billing Period</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Started:</span>
+                    <span className="font-medium">{formatDate(subscription?.currentPeriodStart)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Ends:</span>
+                    <span className="font-medium">{formatDate(subscription?.currentPeriodEnd)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Days Remaining:</span>
+                    <span className="font-medium">
+                      {subscription?.getRemainingDays ? subscription.getRemainingDays() : 
+                       subscription?.currentPeriodEnd ? 
+                       Math.ceil((new Date(subscription.currentPeriodEnd) - new Date()) / (1000 * 60 * 60 * 24)) : 
+                       'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
         </div>
       </Card>
 
@@ -281,11 +281,11 @@ export default function SubscriptionManagement() {
                             <span title="Not included" className="text-gray-400">❌</span>
                           )
                         ) : '-'}
-                      </span>
+                  </span>
                     </li>
                   ))}
                 </ul>
-              </div>
+                </div>
             </div>
           </div>
         </Card>

@@ -16,6 +16,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FiDownload } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { Modal } from '../../components/ui/Modal';
 
 const getTransactionsSummary = (transactions) => {
   const total = transactions.length;
@@ -36,7 +37,9 @@ export default function EmployeeTransactions() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [filters, setFilters] = useState({ name: '', type: '', dateFrom: '', dateTo: '' });
+  const [viewTxn, setViewTxn] = useState(null);
   const navigate = useNavigate();
+  const [editTxn, setEditTxn] = useState(null);
 
   // Fetch transactions with filters
   const fetchTransactions = (params = {}) => {
@@ -49,8 +52,18 @@ export default function EmployeeTransactions() {
   };
 
   React.useEffect(() => {
-    fetchTransactions(filters);
-     
+    setLoading(true);
+    axiosInstance.get(`/api/finance/employees/transactions/all${Object.keys(filters).length ? '?' + new URLSearchParams(filters).toString() : ''}`)
+      .then(res => {
+        // Attach index and type to each transaction
+        const txns = [];
+        (res.data || []).forEach((txn, i) => {
+          txns.push({ ...txn, index: txn.index ?? i, type: txn.type });
+        });
+        setTransactions(txns);
+      })
+      .catch(() => setTransactions([]))
+      .finally(() => setLoading(false));
   }, [filters]);
 
   // Filtering logic (search is now handled by backend filter)
@@ -167,6 +180,35 @@ export default function EmployeeTransactions() {
     printWindow.print();
   };
 
+  const handleView = (txn) => setViewTxn(txn);
+  const handleEdit = (txn) => setEditTxn(txn);
+  const handleDelete = async (txn) => {
+    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
+    setLoading(true);
+    try {
+      await axiosInstance.delete(`/api/finance/employees/${txn.employeeId}/${txn.type}/${txn.index}`);
+      setViewTxn(null);
+      fetchTransactions(filters);
+    } catch (err) {
+      alert('Failed to delete transaction');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditSave = async (updated) => {
+    setLoading(true);
+    try {
+      await axiosInstance.patch(`/api/finance/employees/${editTxn.employeeId}/${editTxn.type}/${editTxn.index}`, updated);
+      setEditTxn(null);
+      fetchTransactions(filters);
+    } catch (err) {
+      alert('Failed to update transaction');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     { Header: 'Employee', accessor: 'employeeName', Cell: ({ value }) => (<div className="font-medium">{value}</div>) },
     { Header: 'Type', accessor: 'type', Cell: ({ value }) => value.charAt(0).toUpperCase() + value.slice(1) },
@@ -177,8 +219,9 @@ export default function EmployeeTransactions() {
     { Header: 'Payment Mode', accessor: 'paymentMode' },
     { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
       <div className="flex gap-2">
-        <Button size="sm" variant="secondary">View</Button>
-        <Button size="sm" variant="primary">Edit</Button>
+        <Button size="sm" variant="secondary" onClick={() => handleView(row.original)}>View</Button>
+        <Button size="sm" variant="primary" onClick={() => handleEdit(row.original)}>Edit</Button>
+        <Button size="sm" variant="danger" onClick={() => handleDelete(row.original)}>Delete</Button>
       </div>
     ) },
   ];
@@ -233,6 +276,57 @@ export default function EmployeeTransactions() {
           <Table columns={columns} data={paginated} />
         )}
       </div>
+      {/* View Transaction Modal */}
+      <Modal open={!!viewTxn} onClose={() => setViewTxn(null)} title="Transaction Details">
+        {viewTxn && (
+          <div className="p-4 space-y-2">
+            <div><strong>Employee:</strong> {viewTxn.employeeName}</div>
+            <div><strong>Type:</strong> {viewTxn.type}</div>
+            <div><strong>Amount:</strong> ₹{viewTxn.amount?.toLocaleString()}</div>
+            <div><strong>Date:</strong> {viewTxn.date ? new Date(viewTxn.date).toLocaleDateString('en-IN') : '-'}</div>
+            <div><strong>Status:</strong> {viewTxn.status}</div>
+            <div><strong>Notes:</strong> {viewTxn.notes}</div>
+            <div><strong>Payment Mode:</strong> {viewTxn.paymentMode}</div>
+            <div className="flex gap-2 pt-4">
+              <Button variant="danger" onClick={() => handleDelete(viewTxn)}>Delete</Button>
+              <Button variant="secondary" onClick={() => setViewTxn(null)}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+      {/* Edit Transaction Modal */}
+      <Modal open={!!editTxn} onClose={() => setEditTxn(null)} title="Edit Transaction">
+        {editTxn && (
+          <form className="p-4 space-y-2" onSubmit={e => { e.preventDefault(); handleEditSave(editTxn); }}>
+            <div><strong>Employee:</strong> {editTxn.employeeName}</div>
+            <div><strong>Type:</strong> {editTxn.type}</div>
+            <div>
+              <label>Amount:</label>
+              <input type="number" className="border rounded px-2 py-1 ml-2" value={editTxn.amount} onChange={e => setEditTxn({ ...editTxn, amount: Number(e.target.value) })} required />
+            </div>
+            <div>
+              <label>Date:</label>
+              <input type="date" className="border rounded px-2 py-1 ml-2" value={editTxn.date ? new Date(editTxn.date).toISOString().slice(0,10) : ''} onChange={e => setEditTxn({ ...editTxn, date: e.target.value })} required />
+            </div>
+            <div>
+              <label>Status:</label>
+              <input type="text" className="border rounded px-2 py-1 ml-2" value={editTxn.status} onChange={e => setEditTxn({ ...editTxn, status: e.target.value })} required />
+            </div>
+            <div>
+              <label>Notes:</label>
+              <input type="text" className="border rounded px-2 py-1 ml-2" value={editTxn.notes} onChange={e => setEditTxn({ ...editTxn, notes: e.target.value })} />
+            </div>
+            <div>
+              <label>Payment Mode:</label>
+              <input type="text" className="border rounded px-2 py-1 ml-2" value={editTxn.paymentMode} onChange={e => setEditTxn({ ...editTxn, paymentMode: e.target.value })} />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button variant="primary" type="submit">Save Changes</Button>
+              <Button variant="secondary" onClick={() => setEditTxn(null)}>Cancel</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 } 

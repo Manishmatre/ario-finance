@@ -180,9 +180,12 @@ export default function MakeBillPaid() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account *</label>
                   <Select
                     name="ourBankAccount"
-                    value={form.ourBankAccount}
+                    value={companyBanks.length === 1 ? companyBanks[0]._id : form.ourBankAccount}
                     onChange={handleChange}
-                    options={companyBanks.map(b => ({ value: b._id, label: `${b.bankName} (${b.bankAccountNo})` }))}
+                    options={[
+                      { value: '', label: 'Select Bank Account' },
+                      ...companyBanks.map(b => ({ value: b._id, label: `${b.bankName} (${b.bankAccountNo})` }))
+                    ]}
                     required
                   />
                 </div>

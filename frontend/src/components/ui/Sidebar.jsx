@@ -16,14 +16,14 @@ const payablesMenu = [
   { to: "/finance/vendor-payments/add", label: "Add Payment", icon: <FiPlusCircle /> },
 ];
 
-const loansMenu = [
-  { to: "/finance/loans", label: "All Loans", icon: <FiDatabase /> },
-  { to: "/finance/loans/apply", label: "Add Loan", icon: <FiPlusCircle /> },
-  { to: "/finance/lenders", label: "Lenders", icon: <FiUsers /> },
-  { to: "/finance/lenders/add", label: "Add Lender", icon: <FiPlusCircle /> },
-  { to: "/finance/loans/:id/documents", label: "Loan Documents", icon: <FiFileText /> },
-  { to: "/finance/loans/:id/analysis", label: "Loan Analysis", icon: <FiPieChart /> },
-];
+// const loansMenu = [
+//   { to: "/finance/loans", label: "All Loans", icon: <FiDatabase /> },
+//   { to: "/finance/loans/apply", label: "Add Loan", icon: <FiPlusCircle /> },
+//   { to: "/finance/lenders", label: "Lenders", icon: <FiUsers /> },
+//   { to: "/finance/lenders/add", label: "Add Lender", icon: <FiPlusCircle /> },
+//   { to: "/finance/loans/:id/documents", label: "Loan Documents", icon: <FiFileText /> },
+//   { to: "/finance/loans/:id/analysis", label: "Loan Analysis", icon: <FiPieChart /> },
+// ];
 
 const transactionsMenu = [
   { to: "/finance/add-transaction", label: "Add Transaction", icon: <FiPlusCircle /> },
@@ -69,7 +69,6 @@ const clientsMenu = [
 
 const navLinks = [
   { to: "/finance", label: "Dashboard", icon: <FiHome /> },
-  { to: "/finance/cash-reimburse", label: "Cash Reimbursement", icon: <FiDollarSign /> },
 ];
 
 const projectsMenu = [
@@ -87,14 +86,14 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const isExpensesActive = expensesMenu.some(link => location.pathname.startsWith(link.to));
   const isTransactionsActive = transactionsMenu.some(link => location.pathname.startsWith(link.to));
   const isAccountsActive = accountsMenu.some(link => location.pathname.startsWith(link.to));
-  const isLoansActive = loansMenu.some(link => location.pathname.startsWith(link.to)) || location.pathname.startsWith('/finance/lenders');
+  // const isLoansActive = loansMenu.some(link => location.pathname.startsWith(link.to)) || location.pathname.startsWith('/finance/lenders');
   const isEmployeesActive = employeesMenu.some(link => location.pathname.startsWith(link.to));
   const isProjectsActive = projectsMenu.some(link => location.pathname.startsWith(link.to));
   const isClientsActive = clientsMenu.some(link => location.pathname.startsWith(link.to));
 
   // Dropdown open state: always open if active, else controlled by click
   const [payablesOpen, setPayablesOpen] = useState(isPayablesActive);
-  const [loansOpen, setLoansOpen] = useState(isLoansActive);
+  // const [loansOpen, setLoansOpen] = useState(isLoansActive);
   const [expensesOpen, setExpensesOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(isTransactionsActive);
   const [accountsOpen, setAccountsOpen] = useState(isAccountsActive);
@@ -106,7 +105,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   useEffect(() => { setExpensesOpen(isExpensesActive); }, [isExpensesActive]);
   useEffect(() => { setTransactionsOpen(isTransactionsActive); }, [isTransactionsActive]);
   useEffect(() => { setAccountsOpen(isAccountsActive); }, [isAccountsActive]);
-  useEffect(() => { setLoansOpen(isLoansActive); }, [isLoansActive]);
+  // useEffect(() => { setLoansOpen(isLoansActive); }, [isLoansActive]);
   useEffect(() => { setEmployeesOpen(isEmployeesActive); }, [isEmployeesActive]);
   useEffect(() => { setProjectsOpen(isProjectsActive); }, [isProjectsActive]);
   useEffect(() => { setClientsOpen(isClientsActive); }, [isClientsActive]);
@@ -115,7 +114,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const handleDropdown = (menu) => {
     switch (menu) {
       case 'loans':
-        setLoansOpen(!loansOpen);
+        // setLoansOpen(!loansOpen);
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
@@ -126,7 +125,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         break;
       case 'expenses':
         setExpensesOpen(!expensesOpen);
-        setLoansOpen(false);
+        // setLoansOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
         setPayablesOpen(false);
@@ -136,7 +135,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         break;
       case 'transactions':
         setTransactionsOpen(!transactionsOpen);
-        setLoansOpen(false);
+        // setLoansOpen(false);
         setExpensesOpen(false);
         setAccountsOpen(false);
         setPayablesOpen(false);
@@ -146,7 +145,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         break;
       case 'accounts':
         setAccountsOpen(!accountsOpen);
-        setLoansOpen(false);
+        // setLoansOpen(false);
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setPayablesOpen(false);
@@ -156,7 +155,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         break;
       case 'payables':
         setPayablesOpen(!payablesOpen);
-        setLoansOpen(false);
+        // setLoansOpen(false);
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
@@ -166,7 +165,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         break;
       case 'employees':
         setEmployeesOpen(!employeesOpen);
-        setLoansOpen(false);
+        // setLoansOpen(false);
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
@@ -176,7 +175,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         break;
       case 'projects':
         setProjectsOpen(!projectsOpen);
-        setLoansOpen(false);
+        // setLoansOpen(false);
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
@@ -186,8 +185,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         break;
       case 'clients':
         setClientsOpen(!clientsOpen);
-        setProjectsOpen(false);
-        setLoansOpen(false);
+        // setProjectsOpen(false);
+        // setLoansOpen(false);
         setExpensesOpen(false);
         setTransactionsOpen(false);
         setAccountsOpen(false);
@@ -300,7 +299,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             </div>
 
             {/* Loans Menu */}
-            <div>
+            {/* <div>
               <button
                 className={`flex items-center w-full rounded px-3 py-2 text-sm font-medium gap-2 transition-all duration-200 ease-in-out
                   ${loansOpen ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-gray-800 hover:text-white'}`}
@@ -331,7 +330,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   </NavLink>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Expenses Dropdown */}
             <div>

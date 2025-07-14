@@ -47,15 +47,17 @@ const LoanApplication = () => {
       const response = await axiosInstance.get('/api/finance/bank-accounts');
       // Get bank accounts from the response
       const bankAccounts = response.data.bankAccounts || [];
-      setBanks(bankAccounts.map((bank, index) => ({
-        key: bank._id || `bank-${index}`,
-        value: bank._id,
-        // Create a more descriptive label using bank name and account number
-        label: `${bank.bankName} (${bank.bankAccountNo}) - ${bank.accountHolder}`
-      })));
+      setBanks([
+        { value: '', label: 'Select Bank Account' },
+        ...bankAccounts.map((bank, index) => ({
+          key: bank._id || `bank-${index}`,
+          value: bank._id,
+          label: `${bank.bankName} (${bank.bankAccountNo}) - ${bank.accountHolder}`
+        }))
+      ]);
     } catch (error) {
       console.error('Error fetching banks:', error);
-      setBanks([]);
+      setBanks([{ value: '', label: 'Select Bank Account' }]);
     } finally {
       setLoadingBanks(false);
     }
@@ -217,7 +219,7 @@ const LoanApplication = () => {
                   <Select
                     key="bank-select"
                     name="bank"
-                    value={formData.bank}
+                    value={banks.length === 2 ? banks[1].value : formData.bank}
                     onChange={handleInputChange}
                     options={banks}
                     placeholder="Select bank"

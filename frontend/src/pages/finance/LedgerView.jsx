@@ -93,15 +93,12 @@ const addRunningBalance = (rows, accountId) => {
   // Sort by date ascending for running balance
   const sorted = [...rows].sort((a, b) => new Date(a.date) - new Date(b.date));
   return sorted.map(row => {
-    // For expenses, always treat as debit
-    const isExpense = row.narration && row.narration.toLowerCase().includes('expense');
-    const isDebit = isExpense || (!!row.vendorId);
-    const debit = isDebit ? row.amount : 0;
-    const credit = !isDebit ? row.amount : 0;
+    // Use backend-provided debit/credit/type directly
+    const debit = row.debit ? Math.abs(Number(row.debit)) : 0;
+    const credit = row.credit ? Math.abs(Number(row.credit)) : 0;
     balance += credit - debit;
     return {
       ...row,
-      type: isDebit ? 'Debit' : 'Credit',
       debit,
       credit,
       balance,
@@ -234,8 +231,8 @@ export default function LedgerView() {
               { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
               { Header: 'Type', accessor: 'type' },
               { Header: 'Note', accessor: 'narration' },
-              { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
-              { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+              { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${Math.abs(Number(value)).toLocaleString()}` : '-' },
+              { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${Math.abs(Number(value)).toLocaleString()}` : '-' },
               { Header: 'Ref', accessor: '_id', Cell: ({ value }) => value ? value.toString().slice(-6) : '-' },
               { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => <span className={value < 0 ? 'text-red-600 font-bold' : 'text-green-700 font-bold'}>{`₹${value?.toLocaleString()}`}</span> },
             ]}

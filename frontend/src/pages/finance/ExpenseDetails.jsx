@@ -51,11 +51,18 @@ export default function ExpenseDetails() {
           typeof bankAccountId === 'object'
         ) {
           setBankAccountDetails(bankAccountId);
+          if (bankAccountId._id) {
+            bankAccountId = bankAccountId._id;
+          }
         } else {
           setBankAccountDetails(null);
         }
         // Fetch related transaction
-        if (res.data.paymentMethod === 'bank_transfer' && bankAccountId) {
+        if (
+          res.data.paymentMethod === 'bank_transfer' &&
+          bankAccountId &&
+          typeof bankAccountId === 'string'
+        ) {
           const txnRes = await axiosInstance.get(`/api/finance/bank-accounts/${bankAccountId}/ledger`);
           // Find the transaction for this expense by amount and date
           const txn = (txnRes.data || []).find(t => t.amount === res.data.amount && new Date(t.date).toISOString().slice(0,10) === new Date(res.data.date).toISOString().slice(0,10));

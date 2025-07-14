@@ -156,6 +156,21 @@ exports.createBankAccount = async (req, res) => {
     });
     await bankAccount.save();
 
+    // Create opening balance transaction if balance is not zero
+    const TransactionLine = require('../models/TransactionLine');
+    if (bankAccount.currentBalance && bankAccount.currentBalance !== 0) {
+      await TransactionLine.create({
+        date: new Date(),
+        bankAccountId: bankAccount._id,
+        debitAccount: null,
+        creditAccount: bankAccount._id,
+        amount: bankAccount.currentBalance,
+        narration: 'Opening Balance',
+        tenantId: req.tenantId,
+        createdBy: req.user?.id || 'system'
+      });
+    }
+
     const io = getIO();
 io.emit('bankAccountCreated', bankAccount);
 

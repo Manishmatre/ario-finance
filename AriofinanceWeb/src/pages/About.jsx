@@ -11,7 +11,7 @@ export default function About() {
         <meta name="description" content="Learn more about Ario Finance Management, our mission, and our team." />
       </Helmet>
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 py-16">
+      <div className="max-w-3xl mx-auto px-4 py-16 fade-in-up">
         <h1 className="text-4xl font-bold mb-8 text-center">About Us</h1>
         <p className="text-lg text-gray-700 mb-6 text-center">Ario Finance Management is built by a passionate team at ArionexTech to help businesses manage their finances with ease, security, and confidence. Our mission is to empower every business to grow with modern, accessible financial tools.</p>
         <div className="flex flex-col md:flex-row gap-8 items-center justify-center">

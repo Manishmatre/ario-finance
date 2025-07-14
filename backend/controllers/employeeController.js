@@ -83,9 +83,6 @@ exports.addAdvance = async (req, res) => {
           tenantId: req.tenantId,
           createdBy: req.user?.id
         });
-        // Update bank balance (debit)
-        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - Number(req.body.amount);
-        await bankAcc.save();
       }
     }
     // Emit notification for advance
@@ -127,9 +124,6 @@ exports.addSalary = async (req, res) => {
           tenantId: req.tenantId,
           createdBy: req.user?.id
         });
-        // Update bank balance (debit)
-        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - Number(req.body.amount);
-        await bankAcc.save();
       }
     }
     // Emit notification for salary
@@ -172,9 +166,6 @@ exports.addOtherExpense = async (req, res) => {
           tenantId: req.tenantId,
           createdBy: req.user?.id
         });
-        // Update bank balance (debit)
-        bankAcc.currentBalance = (bankAcc.currentBalance || 0) - Number(req.body.amount);
-        await bankAcc.save();
       }
     }
     // Emit notification for other expense
@@ -193,6 +184,91 @@ exports.addOtherExpense = async (req, res) => {
   }
 };
 
+// Update a specific advance
+exports.updateAdvance = async (req, res) => {
+  try {
+    const emp = await Employee.findOne({ _id: req.params.employeeId, tenantId: req.tenantId });
+    if (!emp) return res.status(404).json({ error: 'Not found' });
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || !emp.advances[idx]) return res.status(404).json({ error: 'Advance not found' });
+    emp.advances[idx] = { ...emp.advances[idx]._doc, ...req.body };
+    await emp.save();
+    res.json(emp);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+// Delete a specific advance
+exports.deleteAdvance = async (req, res) => {
+  try {
+    const emp = await Employee.findOne({ _id: req.params.employeeId, tenantId: req.tenantId });
+    if (!emp) return res.status(404).json({ error: 'Not found' });
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || !emp.advances[idx]) return res.status(404).json({ error: 'Advance not found' });
+    emp.advances.splice(idx, 1);
+    await emp.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+// Update a specific salary
+exports.updateSalary = async (req, res) => {
+  try {
+    const emp = await Employee.findOne({ _id: req.params.employeeId, tenantId: req.tenantId });
+    if (!emp) return res.status(404).json({ error: 'Not found' });
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || !emp.salaries[idx]) return res.status(404).json({ error: 'Salary not found' });
+    emp.salaries[idx] = { ...emp.salaries[idx]._doc, ...req.body };
+    await emp.save();
+    res.json(emp);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+// Delete a specific salary
+exports.deleteSalary = async (req, res) => {
+  try {
+    const emp = await Employee.findOne({ _id: req.params.employeeId, tenantId: req.tenantId });
+    if (!emp) return res.status(404).json({ error: 'Not found' });
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || !emp.salaries[idx]) return res.status(404).json({ error: 'Salary not found' });
+    emp.salaries.splice(idx, 1);
+    await emp.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+// Update a specific other expense
+exports.updateOtherExpense = async (req, res) => {
+  try {
+    const emp = await Employee.findOne({ _id: req.params.employeeId, tenantId: req.tenantId });
+    if (!emp) return res.status(404).json({ error: 'Not found' });
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || !emp.otherExpenses[idx]) return res.status(404).json({ error: 'Other expense not found' });
+    emp.otherExpenses[idx] = { ...emp.otherExpenses[idx]._doc, ...req.body };
+    await emp.save();
+    res.json(emp);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+// Delete a specific other expense
+exports.deleteOtherExpense = async (req, res) => {
+  try {
+    const emp = await Employee.findOne({ _id: req.params.employeeId, tenantId: req.tenantId });
+    if (!emp) return res.status(404).json({ error: 'Not found' });
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || !emp.otherExpenses[idx]) return res.status(404).json({ error: 'Other expense not found' });
+    emp.otherExpenses.splice(idx, 1);
+    await emp.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 // List all employee transactions (salary + advance, flat)
 exports.listEmployeeTransactions = async (req, res) => {
   try {
@@ -201,7 +277,7 @@ exports.listEmployeeTransactions = async (req, res) => {
     let transactions = [];
     employees.forEach(emp => {
       // Advances
-      (emp.advances || []).forEach(adv => {
+      (emp.advances || []).forEach((adv, idx) => {
         transactions.push({
           employeeId: emp._id,
           employeeName: emp.name,
@@ -211,10 +287,11 @@ exports.listEmployeeTransactions = async (req, res) => {
           status: adv.status || (adv.cleared ? 'paid' : 'pending'),
           notes: adv.reason || '',
           paymentMode: adv.paymentMode || '',
+          index: idx
         });
       });
       // Salaries
-      (emp.salaries || []).forEach(sal => {
+      (emp.salaries || []).forEach((sal, idx) => {
         transactions.push({
           employeeId: emp._id,
           employeeName: emp.name,
@@ -224,10 +301,11 @@ exports.listEmployeeTransactions = async (req, res) => {
           status: sal.status,
           notes: sal.notes || '',
           paymentMode: sal.paymentMode || '',
+          index: idx
         });
       });
       // Other Expenses
-      (emp.otherExpenses || []).forEach(oth => {
+      (emp.otherExpenses || []).forEach((oth, idx) => {
         transactions.push({
           employeeId: emp._id,
           employeeName: emp.name,
@@ -237,6 +315,7 @@ exports.listEmployeeTransactions = async (req, res) => {
           status: oth.status,
           notes: oth.description || '',
           paymentMode: oth.paymentMode || '',
+          index: idx
         });
       });
     });

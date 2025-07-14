@@ -20,18 +20,18 @@ export function Modal({ open, onClose, children, fullscreen = false, backgroundC
       >
         <div
           className={
-            fullscreen
+        fullscreen
               ? `bg-white shadow-2xl border border-gray-100 rounded-none h-full flex flex-col ${className}`
               : `bg-white shadow-2xl border border-gray-100 rounded-3xl flex flex-col ${className}`
           }
         >
           <div className="flex items-center justify-between px-8 py-6 bg-gray-50 rounded-t-3xl shadow-sm relative">
             {title && <span className="text-2xl font-bold text-gray-900">{title}</span>}
-            <button
+          <button
               className="absolute -top-4 -right-4 bg-white shadow-lg text-gray-500 hover:text-blue-600 text-2xl z-20 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded-full p-2 transition-colors"
-              onClick={onClose}
-              aria-label="Close modal"
-              tabIndex={0}
+            onClick={onClose}
+            aria-label="Close modal"
+            tabIndex={0}
               style={{ boxShadow: '0 4px 24px 0 rgba(37, 99, 235, 0.10)' }}
             >
               {/* Modern close icon (SVG) */}

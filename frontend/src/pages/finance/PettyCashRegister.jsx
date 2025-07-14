@@ -4,156 +4,90 @@ import Loader from "../../components/ui/Loader";
 import EmptyState from "../../components/ui/EmptyState";
 import Pagination from "../../components/ui/Pagination";
 import PageHeading from "../../components/ui/PageHeading";
-import Card from "../../components/ui/Card";
-import { FiDollarSign, FiMapPin, FiUsers, FiCalendar } from "react-icons/fi";
-
-// Mock data
-const pettyCashData = [
-  { 
-    id: 1, 
-    site: 'Mumbai Office', 
-    custodian: 'Rajesh Kumar',
-    opening: 50000, 
-    closing: 35000, 
-    date: '2025-01-15', 
-    expenses: 15000,
-    notes: 'Office supplies, team lunch, transport',
-    status: 'Active'
-  },
-  { 
-    id: 2, 
-    site: 'Delhi Branch', 
-    custodian: 'Priya Sharma',
-    opening: 30000, 
-    closing: 22000, 
-    date: '2025-01-15', 
-    expenses: 8000,
-    notes: 'Stationery, refreshments',
-    status: 'Active'
-  },
-  { 
-    id: 3, 
-    site: 'Bangalore Site', 
-    custodian: 'Amit Patel',
-    opening: 40000, 
-    closing: 28000, 
-    date: '2025-01-15', 
-    expenses: 12000,
-    notes: 'Site maintenance, tools',
-    status: 'Active'
-  },
-  { 
-    id: 4, 
-    site: 'Chennai Office', 
-    custodian: 'Lakshmi Devi',
-    opening: 25000, 
-    closing: 18000, 
-    date: '2025-01-15', 
-    expenses: 7000,
-    notes: 'Printing, courier charges',
-    status: 'Active'
-  },
-  { 
-    id: 5, 
-    site: 'Hyderabad Branch', 
-    custodian: 'Suresh Reddy',
-    opening: 35000, 
-    closing: 25000, 
-    date: '2025-01-15', 
-    expenses: 10000,
-    notes: 'Travel expenses, meals',
-    status: 'Active'
-  },
-  { 
-    id: 6, 
-    site: 'Pune Site', 
-    custodian: 'Meera Joshi',
-    opening: 20000, 
-    closing: 15000, 
-    date: '2025-01-15', 
-    expenses: 5000,
-    notes: 'Minor repairs, cleaning supplies',
-    status: 'Active'
-  },
-];
-
-const pettyCashSummary = [
-  { title: 'Total Sites', value: 6, icon: <FiMapPin className="h-6 w-6 text-blue-500" /> },
-  { title: 'Total Custodians', value: 6, icon: <FiUsers className="h-6 w-6 text-green-500" /> },
-  { title: 'Total Opening Balance', value: 200000, icon: <FiDollarSign className="h-6 w-6 text-purple-500" /> },
-  { title: 'Total Expenses', value: 57000, icon: <FiCalendar className="h-6 w-6 text-red-500" /> },
-];
+import axiosInstance from '../../utils/axiosInstance';
+import Button from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
 
 export default function PettyCashRegister() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pettyCash, setPettyCash] = useState([]);
-  const totalPages = 2;
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({ siteCode: '', opening: '', closing: '', date: '', notes: '' });
+  const totalPages = Math.max(1, Math.ceil(pettyCash.length / 10));
+
+  const fetchPettyCash = () => {
+    setLoading(true);
+    setError('');
+    axiosInstance.get('/api/finance/petty-cash')
+      .then(res => setPettyCash(res.data || []))
+      .catch(() => setError('Failed to fetch petty cash'))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setPettyCash(pettyCashData);
-      setLoading(false);
-    }, 1000);
+    fetchPettyCash();
   }, []);
 
+  const handleAdd = () => {
+    setForm({ siteCode: '', opening: '', closing: '', date: '', notes: '' });
+    setEditItem(null);
+    setShowModal(true);
+  };
+  const handleEdit = (item) => {
+    setForm({ ...item });
+    setEditItem(item);
+    setShowModal(true);
+  };
+  const handleDelete = async (item) => {
+    if (!window.confirm('Delete this entry?')) return;
+    setLoading(true);
+    setError('');
+    try {
+      await axiosInstance.delete(`/api/finance/petty-cash/${item._id}`);
+      fetchPettyCash();
+    } catch {
+      setError('Failed to delete entry');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleModalSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      if (editItem && editItem._id) {
+        await axiosInstance.patch(`/api/finance/petty-cash/${editItem._id}`, form);
+      } else {
+        await axiosInstance.post('/api/finance/petty-cash', form);
+      }
+      setShowModal(false);
+      fetchPettyCash();
+    } catch {
+      setError('Failed to save entry');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
-    { 
-      Header: 'Site', 
-      accessor: 'site',
-      Cell: ({ value, row }) => (
-        <div>
-          <div className="font-medium">{value}</div>
-          <div className="text-sm text-gray-500">Custodian: {row.original.custodian}</div>
-        </div>
-      )
-    },
-    { 
-      Header: 'Opening Balance', 
-      accessor: 'opening',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
-    { 
-      Header: 'Expenses', 
-      accessor: 'expenses',
-      Cell: ({ value }) => (
-        <span className="text-red-600 font-medium">₹{value.toLocaleString()}</span>
-      )
-    },
-    { 
-      Header: 'Closing Balance', 
-      accessor: 'closing',
-      Cell: ({ value }) => `₹${value.toLocaleString()}`
-    },
-    { 
-      Header: 'Date', 
-      accessor: 'date',
-      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN')
-    },
-    { 
-      Header: 'Status', 
-      accessor: 'status',
-      Cell: ({ value }) => (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          {value}
-        </span>
-      )
-    },
-    { 
-      Header: 'Notes', 
-      accessor: 'notes',
-      Cell: ({ value }) => (
-        <div className="max-w-xs truncate" title={value}>
-          {value}
-        </div>
-      )
-    },
+    { Header: 'Site Code', accessor: 'siteCode' },
+    { Header: 'Opening', accessor: 'opening', Cell: ({ value }) => ` ₹${value?.toLocaleString()}` },
+    { Header: 'Closing', accessor: 'closing', Cell: ({ value }) => ` ₹${value?.toLocaleString()}` },
+    { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '' },
+    { Header: 'Notes', accessor: 'notes' },
+    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
+      <div className="flex gap-2">
+        <Button size="sm" variant="primary" onClick={() => handleEdit(row.original)}>Edit</Button>
+        <Button size="sm" variant="danger" onClick={() => handleDelete(row.original)}>Delete</Button>
+      </div>
+    ) },
   ];
 
-  if (loading) {
-    return <Loader />;
-  }
+  if (loading) return <Loader />;
 
   return (
     <div className="space-y-4 px-2 sm:px-4">
@@ -166,37 +100,53 @@ export default function PettyCashRegister() {
           { label: "Petty Cash Register" }
         ]}
       />
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {pettyCashSummary.map((summary, index) => (
-          <Card
-            key={index}
-            title={summary.title}
-            value={summary.title.includes('Balance') || summary.title.includes('Expenses') 
-              ? `₹${summary.value.toLocaleString()}` 
-              : summary.value.toString()}
-            icon={summary.icon}
-          />
-        ))}
+      <div className="flex justify-end mb-2">
+        <Button variant="primary" onClick={handleAdd}>Add Petty Cash</Button>
       </div>
-
-      {/* Petty Cash Table */}
+      {error && <div className="text-red-600 mb-2">{error}</div>}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
           <h3 className="text-lg font-medium text-gray-800">Site-wise Petty Cash Summary</h3>
         </div>
         {pettyCash.length === 0 ? (
-        <EmptyState message="No petty cash entries found." />
-      ) : (
+          <EmptyState message="No petty cash entries found." />
+        ) : (
           <>
-            <Table columns={columns} data={pettyCash} />
+            <Table columns={columns} data={pettyCash.slice((page-1)*10, page*10)} />
             <div className="p-4 border-t border-gray-100">
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </>
         )}
       </div>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editItem ? 'Edit Petty Cash' : 'Add Petty Cash'}>
+        <form className="space-y-3" onSubmit={handleModalSave}>
+          <div>
+            <label>Site Code</label>
+            <input className="border rounded px-2 py-1 w-full" value={form.siteCode} onChange={e => setForm({ ...form, siteCode: e.target.value })} required />
+          </div>
+          <div>
+            <label>Opening</label>
+            <input type="number" className="border rounded px-2 py-1 w-full" value={form.opening} onChange={e => setForm({ ...form, opening: e.target.value })} required />
+          </div>
+          <div>
+            <label>Closing</label>
+            <input type="number" className="border rounded px-2 py-1 w-full" value={form.closing} onChange={e => setForm({ ...form, closing: e.target.value })} required />
+          </div>
+          <div>
+            <label>Date</label>
+            <input type="date" className="border rounded px-2 py-1 w-full" value={form.date ? form.date.slice(0,10) : ''} onChange={e => setForm({ ...form, date: e.target.value })} required />
+          </div>
+          <div>
+            <label>Notes</label>
+            <input className="border rounded px-2 py-1 w-full" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="primary" type="submit">Save</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Security() {
   return (
-    <section className="max-w-7xl mx-auto px-4 py-16 flex flex-col md:flex-row items-center gap-12">
+    <section className="max-w-7xl mx-auto px-4 py-16 flex flex-col md:flex-row items-center gap-12 fade-in-up">
       <div className="flex-1">
         <h2 className="text-3xl font-bold mb-4">Bank-Grade Security & Compliance</h2>
         <p className="text-lg text-gray-700 mb-6">Your data is protected with industry-leading encryption, secure cloud infrastructure, and strict privacy controls. We are committed to keeping your business safe and compliant at all times.</p>

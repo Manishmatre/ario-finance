@@ -66,9 +66,7 @@ exports.createExpense = async (req, res) => {
             tenantId: req.tenantId,
             createdBy: req.user?.userId || req.user?.id
           });
-          // Update account balance
-          bankAcc.currentBalance = (bankAcc.currentBalance || 0) - expense.amount;
-          await bankAcc.save();
+          // Removed: bankAcc.currentBalance update
         }
       } else {
         // If no bankAccount provided, do not create TransactionLine (could log a warning)

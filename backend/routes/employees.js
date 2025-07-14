@@ -18,4 +18,14 @@ router.post('/:id/salary', employeeController.addSalary);
 router.post('/:id/other', employeeController.addOtherExpense);
 router.get('/transactions/all', employeeController.listEmployeeTransactions);
 
+// Update/delete specific advance
+router.patch('/:employeeId/advance/:index', employeeController.updateAdvance);
+router.delete('/:employeeId/advance/:index', employeeController.deleteAdvance);
+// Update/delete specific salary
+router.patch('/:employeeId/salary/:index', employeeController.updateSalary);
+router.delete('/:employeeId/salary/:index', employeeController.deleteSalary);
+// Update/delete specific other expense
+router.patch('/:employeeId/other/:index', employeeController.updateOtherExpense);
+router.delete('/:employeeId/other/:index', employeeController.deleteOtherExpense);
+
 module.exports = router; 

@@ -23,3 +23,27 @@ exports.createPettyCash = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+exports.updatePettyCash = async (req, res) => {
+  try {
+    const entry = await PettyCash.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.tenantId },
+      req.body,
+      { new: true }
+    );
+    if (!entry) return res.status(404).json({ error: 'Not found' });
+    res.json(entry);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+exports.deletePettyCash = async (req, res) => {
+  try {
+    const entry = await PettyCash.findOneAndDelete({ _id: req.params.id, tenantId: req.tenantId });
+    if (!entry) return res.status(404).json({ error: 'Not found' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};

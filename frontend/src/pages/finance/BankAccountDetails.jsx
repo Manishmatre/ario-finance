@@ -83,7 +83,7 @@ export default function BankAccountDetails() {
   const transactionColumns = [
     { Header: 'Date', accessor: 'date', Cell: ({ value }) => formatDate(value) },
     { Header: 'Description', accessor: 'narration' },
-    { Header: 'Amount', accessor: 'amount', Cell: ({ row }) => formatCurrency(row.original.debit || row.original.credit || 0) },
+    { Header: 'Amount', accessor: 'amount', Cell: ({ row }) => formatCurrency(Math.abs(row.original.debit || row.original.credit || 0)) },
     { Header: 'Type', accessor: 'type', Cell: ({ row }) => row.original.debit ? 'Debit' : 'Credit' },
     { Header: 'Reference', accessor: 'reference' },
     { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => formatCurrency(value) },

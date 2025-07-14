@@ -38,9 +38,10 @@ export default function PaymentForm({ projectId, payment, onSuccess, onCancel })
           headers: { Authorization: `Bearer ${token}` }
         });
         // If data.bankAccounts exists, use it; else fallback to array or empty
-        setBankAccounts(Array.isArray(data.bankAccounts) ? data.bankAccounts : (Array.isArray(data) ? data : []));
-        if (Array.isArray(data.bankAccounts) && data.bankAccounts.length === 1) {
-          setValue('bankAccountId', data.bankAccounts[0]._id);
+        const accounts = Array.isArray(data.bankAccounts) ? data.bankAccounts : (Array.isArray(data) ? data : []);
+        setBankAccounts(accounts);
+        if (accounts.length === 1) {
+          setValue('bankAccountId', accounts[0]._id);
         }
       } catch {}
     };
@@ -143,8 +144,9 @@ export default function PaymentForm({ projectId, payment, onSuccess, onCancel })
                 {...register('bankAccountId', { required: true })}
                 className="border rounded px-3 py-2 w-full"
                 disabled={bankAccounts.length === 0}
+                value={bankAccounts.length === 1 ? bankAccounts[0]._id : undefined}
               >
-                <option value="">{bankAccounts.length === 0 ? 'No bank accounts available' : 'Select Bank Account'}</option>
+                <option value="">Select Bank Account</option>
                 {bankAccounts.map((account) => (
                   <option key={account._id} value={account._id}>
                     {account.name} - {account.accountNumber} ({account.bankName})

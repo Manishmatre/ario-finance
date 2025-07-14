@@ -6,5 +6,8 @@ router.use(withTenant);
 
 router.get('/', pettyCashController.getPettyCash);
 router.post('/', pettyCashController.createPettyCash);
+router.put('/:id', pettyCashController.updatePettyCash);
+router.patch('/:id', pettyCashController.updatePettyCash);
+router.delete('/:id', pettyCashController.deletePettyCash);
 
 module.exports = router;

@@ -182,7 +182,13 @@ exports.listBankAccountTransactions = async (req, res) => {
     const txnsWithBalance = txns.map(txn => {
       // For expenses, always treat as debit for the bank account
       const isExpense = txn.narration && txn.narration.toLowerCase().includes('expense');
-      const isDebit = isExpense || txn.debitAccount?.toString() === bankAccountId;
+      // Fix: If creditAccount is null and amount is positive, treat as Credit (received payment)
+      let isDebit;
+      if (txn.creditAccount === null && txn.amount > 0) {
+        isDebit = false;
+      } else {
+        isDebit = isExpense || txn.debitAccount?.toString() === bankAccountId;
+      }
       const debit = isDebit ? txn.amount : 0;
       const credit = !isDebit ? txn.amount : 0;
       balance += credit - debit;
@@ -197,6 +203,62 @@ exports.listBankAccountTransactions = async (req, res) => {
       };
     });
     res.json(txnsWithBalance);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get full ledger for a bank account (debit/credit columns, running balance)
+exports.getBankAccountLedger = async (req, res) => {
+  try {
+    const { bankAccountId } = req.query;
+    if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId is required' });
+    const query = {
+      tenantId: req.tenantId,
+      $or: [
+        { debitAccount: bankAccountId },
+        { creditAccount: bankAccountId },
+        { bankAccountId: bankAccountId }
+      ]
+    };
+    const txns = await require('../models/TransactionLine').find(query)
+      .sort({ date: 1 })
+      .populate('projectId', 'name')
+      .populate('vendorId', 'name')
+      .lean();
+
+    let balance = 0;
+    const ledgerEntries = txns.map(txn => {
+      // Determine debit/credit for this bank account
+      let debit = 0, credit = 0, type = '';
+      if (txn.debitAccount?.toString() === bankAccountId) {
+        debit = Math.abs(Number(txn.amount));
+        type = 'Debit';
+      } else if (txn.creditAccount?.toString() === bankAccountId) {
+        credit = Math.abs(Number(txn.amount));
+        type = 'Credit';
+      } else if (txn.creditAccount === null && txn.amount > 0) {
+        // Received payment (credit)
+        credit = Math.abs(Number(txn.amount));
+        type = 'Credit';
+      }
+      // Always show positive values in debit/credit columns
+      debit = debit > 0 ? debit : '';
+      credit = credit > 0 ? credit : '';
+      balance += (credit || 0) - (debit || 0);
+      return {
+        date: txn.date,
+        type,
+        description: txn.narration || '',
+        debit,
+        credit,
+        reference: txn.reference || '',
+        balance,
+        projectName: txn.projectId?.name,
+        vendorName: txn.vendorId?.name,
+      };
+    });
+    res.json(ledgerEntries);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

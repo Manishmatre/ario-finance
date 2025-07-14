@@ -166,9 +166,13 @@ export default function AddEmployeeTransaction() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Company Bank Account *</label>
                   <Select
                     {...register('companyBankId', { required: true })}
-                    options={companyBanks.map(b => ({ value: b._id, label: `${b.bankName} (${b.bankAccountNo})` }))}
+                    options={[
+                      { value: '', label: 'Select Bank Account' },
+                      ...companyBanks.map(b => ({ value: b._id, label: `${b.bankName} (${b.bankAccountNo})` }))
+                    ]}
                     className="w-full"
                     required
+                    value={companyBanks.length === 1 ? companyBanks[0]._id : undefined}
                   />
                 </div>
                 <div>

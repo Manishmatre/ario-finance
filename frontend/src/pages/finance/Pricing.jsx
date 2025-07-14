@@ -547,39 +547,39 @@ export default function Pricing() {
               <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2"><span role="img" aria-label="card">💳</span> Card Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="relative">
-                  <input
-                    type="text"
-                    name="cardNumber"
-                    value={paymentData.cardNumber}
-                    onChange={handlePaymentChange}
-                    placeholder="1234 5678 9012 3456"
+              <input
+                type="text"
+                name="cardNumber"
+                value={paymentData.cardNumber}
+                onChange={handlePaymentChange}
+                placeholder="1234 5678 9012 3456"
                     className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required={paymentData.method === 'card'}
-                  />
+              />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span role="img" aria-label="card">💳</span></span>
-                </div>
+            </div>
                 <div className="relative">
-                  <input
-                    type="text"
-                    name="expiryDate"
-                    value={paymentData.expiryDate}
-                    onChange={handlePaymentChange}
-                    placeholder="MM/YY"
+                <input
+                  type="text"
+                  name="expiryDate"
+                  value={paymentData.expiryDate}
+                  onChange={handlePaymentChange}
+                  placeholder="MM/YY"
                     className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required={paymentData.method === 'card'}
-                  />
+                />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span role="img" aria-label="calendar">📅</span></span>
-                </div>
+              </div>
                 <div className="relative">
-                  <input
-                    type="text"
-                    name="cvv"
-                    value={paymentData.cvv}
-                    onChange={handlePaymentChange}
-                    placeholder="123"
+                <input
+                  type="text"
+                  name="cvv"
+                  value={paymentData.cvv}
+                  onChange={handlePaymentChange}
+                  placeholder="123"
                     className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required={paymentData.method === 'card'}
-                  />
+                />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span role="img" aria-label="lock">🔒</span></span>
                 </div>
               </div>
@@ -661,8 +661,8 @@ export default function Pricing() {
             </div>
           )}
 
-          {/* Billing Address */}
-          <div>
+            {/* Billing Address */}
+              <div>
             <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2"><span role="img" aria-label="address">📍</span> Billing Address</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="relative">
@@ -689,39 +689,39 @@ export default function Pricing() {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span role="img" aria-label="building">🏢</span></span>
               </div>
               <div className="relative">
-                <input
-                  type="text"
-                  name="billingAddress.city"
-                  value={paymentData.billingAddress.city}
-                  onChange={handlePaymentChange}
-                  placeholder="City"
+                  <input
+                    type="text"
+                    name="billingAddress.city"
+                    value={paymentData.billingAddress.city}
+                    onChange={handlePaymentChange}
+                    placeholder="City"
                   className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                    required
+                  />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span role="img" aria-label="city">🏙️</span></span>
-              </div>
+                </div>
               <div className="relative">
-                <input
-                  type="text"
-                  name="billingAddress.state"
-                  value={paymentData.billingAddress.state}
-                  onChange={handlePaymentChange}
-                  placeholder="State"
+                  <input
+                    type="text"
+                    name="billingAddress.state"
+                    value={paymentData.billingAddress.state}
+                    onChange={handlePaymentChange}
+                    placeholder="State"
                   className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                    required
+                  />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span role="img" aria-label="state">🌐</span></span>
-              </div>
+                </div>
               <div className="relative">
-                <input
-                  type="text"
-                  name="billingAddress.pincode"
-                  value={paymentData.billingAddress.pincode}
-                  onChange={handlePaymentChange}
-                  placeholder="123456"
+                  <input
+                    type="text"
+                    name="billingAddress.pincode"
+                    value={paymentData.billingAddress.pincode}
+                    onChange={handlePaymentChange}
+                    placeholder="123456"
                   className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                    required
+                  />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span role="img" aria-label="pin">📮</span></span>
               </div>
             </div>

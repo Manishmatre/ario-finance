@@ -20,9 +20,9 @@ const features = [
 
 export default function Features() {
   return (
-    <section className="max-w-7xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-10">
+    <section className="max-w-7xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-10 fade-in-up">
       {features.map((f, i) => (
-        <div key={i} className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition-shadow">
+        <div key={i} className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition-shadow card-hover">
           <span className="text-5xl mb-4">{f.icon}</span>
           <h3 className="font-bold text-2xl mb-2">{f.title}</h3>
           <p className="text-gray-600 text-lg">{f.desc}</p>

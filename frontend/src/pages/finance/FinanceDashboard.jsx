@@ -349,8 +349,8 @@ export default function FinanceDashboard() {
       </div>
 
       {/* Recent Transactions & Recent Activities */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <h3 className="text-lg font-medium text-gray-800">Recent Transactions</h3>
           <input
             type="text"

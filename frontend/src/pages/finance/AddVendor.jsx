@@ -8,6 +8,7 @@ import { FiCheckCircle } from 'react-icons/fi';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 import Select from '../../components/ui/Select';
+import { toast } from 'react-toastify';
 
 const STATUS_OPTIONS = [
   { value: 'Active', label: 'Active' },
@@ -50,6 +51,7 @@ export default function AddVendor() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [cashOnly, setCashOnly] = useState(false);
 
   React.useEffect(() => {
     if (isEdit) {
@@ -63,6 +65,7 @@ export default function AddVendor() {
           setValue('address', v.address || '');
           setValue('bankAccounts', Array.isArray(v.bankAccounts) && v.bankAccounts.length > 0 ? v.bankAccounts : [{}]);
           setValue('paymentModes', Array.isArray(v.paymentModes) ? v.paymentModes : []);
+          setCashOnly(!!v.cashOnly);
         })
         .catch(err => setError('Failed to fetch vendor'))
         .finally(() => setLoading(false));
@@ -79,12 +82,15 @@ export default function AddVendor() {
         phone: data.phone,
         address: data.address,
         bankAccounts: data.bankAccounts?.filter(acc => acc.accountHolder || acc.bankName || acc.accountNumber || acc.ifsc || acc.branch || acc.notes),
-        paymentModes: data.paymentModes || []
+        paymentModes: data.paymentModes || [],
+        cashOnly: cashOnly
       };
       if (isEdit) {
         await axiosInstance.put(`/api/finance/vendors/${vendorId}`, payload);
+        toast.success('Vendor updated successfully');
       } else {
         await axiosInstance.post('/api/finance/vendors', payload);
+        toast.success('Vendor added successfully');
       }
       setSuccess(true);
       setTimeout(() => {
@@ -92,7 +98,9 @@ export default function AddVendor() {
       }, 1200);
       reset();
     } catch (err) {
-      setError(err.response?.data?.error || err.message || (isEdit ? 'Failed to update vendor' : 'Failed to add vendor'));
+      const msg = err.response?.data?.error || err.message || (isEdit ? 'Failed to update vendor' : 'Failed to add vendor');
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -133,8 +141,14 @@ export default function AddVendor() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">GST Number</label>
-                <Input {...register('gstNo')} placeholder="Enter GST number" />
+                <Input {...register('gstNo')} placeholder="Enter GST number" disabled={cashOnly} />
               </div>
+            </div>
+            <div className="mb-4">
+              <label className="inline-flex items-center">
+                <input type="checkbox" className="form-checkbox h-4 w-4 text-blue-600" checked={cashOnly} onChange={e => setCashOnly(e.target.checked)} />
+                <span className="ml-2 text-sm text-gray-700 font-medium">Cash Only (No GST)</span>
+              </label>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>

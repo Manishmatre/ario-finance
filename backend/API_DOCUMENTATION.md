@@ -1,11 +1,11 @@
 # Bank Account API Documentation
 
 ## Overview
-The Bank Account API provides endpoints for managing bank accounts in the Ario Finance Management system. All endpoints require authentication and tenant context.
+The Bank Account API provides endpoints for managing bank accounts in the SSK Finance Management system. All endpoints require authentication and tenant context.
 
 ## Base URL
 ```
-https://ariofinance-backend.onrender.com/api/finance/bank-accounts
+https://SSKfinance-backend.onrender.com/api/finance/bank-accounts
 ```
 
 ## Authentication
@@ -36,7 +36,7 @@ Retrieves all bank accounts for the current tenant with pagination and filtering
       "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
       "bankName": "HDFC",
       "type": "Current",
-      "accountHolder": "Arionex Technologies Pvt Ltd",
+      "accountHolder": "SSKnex Technologies Pvt Ltd",
       "bankAccountNo": "1234567890",
       "ifsc": "HDFC0001234",
       "branchName": "Koramangala Branch",
@@ -125,7 +125,7 @@ Retrieves a specific bank account by ID.
   "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
   "bankName": "HDFC",
   "type": "Current",
-  "accountHolder": "Arionex Technologies Pvt Ltd",
+  "accountHolder": "SSKnex Technologies Pvt Ltd",
   "bankAccountNo": "1234567890",
   "ifsc": "HDFC0001234",
   "branchName": "Koramangala Branch",
@@ -157,7 +157,7 @@ Creates a new bank account.
 {
   "bankName": "HDFC",
   "type": "Current",
-  "accountHolder": "Arionex Technologies Pvt Ltd",
+  "accountHolder": "SSKnex Technologies Pvt Ltd",
   "bankAccountNo": "1234567890",
   "ifsc": "HDFC0001234",
   "branchName": "Koramangala Branch",
@@ -197,7 +197,7 @@ Creates a new bank account.
     "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
     "bankName": "HDFC",
     "type": "Current",
-    "accountHolder": "Arionex Technologies Pvt Ltd",
+    "accountHolder": "SSKnex Technologies Pvt Ltd",
     "bankAccountNo": "1234567890",
     "ifsc": "HDFC0001234",
     "branchName": "Koramangala Branch",

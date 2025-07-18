@@ -6,7 +6,7 @@ import Sidebar from "../components/ui/Sidebar";
 export default function FinanceLayout() {
   // Demo user/tenant info; replace with real context later
   const user = { name: "Demo Admin" };
-  const tenant = { name: "Ario Finance" };
+  const tenant = { name: "SSK Finance" };
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (

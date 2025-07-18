@@ -4,7 +4,7 @@ const testimonials = [
   {
     name: 'Priya S.',
     role: 'Startup Founder',
-    quote: 'Ario Finance made our accounting effortless. The dashboard is beautiful and easy to use!',
+    quote: 'SSK Finance made our accounting effortless. The dashboard is beautiful and easy to use!',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
     rating: 5
   },

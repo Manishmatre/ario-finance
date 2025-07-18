@@ -17,5 +17,6 @@ const VendorSchema = new mongoose.Schema({
   paymentModes: [String],
   tenantId: { type: String, required: true, index: true },
   createdBy: String,
+  cashOnly: { type: Boolean, default: false },
 }, { timestamps: true });
 module.exports = mongoose.model('Vendor', VendorSchema);

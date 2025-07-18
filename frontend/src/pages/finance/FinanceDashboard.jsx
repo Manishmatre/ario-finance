@@ -11,7 +11,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { useNavigate } from 'react-router-dom';
 import Table from '../../components/ui/Table';
 
-// Removed: const socket = io(import.meta.env.VITE_API_URL || 'https://ariofinance-backend.onrender.com');
+// Removed: const socket = io(import.meta.env.VITE_API_URL || 'https://SSKfinance-backend.onrender.com');
 
 export default function FinanceDashboard() {
   const [kpis, setKpis] = useState({
@@ -326,7 +326,9 @@ export default function FinanceDashboard() {
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Taxable Value</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">GST</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Invoice Value</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
@@ -335,7 +337,9 @@ export default function FinanceDashboard() {
                 <tr key={bill._id} className="hover:bg-blue-50 cursor-pointer" onClick={() => navigate(`/finance/bills/${bill._id}`)}>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{new Date(bill.billDate || bill.dueDate).toLocaleDateString()}</td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm">{bill.description}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium text-red-600">-₹{(bill.amount ?? 0).toLocaleString()}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-right text-sm">₹{bill.taxableValue ? Number(bill.taxableValue).toLocaleString() : '-'}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-right text-sm">₹{bill.taxAmount?.integratedTax ? Number(bill.taxAmount.integratedTax).toLocaleString() : '-'} / ₹{bill.taxAmount?.centralTax ? Number(bill.taxAmount.centralTax).toLocaleString() : ''} + ₹{bill.taxAmount?.stateTax ? Number(bill.taxAmount.stateTax).toLocaleString() : ''}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium text-red-600">₹{bill.total ? Number(bill.total).toLocaleString() : '-'}</td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                       {bill.status ? (typeof bill.status === 'string' && bill.status.length > 0 ? bill.status.charAt(0).toUpperCase() + bill.status.slice(1) : '-') : ''}

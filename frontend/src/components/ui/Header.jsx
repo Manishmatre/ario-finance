@@ -189,7 +189,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
               <span className="text-white font-bold text-lg">A</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900">Ario</span>
+              <span className="text-xl font-bold text-gray-900">SSK</span>
               <span className="text-sm font-medium text-gray-600">Finance Management</span>
             </div>
           </Link>

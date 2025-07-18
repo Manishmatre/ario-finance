@@ -125,7 +125,7 @@ export default function Register() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join Ario Finance and streamline your financial management"
+      subtitle="Join SSK Finance and streamline your financial management"
     >
       {error && (
         <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r">

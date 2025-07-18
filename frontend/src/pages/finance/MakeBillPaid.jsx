@@ -42,7 +42,11 @@ export default function MakeBillPaid() {
     axiosInstance.get(`/api/finance/bills/${id}`)
       .then(billRes => {
         setBill(billRes.data);
-        setForm(f => ({ ...f, amount: billRes.data.amount || '' }));
+        // Calculate remaining balance
+        const total = Number(billRes.data.total) || 0;
+        const paid = (billRes.data.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const balance = Math.max(total - paid, 0);
+        setForm(f => ({ ...f, amount: balance }));
         setPaymentStatus(billRes.data.paymentStatus || (billRes.data.isPaid ? 'paid' : 'pending'));
         setPayments(billRes.data.payments || []);
         // Robust vendorId resolution
@@ -151,7 +155,7 @@ export default function MakeBillPaid() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Payment Amount *</label>
-                <Input type="number" min="1" max={bill.amount} name="amount" value={form.amount} onChange={handleChange} required />
+                <Input type="number" min="1" max={Math.max((Number(bill.total) || 0) - (payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0), 0)} name="amount" value={form.amount} onChange={handleChange} required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Payment Date *</label>
@@ -223,7 +227,7 @@ export default function MakeBillPaid() {
           <div><strong>Vendor:</strong> {bill.vendorId?.name || bill.vendorName || '-'}</div>
           <div><strong>Bill No:</strong> {bill.billNo}</div>
           <div><strong>Bill Date:</strong> {bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'}</div>
-          <div><strong>Amount:</strong> ₹{bill.amount?.toLocaleString()}</div>
+          <div><strong>Total Invoice Value:</strong> ₹{!isNaN(Number(bill.total)) && bill.total !== undefined && bill.total !== null ? Number(bill.total).toLocaleString() : '0'}</div>
           <div><strong>Payment Status:</strong> <span className="font-semibold capitalize">{paymentStatus}</span></div>
         </div>
         {payments && payments.length > 0 && (

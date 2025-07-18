@@ -9,6 +9,7 @@ import { FiUsers, FiDollarSign, FiMapPin, FiPhone, FiPlus } from "react-icons/fi
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
+import { toast } from 'react-toastify';
 
 // Compute real summary stats from vendors
 const getVendorsSummary = (vendors) => {
@@ -67,10 +68,11 @@ export default function Vendors() {
       axiosInstance.delete(`/api/finance/vendors/${id}`)
         .then(() => {
           setVendors(vendors.filter(v => v._id !== id && v.id !== id));
+          toast.success('Vendor deleted successfully');
           setLoading(false);
         })
         .catch(err => {
-          setError(err.message || 'Failed to delete vendor');
+          toast.error(err.message || 'Failed to delete vendor');
           setLoading(false);
         });
     }

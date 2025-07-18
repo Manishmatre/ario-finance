@@ -36,6 +36,18 @@ const DESIGNATION_OPTIONS = [
   { value: 'Analyst', label: 'Analyst' },
   { value: 'Clerk', label: 'Clerk' },
   { value: 'Intern', label: 'Intern' },
+  // Tech-related designations
+  { value: 'Software Developer', label: 'Software Developer' },
+  { value: 'Frontend Developer', label: 'Frontend Developer' },
+  { value: 'Backend Developer', label: 'Backend Developer' },
+  { value: 'Full Stack Developer', label: 'Full Stack Developer' },
+  { value: 'UI/UX Designer', label: 'UI/UX Designer' },
+  { value: 'QA Engineer', label: 'QA Engineer' },
+  { value: 'DevOps Engineer', label: 'DevOps Engineer' },
+  { value: 'Product Manager', label: 'Product Manager' },
+  { value: 'Tech Lead', label: 'Tech Lead' },
+  { value: 'System Administrator', label: 'System Administrator' },
+  { value: 'IT Support', label: 'IT Support' },
 ];
 
 const BANK_OPTIONS = [

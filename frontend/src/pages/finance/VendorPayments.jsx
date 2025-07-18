@@ -36,10 +36,29 @@ const VendorPayments = () => {
   useEffect(() => {
     if (!selectedVendor) return;
     setLoading(true);
-    axiosInstance.get(`/transactions?accountId=${selectedVendor}`).then(res => {
-      // Filter only payment transactions (credit to vendor)
-      setPayments(res.data.filter(t => t.amount < 0 || t.creditAccount === selectedVendor));
-      setTotal(res.data.length);
+    Promise.all([
+      axiosInstance.get(`/transactions?accountId=${selectedVendor}`),
+      axiosInstance.get(`/api/finance/bills?vendorId=${selectedVendor}`)
+    ]).then(([txnRes, billsRes]) => {
+      // TransactionLine payments
+      const txnPayments = txnRes.data.filter(t => t.amount < 0 || t.creditAccount === selectedVendor);
+      // Payments from bills
+      const billPayments = [];
+      (billsRes.data || []).forEach(bill => {
+        (bill.payments || []).forEach(p => {
+          billPayments.push({
+            date: p.date,
+            debitAccount: 'Cash',
+            creditAccount: selectedVendor,
+            amount: p.amount,
+            narration: `Bill Payment: ${bill.billNo || ''} (${p.paymentMode || 'Cash'})`,
+          });
+        });
+      });
+      // Merge and sort by date desc
+      const allPayments = [...txnPayments, ...billPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+      setPayments(allPayments);
+      setTotal(allPayments.length);
       setLoading(false);
     }).catch(() => {
       setPayments([]);

@@ -66,6 +66,12 @@ export default function BillDetails() {
   if (error) return <div className="text-red-500 p-4">{error}</div>;
   if (!bill) return null;
 
+  // Calculate balance
+  const total = Number(bill.total) || 0;
+  const paid = (bill.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const balance = Math.max(total - paid, 0);
+  const isPaid = balance === 0;
+
   return (
     <div className="space-y-4 px-2 sm:px-4">
       <PageHeading
@@ -75,35 +81,60 @@ export default function BillDetails() {
           { label: 'Purchase Bills', to: '/finance/bills' },
           { label: 'Bill Details' }
         ]}
-        // Removed actions prop to eliminate Add New Bill button
       />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <StatCard title="Vendor" value={bill.vendorName} icon={<FiFileText className="h-6 w-6 text-blue-500" />} />
-        <StatCard title="Amount" value={`₹${bill.amount?.toLocaleString()}`} icon={<FiDollarSign className="h-6 w-6 text-green-500" />} valueColor="text-green-600" />
+        <StatCard title="Vendor" value={<span>{bill.vendorName}{bill.cashOnly && <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Cash Only</span>}</span>} icon={<FiFileText className="h-6 w-6 text-blue-500" />} />
+        <StatCard
+          title="Total Invoice Value"
+          value={`₹${!isNaN(Number(bill.total)) && bill.total !== undefined && bill.total !== null ? Number(bill.total).toLocaleString() : '0'}`}
+          icon={<FiDollarSign className="h-6 w-6 text-green-500" />}
+        />
         <StatCard title="Bill Date" value={bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'} icon={<FiCalendar className="h-6 w-6 text-yellow-500" />} />
-        <StatCard title="Status" value={bill.paymentStatus ? bill.paymentStatus.charAt(0).toUpperCase() + bill.paymentStatus.slice(1) : (bill.isPaid ? 'Paid' : 'Pending')} icon={<FiCheckCircle className={`h-6 w-6 ${bill.paymentStatus === 'paid' || bill.isPaid ? 'text-green-500' : bill.paymentStatus === 'partial' ? 'text-yellow-500' : 'text-yellow-500'}`} />} valueColor={bill.paymentStatus === 'paid' || bill.isPaid ? 'text-green-600' : bill.paymentStatus === 'partial' ? 'text-yellow-600' : 'text-yellow-600'} />
+        <StatCard
+          title="Paid"
+          value={`₹${paid.toLocaleString()}`}
+          icon={<FiCheckCircle className="h-6 w-6 text-green-500" />}
+        />
+        <StatCard
+          title="Balance"
+          value={`₹${balance.toLocaleString()}`}
+          icon={<FiDollarSign className="h-6 w-6 text-red-500" />}
+        />
+        <StatCard
+          title="Status"
+          value={isPaid ? 'Paid' : 'Pending'}
+          icon={<FiCheckCircle className={`h-6 w-6 ${isPaid ? 'text-green-500' : 'text-yellow-500'}`} />}
+          valueColor={isPaid ? 'text-green-600' : 'text-yellow-600'}
+        />
       </div>
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-medium text-gray-800 mb-4">Bill Information</h3>
+        <h3 className="text-lg font-medium text-gray-800 mb-4">Bill/Invoice Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div><strong>Vendor:</strong> {bill.vendorName}</div>
-            <div><strong>Bill No:</strong> {bill.billNo}</div>
-            <div><strong>Bill Date:</strong> {bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'}</div>
-            <div><strong>Amount:</strong> ₹{bill.amount?.toLocaleString()}</div>
-            <div><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs font-medium ${bill.paymentStatus === 'paid' || bill.isPaid ? 'bg-green-100 text-green-800' : bill.paymentStatus === 'partial' ? 'bg-yellow-100 text-yellow-800' : 'bg-yellow-100 text-yellow-800'}`}>{bill.paymentStatus ? bill.paymentStatus.charAt(0).toUpperCase() + bill.paymentStatus.slice(1) : (bill.isPaid ? 'Paid' : 'Pending')}</span></div>
-            {bill.fileUrl && /^https?:\/\//.test(bill.fileUrl) && (
-              <div><strong>Bill File:</strong> <a href={bill.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View/Download</a></div>
-            )}
-            {bill.fileUrl && !/^https?:\/\//.test(bill.fileUrl) && (
-              <div><strong>Bill File:</strong> <span className="text-gray-400">Invalid file URL</span></div>
-            )}
-            {bill.projectId && <div><strong>Project:</strong> {bill.projectId.name || bill.projectId}</div>}
-            {bill.createdBy && <div><strong>Created By:</strong> {bill.createdBy}</div>}
-            {bill.createdAt && <div><strong>Created At:</strong> {new Date(bill.createdAt).toLocaleString()}</div>}
-            {bill.updatedAt && <div><strong>Updated At:</strong> {new Date(bill.updatedAt).toLocaleString()}</div>}
-          </div>
-        {/* After the main bill info, add payment details if bill.isPaid */}
-        {!bill.isPaid && (
+          <div><strong>Vendor:</strong> {bill.vendorName}{bill.cashOnly && <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Cash Only</span>}</div>
+          <div><strong>Bill/Invoice No:</strong> {bill.billNo}</div>
+          <div><strong>Bill/Invoice Date:</strong> {bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : '-'}</div>
+          <div><strong>Taxable Value:</strong> {bill.cashOnly ? <span className="text-gray-400">N/A</span> : <>₹{bill.taxableValue ? Number(bill.taxableValue).toLocaleString() : '-'}</>}</div>
+          <div><strong>GST (Integrated):</strong> {bill.cashOnly ? <span className="text-gray-400">N/A</span> : <>₹{bill.taxAmount?.integratedTax ? Number(bill.taxAmount.integratedTax).toLocaleString() : '-'}</>}</div>
+          <div><strong>GST (Central):</strong> {bill.cashOnly ? <span className="text-gray-400">N/A</span> : <>₹{bill.taxAmount?.centralTax ? Number(bill.taxAmount.centralTax).toLocaleString() : '-'}</>}</div>
+          <div><strong>GST (State/UT):</strong> {bill.cashOnly ? <span className="text-gray-400">N/A</span> : <>₹{bill.taxAmount?.stateTax ? Number(bill.taxAmount.stateTax).toLocaleString() : '-'}</>}</div>
+          <div><strong>Cess:</strong> {bill.cashOnly ? <span className="text-gray-400">N/A</span> : <>₹{bill.taxAmount?.cess ? Number(bill.taxAmount.cess).toLocaleString() : '-'}</>}</div>
+          <div><strong>Total Invoice Value:</strong> <span className="font-bold">₹{bill.total ? Number(bill.total).toLocaleString() : '-'}</span></div>
+          <div><strong>Paid:</strong> ₹{paid.toLocaleString()}</div>
+          <div><strong>Balance:</strong> <span className="font-bold">₹{balance.toLocaleString()}</span></div>
+          <div><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs font-medium ${isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{isPaid ? 'Paid' : 'Pending'}</span></div>
+          {bill.fileUrl && /^https?:\/\//.test(bill.fileUrl) && (
+            <div><strong>Bill File:</strong> <a href={bill.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View/Download</a></div>
+          )}
+          {bill.fileUrl && !/^https?:\/\//.test(bill.fileUrl) && (
+            <div><strong>Bill File:</strong> <span className="text-gray-400">Invalid file URL</span></div>
+          )}
+          {bill.projectId && <div><strong>Project:</strong> {bill.projectId.name || bill.projectId}</div>}
+          {bill.createdBy && <div><strong>Created By:</strong> {bill.createdBy}</div>}
+          {bill.createdAt && <div><strong>Created At:</strong> {new Date(bill.createdAt).toLocaleString()}</div>}
+          {bill.updatedAt && <div><strong>Updated At:</strong> {new Date(bill.updatedAt).toLocaleString()}</div>}
+        </div>
+        {/* Hide payment details for cash-only bills */}
+        {!bill.cashOnly && !bill.isPaid && (
           <div className="mt-8">
             <h3 className="text-lg font-semibold text-green-700 mb-2">Payment Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -162,7 +193,7 @@ export default function BillDetails() {
         <div className="flex gap-2 mt-8">
           <Button variant="secondary" onClick={() => navigate('/finance/bills')}>Back</Button>
           <Button variant="primary" onClick={handleEdit}>Edit</Button>
-          {!bill.isPaid && (
+          {balance > 0 && (
             <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => navigate(`/finance/bills/${bill._id || bill.id}/pay`)}>
               Mark as Paid
             </Button>

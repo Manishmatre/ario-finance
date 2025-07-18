@@ -16,15 +16,24 @@ import { useNavigate } from 'react-router-dom';
 const getBillsSummary = (bills) => {
   const now = new Date();
   const totalBills = bills.length;
-  const pendingAmount = bills.filter(b => !b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
-  const paidAmount = bills.filter(b => b.isPaid).reduce((sum, b) => sum + (b.amount || 0), 0);
+  const totalInvoiceValue = bills.reduce((sum, b) => sum + (Number(b.total) || 0), 0);
+  const pendingAmount = bills.filter(b => !b.isPaid).reduce((sum, b) => {
+    const total = Number(b.total) || 0;
+    const paid = (b.payments || []).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    return sum + Math.max(total - paid, 0);
+  }, 0);
+  const paidAmount = bills.reduce((sum, b) => {
+    const paid = (b.payments || []).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    return sum + paid;
+  }, 0);
   const overdueBills = bills.filter(b => !b.isPaid && b.billDate && new Date(b.billDate) < now).length;
   return [
     { title: 'Total Bills', value: totalBills, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
+    { title: 'Total Invoice Value', value: totalInvoiceValue, icon: <FiDollarSign className="h-6 w-6 text-blue-500" /> },
     { title: 'Pending Amount', value: pendingAmount, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
     { title: 'Paid Amount', value: paidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
     { title: 'Overdue Bills', value: overdueBills, icon: <FiCalendar className="h-6 w-6 text-yellow-500" /> },
-];
+  ];
 };
 
 export default function PurchaseBills() {
@@ -99,49 +108,20 @@ export default function PurchaseBills() {
   };
 
   const columns = [
-    { 
-      Header: 'Vendor', 
-      accessor: 'vendorName',
-      Cell: ({ row }) => <div className="font-medium">{row.original.vendorName}</div>
-    },
-    { 
-      Header: 'Bill No', 
-      accessor: 'billNo',
-      Cell: ({ value }) => <div className="font-medium">{value}</div>
-    },
-    { 
-      Header: 'Bill Date', 
-      accessor: 'billDate',
-      Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : ''
-    },
-    { 
-      Header: 'Amount', 
-      accessor: 'amount',
-      Cell: ({ value }) => <div className="font-medium">₹{value?.toLocaleString()}</div>
-    },
-    { 
-      Header: 'Status', 
-      accessor: 'isPaid',
-      Cell: ({ value }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${value ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-          {value ? 'Paid' : 'Pending'}
-        </span>
-      )
-    },
-    { 
-      Header: 'Actions', 
-      accessor: 'actions',
-      Cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/bills/${row.original._id || row.original.id}`)}>View</Button>
-          <Button size="sm" variant="primary" onClick={() => handleEditBill(row.original)}>Edit</Button>
-          {!row.original.isPaid && (
-            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => navigate(`/finance/bills/${row.original._id || row.original.id}/pay`)}>Pay</Button>
-          )}
-          <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id || row.original.id)}>Delete</Button>
-        </div>
-      )
-    }
+    { Header: 'Vendor Name', accessor: 'vendorId.name', Cell: ({ row }) => (<div className="font-medium">{row.original.vendorId?.name}{row.original.cashOnly && <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Cash Only</span>}</div>) },
+    { Header: 'GST No', accessor: 'gstinSupplier', Cell: ({ row }) => row.original.cashOnly ? <span className="text-gray-400">N/A</span> : <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{row.original.gstinSupplier}</span> },
+    { Header: 'Bill No', accessor: 'billNo' },
+    { Header: 'Bill Date', accessor: 'billDate', Cell: ({ value }) => value ? new Date(value).toLocaleDateString() : '-' },
+    { Header: 'Amount', accessor: 'total', Cell: ({ value }) => <span className="font-medium">₹{value?.toLocaleString()}</span> },
+    { Header: 'GST Amount', accessor: 'taxAmount', Cell: ({ row }) => row.original.cashOnly ? <span className="text-gray-400">N/A</span> : <span>₹{(row.original.taxAmount?.integratedTax || 0) + (row.original.taxAmount?.centralTax || 0) + (row.original.taxAmount?.stateTax || 0) + (row.original.taxAmount?.cess || 0)}</span> },
+    { Header: 'Status', accessor: 'paymentStatus', Cell: ({ value }) => <span className="capitalize font-medium">{value}</span> },
+    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
+      <div className="flex gap-2">
+        <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/bills/${row.original._id}`)}>View</Button>
+        <Button size="sm" variant="primary" onClick={() => navigate(`/finance/bills/edit/${row.original._id}`)}>Edit</Button>
+        <Button size="sm" variant="danger" onClick={() => handleDelete(row.original._id)}>Delete</Button>
+      </div>
+    ) }
   ];
 
   const handleUpload = e => {
@@ -226,8 +206,8 @@ export default function PurchaseBills() {
           <StatCard
             key={index}
             title={summary.title}
-            value={summary.title.includes('Amount') 
-              ? `₹${summary.value.toLocaleString()}` 
+            value={typeof summary.value === 'number' && summary.title !== 'Total Bills' && summary.title !== 'Overdue Bills'
+              ? `₹${summary.value.toLocaleString()}`
               : summary.value.toString()}
             icon={summary.icon}
           />

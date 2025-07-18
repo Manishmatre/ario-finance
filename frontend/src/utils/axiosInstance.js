@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Set base URL from environment variable or default to local development
-const baseURL = import.meta.env.VITE_API_URL || "https://ariofinance-backend.onrender.com";
+const baseURL = import.meta.env.VITE_API_URL || "https://SSKfinance-backend.onrender.com";
 
 const axiosInstance = axios.create({
   baseURL: baseURL,

@@ -4,6 +4,22 @@ const PurchaseBillSchema = new mongoose.Schema({
   billNo: String,
   billDate: Date,
   amount: Number,
+  // GST and Invoice Details
+  gstinSupplier: String, // GSTIN of supplier
+  tradeLegalName: String, // Trade/Legal name
+  invoiceType: String, // Invoice type
+  invoiceValue: Number, // Invoice Value (₹)
+  placeOfSupply: String, // Place of supply
+  reverseCharge: { type: Boolean, default: false }, // Supply Attract Reverse Charge
+  gstRate: Number, // Rate (%)
+  taxableValue: Number, // Taxable Value (₹)
+  taxAmount: {
+    integratedTax: Number, // Integrated Tax (₹)
+    centralTax: Number, // Central Tax (₹)
+    stateTax: Number, // State/UT Tax (₹)
+    cess: Number // Cess (₹)
+  },
+  total: Number, // TOTAL
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
   fileUrl: String,
   isPaid: { type: Boolean, default: false },
@@ -26,5 +42,6 @@ const PurchaseBillSchema = new mongoose.Schema({
   }],
   tenantId: { type: String, required: true, index: true },
   createdBy: String,
+  cashOnly: { type: Boolean, default: false },
 }, { timestamps: true });
 module.exports = mongoose.model('PurchaseBill', PurchaseBillSchema);

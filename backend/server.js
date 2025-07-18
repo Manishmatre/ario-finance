@@ -30,14 +30,14 @@ if (!process.env.JWT_SECRET) {
 
 if (!process.env.MONGO_URI) {
   console.warn('WARNING: MONGO_URI is not set. Using default local MongoDB connection.');
-  process.env.MONGO_URI = 'mongodb://localhost:27017/ario-finance';
+  process.env.MONGO_URI = 'mongodb://localhost:27017/SSK-finance';
 }
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app' , 'https://ariofinance.netlify.app'],
+    origin: ['http://localhost:5173', 'https://SSKfinance-frontned.vercel.app' , 'https://SSKfinance.netlify.app'],
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -48,7 +48,7 @@ setIO(io);
 
 // Enable CORS with specific options
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://ariofinance-frontned.vercel.app', 'https://ariofinance.netlify.app'],
+  origin: ['http://localhost:5173', 'https://SSKfinance-frontned.vercel.app', 'https://SSKfinance.netlify.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

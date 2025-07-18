@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Ario Finance Management - Effortless Business Finance</title>
+        <title>SSK Finance Management - Effortless Business Finance</title>
         <meta name="description" content="The modern SaaS platform for effortless business finance management. Try free for 1 year!" />
       </Helmet>
       <Navbar />

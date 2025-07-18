@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Plan = require('../models/Plan');
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ario-finance', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/SSK-finance', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -206,7 +206,7 @@ const plans = [
       { name: 'Multi-Currency', description: 'Support for multiple currencies', included: true },
       { name: 'Audit Trail', description: 'Detailed activity logs', included: true },
       { name: 'Data Export', description: 'Export data in multiple formats', included: true },
-      { name: 'White Label', description: 'Remove Ario branding', included: true },
+      { name: 'White Label', description: 'Remove SSK branding', included: true },
       { name: 'Dedicated Support', description: 'Dedicated account manager', included: true }
     ],
     isPopular: false,

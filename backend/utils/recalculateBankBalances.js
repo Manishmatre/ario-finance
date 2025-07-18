@@ -7,7 +7,7 @@ const fs = require('fs');
 const AUDIT_LOG = 'bank_balance_audit.log';
 
 // Connect to your MongoDB (update the URI as needed)
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ariofinance';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/SSKfinance';
 
 // Set to false to disallow negative balances
 const ALLOW_NEGATIVE_BALANCE = false;

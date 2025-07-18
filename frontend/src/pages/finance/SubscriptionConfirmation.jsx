@@ -72,7 +72,7 @@ export default function SubscriptionConfirmation() {
           Subscription Activated!
         </h1>
         <p className="text-gray-600">
-          Thank you for subscribing to Ario Finance. Your subscription is now active.
+          Thank you for subscribing to SSK Finance. Your subscription is now active.
         </p>
       </div>
 

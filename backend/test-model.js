@@ -6,7 +6,7 @@ async function testModel() {
     console.log('Testing BankAccount model...\n');
 
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ario-finance');
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/SSK-finance');
     console.log('✅ Connected to MongoDB');
 
     // Test creating a bank account

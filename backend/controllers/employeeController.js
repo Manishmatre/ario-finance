@@ -205,8 +205,17 @@ exports.deleteAdvance = async (req, res) => {
     if (!emp) return res.status(404).json({ error: 'Not found' });
     const idx = parseInt(req.params.index, 10);
     if (isNaN(idx) || !emp.advances[idx]) return res.status(404).json({ error: 'Advance not found' });
+    const adv = emp.advances[idx];
     emp.advances.splice(idx, 1);
     await emp.save();
+    // Also delete the corresponding TransactionLine
+    await TransactionLine.deleteOne({
+      employeeId: emp._id,
+      amount: -Math.abs(adv.amount),
+      date: adv.date,
+      narration: { $regex: 'Advance to employee', $options: 'i' },
+      tenantId: req.tenantId
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -233,8 +242,17 @@ exports.deleteSalary = async (req, res) => {
     if (!emp) return res.status(404).json({ error: 'Not found' });
     const idx = parseInt(req.params.index, 10);
     if (isNaN(idx) || !emp.salaries[idx]) return res.status(404).json({ error: 'Salary not found' });
+    const sal = emp.salaries[idx];
     emp.salaries.splice(idx, 1);
     await emp.save();
+    // Also delete the corresponding TransactionLine
+    await TransactionLine.deleteOne({
+      employeeId: emp._id,
+      amount: -Math.abs(sal.amount),
+      date: sal.paidDate,
+      narration: { $regex: 'Salary payment to employee', $options: 'i' },
+      tenantId: req.tenantId
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -261,8 +279,17 @@ exports.deleteOtherExpense = async (req, res) => {
     if (!emp) return res.status(404).json({ error: 'Not found' });
     const idx = parseInt(req.params.index, 10);
     if (isNaN(idx) || !emp.otherExpenses[idx]) return res.status(404).json({ error: 'Other expense not found' });
+    const oth = emp.otherExpenses[idx];
     emp.otherExpenses.splice(idx, 1);
     await emp.save();
+    // Also delete the corresponding TransactionLine
+    await TransactionLine.deleteOne({
+      employeeId: emp._id,
+      amount: -Math.abs(oth.amount),
+      date: oth.date,
+      narration: { $regex: 'Other employee expense', $options: 'i' },
+      tenantId: req.tenantId
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });

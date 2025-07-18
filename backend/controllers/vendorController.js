@@ -15,9 +15,9 @@ exports.listVendors = async (req, res) => {
 exports.createVendor = async (req, res) => {
   try {
     if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
-    const { name, gstNo, phone, address, bankAccounts, paymentModes } = req.body;
+    const { name, gstNo, phone, address, bankAccounts, paymentModes, cashOnly } = req.body;
     const vendor = await Vendor.create({
-      name, gstNo, phone, address, bankAccounts, paymentModes, tenantId: req.tenantId, createdBy: req.user?.id
+      name, gstNo, phone, address, bankAccounts, paymentModes, cashOnly, tenantId: req.tenantId, createdBy: req.user?.id
     });
     res.status(201).json(vendor);
   } catch (err) {
@@ -47,6 +47,17 @@ exports.updateVendor = async (req, res) => {
     );
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
     res.json(vendor);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+exports.deleteVendor = async (req, res) => {
+  try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
+    const vendor = await Vendor.findOneAndDelete({ _id: req.params.id, tenantId: req.tenantId });
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+    res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -135,9 +146,9 @@ exports.getVendorLedger = async (req, res) => {
         _id: bill._id,
         type: 'Bill',
         date: bill.billDate || bill.createdAt,
-        amount: bill.amount,
+        amount: bill.total,
         debit: 0,
-        credit: bill.amount,
+        credit: bill.total, // Bill is a credit
         ref: bill.billNo || '',
         note: 'Purchase Bill',
       })),
@@ -146,19 +157,19 @@ exports.getVendorLedger = async (req, res) => {
         type: 'Advance',
         date: adv.date || adv.createdAt,
         amount: adv.amount,
-        debit: adv.amount, // CHANGED: advances are now debit
-        credit: 0,         // CHANGED: advances are not credit
+        debit: adv.amount, // advances are debit
+        credit: 0,
         ref: '',
         note: adv.cleared ? 'Advance (Cleared)' : 'Advance',
       })),
-      // Add bill payments as debit entries
+      // Bill payments as debit
       ...bills.flatMap(bill =>
         (bill.payments || []).map((payment, idx) => ({
           _id: `${bill._id}-payment-${idx}`,
           type: 'Payment',
           date: payment.date || bill.updatedAt || bill.createdAt,
           amount: payment.amount,
-          debit: payment.amount,
+          debit: payment.amount, // Payment is a debit
           credit: 0,
           ref: bill.billNo || '',
           note: 'Bill Payment',
@@ -169,10 +180,11 @@ exports.getVendorLedger = async (req, res) => {
     // Sort by date ascending
     ledgerEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Calculate running balance
+    // Calculate running balance (credit - debit, clamp to zero to avoid negative balance)
     let balance = 0;
     ledgerEntries = ledgerEntries.map(entry => {
-      balance += (entry.debit || 0) - (entry.credit || 0);
+      balance = balance + (entry.credit || 0) - (entry.debit || 0);
+      if (balance < 0) balance = 0;  // Clamp balance to zero to avoid negative
       return { ...entry, balance };
     });
 

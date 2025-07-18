@@ -46,8 +46,8 @@ export default function Pricing() {
   return (
     <>
       <Helmet>
-        <title>Pricing - Ario Finance Management</title>
-        <meta name="description" content="Simple, transparent pricing for Ario Finance Management. Choose the plan that fits your business." />
+        <title>Pricing - SSK Finance Management</title>
+        <meta name="description" content="Simple, transparent pricing for SSK Finance Management. Choose the plan that fits your business." />
       </Helmet>
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-16">

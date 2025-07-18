@@ -6,7 +6,7 @@ export default function Navbar() {
     <nav className="w-full bg-white/90 shadow-sm sticky top-0 z-30 backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="text-2xl font-bold text-primary flex items-center gap-2">
-          <span>Ario Finance</span>
+          <span>SSK Finance</span>
         </Link>
         <div className="flex gap-6 items-center text-base font-medium">
           <Link to="/features" className="hover:text-primary">Features</Link>

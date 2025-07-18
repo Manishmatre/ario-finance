@@ -7,13 +7,13 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About - Ario Finance Management</title>
-        <meta name="description" content="Learn more about Ario Finance Management, our mission, and our team." />
+        <title>About - SSK Finance Management</title>
+        <meta name="description" content="Learn more about SSK Finance Management, our mission, and our team." />
       </Helmet>
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-16 fade-in-up">
         <h1 className="text-4xl font-bold mb-8 text-center">About Us</h1>
-        <p className="text-lg text-gray-700 mb-6 text-center">Ario Finance Management is built by a passionate team at ArionexTech to help businesses manage their finances with ease, security, and confidence. Our mission is to empower every business to grow with modern, accessible financial tools.</p>
+        <p className="text-lg text-gray-700 mb-6 text-center">SSK Finance Management is built by a passionate team at SSKnexTech to help businesses manage their finances with ease, security, and confidence. Our mission is to empower every business to grow with modern, accessible financial tools.</p>
         <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
           <div className="flex-1">
             <h3 className="font-bold text-lg mb-2">Our Mission</h3>

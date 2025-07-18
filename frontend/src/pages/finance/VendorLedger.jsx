@@ -255,7 +255,7 @@ const VendorLedger = () => {
               { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
               { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
               { Header: 'Ref', accessor: 'ref' },
-              { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => <span className={value < 0 ? 'text-red-600 font-bold' : 'text-green-700 font-bold'}>{`₹${value?.toLocaleString()}`}</span> },
+              { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => <span className={value < 0 ? 'text-red-600 font-bold' : 'text-green-700 font-bold'}>{`₹${Math.abs(value)?.toLocaleString()}`}</span> },
             ]}
             data={paginated.map((row, i) => ({ ...row, _id: row._id || `${row.type}-${row.date}-${i}` }))}
           />

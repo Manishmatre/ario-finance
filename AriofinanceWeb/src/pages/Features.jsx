@@ -40,8 +40,8 @@ export default function Features() {
   return (
     <>
       <Helmet>
-        <title>Features - Ario Finance Management</title>
-        <meta name="description" content="Explore all the features of Ario Finance Management. Real-time dashboards, automation, security, and more." />
+        <title>Features - SSK Finance Management</title>
+        <meta name="description" content="Explore all the features of SSK Finance Management. Real-time dashboards, automation, security, and more." />
       </Helmet>
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-16">

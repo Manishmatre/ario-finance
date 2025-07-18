@@ -59,32 +59,34 @@ export default function VendorDetails() {
   const ledgerWithBalance = (() => {
     let balance = 0;
     return ledger.map(row => {
-      balance += (row.debit || 0) - (row.credit || 0);
+      balance += (row.credit || 0) - (row.debit || 0);
+      if (balance < 0) balance = 0; // clamp to zero to avoid negative balance
       return { ...row, balance };
     });
   })();
   const totalBillAmount = ledger.filter(e => e.type === 'Bill').reduce((sum, e) => sum + (e.amount || 0), 0);
   const totalPaidAmount = ledger.filter(e => e.type === 'Payment').reduce((sum, e) => sum + (e.amount || 0), 0);
-  const totalPendingAmount = totalBillAmount - totalPaidAmount;
+  const totalPendingAmount = Math.max(totalBillAmount - totalPaidAmount, 0);
   const outstanding = ledgerWithBalance.length > 0 ? ledgerWithBalance[ledgerWithBalance.length - 1].balance : 0;
+
+  // Fix: Never show negative or nonzero outstanding if balance is 0 or less
+  const fixedOutstanding = outstanding > 0 ? outstanding : 0;
 
   const summaryCards = [
     { title: 'Total Bill Amount', value: totalBillAmount, icon: <FiFileText className="h-6 w-6 text-blue-500" /> },
     { title: 'Total Paid Amount', value: totalPaidAmount, icon: <FiCheckCircle className="h-6 w-6 text-green-500" /> },
     { title: 'Total Pending Amount', value: totalPendingAmount, icon: <FiDollarSign className="h-6 w-6 text-yellow-500" /> },
-    { title: 'Outstanding', value: outstanding, icon: <FiDollarSign className="h-6 w-6 text-red-500" /> },
+    { title: 'Outstanding', value: fixedOutstanding, icon: <FiDollarSign className="h-6 w-6 text-red-500" />, highlight: fixedOutstanding > 0 },
   ];
 
   const billColumns = [
-    { Header: 'Bill No', accessor: 'billNo', Cell: ({ value }) => <span className="font-medium">{value}</span> },
-    { Header: 'Bill Date', accessor: 'billDate', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
-    { Header: 'Amount', accessor: 'amount', Cell: ({ value }) => <span>₹{value?.toLocaleString()}</span> },
-    { Header: 'Status', accessor: 'isPaid', Cell: ({ value }) => <span className={`px-2 py-1 rounded-full text-xs font-medium ${value ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{value ? 'Paid' : 'Pending'}</span> },
-    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (
-      <div className="flex gap-2">
-        <Button size="sm" variant="secondary" onClick={() => navigate(`/finance/bills/${row.original._id || row.original.id}`)}>View</Button>
-      </div>
-    ) }
+    { Header: 'Bill/Invoice No', accessor: 'billNo', Cell: ({ value }) => <span className="font-medium">{value}</span> },
+    { Header: 'Bill/Invoice Date', accessor: 'billDate', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
+    { Header: 'Taxable Value', accessor: 'taxableValue', Cell: ({ row }) => row.original.cashOnly ? <span className="text-gray-400">N/A</span> : <span>₹{row.original.taxableValue ? Number(row.original.taxableValue).toLocaleString() : '-'}</span> },
+    { Header: 'GST', accessor: 'gst', Cell: ({ row }) => row.original.cashOnly ? <span className="text-gray-400">N/A</span> : (() => { const i = Number(row.original.taxAmount?.integratedTax); const c = Number(row.original.taxAmount?.centralTax); const s = Number(row.original.taxAmount?.stateTax); const totalGST = [i, c, s].reduce((sum, v) => sum + (isNaN(v) ? 0 : v), 0); return <span>₹{totalGST.toLocaleString()}</span>; })() },
+    { Header: 'Total Invoice Value', accessor: 'total', Cell: ({ value }) => <span>₹{value ? Number(value).toLocaleString() : '-'}</span> },
+    { Header: 'Status', accessor: 'isPaid', Cell: ({ row }) => { const total = Number(row.original.total) || 0; const paid = (row.original.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0); const balance = Math.max(total - paid, 0); const isPaid = balance === 0; return <span className={`px-2 py-1 rounded-full text-xs font-medium ${isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{isPaid ? 'Paid' : 'Pending'}</span>; } },
+    { Header: 'Actions', accessor: 'actions', Cell: ({ row }) => (<div className="flex gap-2"><Button size="sm" variant="secondary" onClick={() => navigate(`/finance/bills/${row.original._id || row.original.id}`)}>View</Button>{row.original.cashOnly && <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Cash Only</span>}</div>) }
   ];
 
   const advanceColumns = [
@@ -98,10 +100,10 @@ export default function VendorDetails() {
     { Header: 'Date', accessor: 'date', Cell: ({ value }) => value ? new Date(value).toLocaleDateString('en-IN') : '-' },
     { Header: 'Type', accessor: 'type' },
     { Header: 'Note', accessor: 'note' },
-    { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
-    { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${value.toLocaleString()}` : '-' },
+    { Header: 'Debit', accessor: 'debit', Cell: ({ value }) => value ? `₹${Math.abs(value).toLocaleString()}` : '-' },
+    { Header: 'Credit', accessor: 'credit', Cell: ({ value }) => value ? `₹${Math.abs(value).toLocaleString()}` : '-' },
     { Header: 'Bill/Invoice No', accessor: 'ref', Cell: ({ row }) => row.original.billNo || row.original.invoiceNo || row.original.ref || '-' },
-    { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => value !== undefined ? `₹${value.toLocaleString()}` : '-' },
+    { Header: 'Balance', accessor: 'balance', Cell: ({ value }) => value !== undefined ? `₹${Math.abs(Math.max(0, value)).toLocaleString()}` : '-' },
   ];
 
   // Ledger download helpers (copied from VendorLedger)
@@ -211,7 +213,19 @@ export default function VendorDetails() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         {summaryCards.map((card, idx) => (
-          <StatCard key={idx} title={card.title} value={card.title.includes('Amount') || card.title === 'Outstanding' ? `₹${card.value?.toLocaleString()}` : card.value} icon={card.icon} />
+          <StatCard
+            key={idx}
+            title={card.title}
+            value={card.title === 'Outstanding'
+              ? <span className={card.highlight ? 'text-red-600 font-bold' : 'text-gray-700'}>
+                  ₹{card.value?.toLocaleString()}
+                  {card.highlight && <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded">Due</span>}
+                </span>
+              : card.title.includes('Amount')
+                ? `₹${card.value?.toLocaleString()}`
+                : card.value}
+            icon={card.icon}
+          />
         ))}
       </div>
       {/* Tabs */}
@@ -235,8 +249,8 @@ export default function VendorDetails() {
           {tab === 'info' && (
             <div className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div><strong>Name:</strong> {vendor.name}</div>
-          <div><strong>GST No:</strong> {vendor.gstNo}</div>
+          <div><strong>Name:</strong> {vendor.name}{vendor.cashOnly && <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Cash Only</span>}</div>
+          <div><strong>GST No:</strong> {vendor.cashOnly ? <span className="text-gray-400">N/A</span> : vendor.gstNo}</div>
           <div><strong>Phone:</strong> {vendor.phone}</div>
           <div><strong>Address:</strong> {vendor.address}</div>
           {vendor.createdBy && <div><strong>Created By:</strong> {vendor.createdBy}</div>}

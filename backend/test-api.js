@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const API_BASE_URL = 'https://ariofinance-backend.onrender.com';
+const API_BASE_URL = 'https://SSKfinance-backend.onrender.com';
 
 async function testBankAccountAPI() {
   try {

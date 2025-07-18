@@ -3,7 +3,7 @@ import axios from 'axios';
 // Validate and set the base URL
 const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  const defaultUrl = 'https://ariofinance-backend.onrender.com';
+  const defaultUrl = 'https://SSKfinance-backend.onrender.com';
   
   // If VITE_API_URL is set and not empty, use it
   if (envUrl && envUrl.trim() !== '') {

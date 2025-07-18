@@ -1,4 +1,4 @@
-const PurchaseBill = require('../models/PurchaseBill');
+  const PurchaseBill = require('../models/PurchaseBill');
 const { uploadFile } = require('../utils/storage');
 const TransactionLine = require('../models/TransactionLine');
 const BankAccount = require('../models/BankAccount');
@@ -8,7 +8,9 @@ const { getIO } = require('../socket');
 exports.uploadBill = async (req, res) => {
   try {
     if (!req.tenantId) return res.status(400).json({ error: 'Missing tenantId' });
-    const { vendorId, billNo, billDate, amount, projectId } = req.body;
+    const { vendorId, billNo, billDate, amount, projectId,
+      gstinSupplier, tradeLegalName, invoiceType, invoiceValue, placeOfSupply, reverseCharge, gstRate, taxableValue, taxAmount, total
+    } = req.body;
     console.log('Received uploadBill request');
     if (!req.file) {
       console.error('No file uploaded');
@@ -36,9 +38,14 @@ exports.uploadBill = async (req, res) => {
       if (Array.isArray(vendorId)) fixedVendorId = vendorId[0];
       if (typeof fixedVendorId === 'object') fixedVendorId = String(fixedVendorId);
     }
+    // Fetch vendor to check cashOnly
+    const vendorDoc = await Vendor.findById(fixedVendorId);
+    const isCashOnly = vendorDoc?.cashOnly || false;
     const bill = await PurchaseBill.create({
       vendorId: fixedVendorId, billNo, billDate, amount, projectId,
-      fileUrl, tenantId: req.tenantId, createdBy: req.user?.id
+      gstinSupplier, tradeLegalName, invoiceType, invoiceValue, placeOfSupply, reverseCharge, gstRate, taxableValue, taxAmount, total,
+      fileUrl, tenantId: req.tenantId, createdBy: req.user?.id,
+      cashOnly: isCashOnly
     });
     const populatedBill = await PurchaseBill.findById(bill._id).populate('vendorId', 'name');
     // Create and emit a real notification
@@ -82,65 +89,70 @@ exports.payBill = async (req, res) => {
     // const vendorAccount = await Account.findOne({ name: vendor.name, tenantId: req.tenantId });
     // if (!vendorAccount) return res.status(400).json({ error: 'Vendor account not found in Chart of Accounts' });
 
-    // 2. Find our bank account (by _id)
-    let bankAccountDoc = null;
-    let bankAccount = null;
-    if (ourBankAccount) {
-      bankAccountDoc = await BankAccount.findOne({ _id: ourBankAccount, tenantId: req.tenantId });
-      if (!bankAccountDoc) return res.status(400).json({ error: 'Company bank account not found' });
-      // Remove all Account model and Chart of Accounts logic. Use only BankAccount.
-      // bankAccount = await Account.findOne({ name: bankAccountDoc.bankName, tenantId: req.tenantId });
-      // if (!bankAccount) return res.status(400).json({ error: 'Bank account not found in Chart of Accounts' });
-    } else {
-      return res.status(400).json({ error: 'Bank account required for this payment mode' });
-    }
-
-    // Only allow bank transfer payment modes
-    if (!["UPI", "NEFT", "RTGS", "IMPS", "Cheque"].includes(paymentMode)) {
-      return res.status(400).json({ error: 'Only bank transfer payment modes are allowed' });
-    }
-
-    // 3. Create transaction (bank-centric)
-    const txn = await TransactionLine.create({
-      date: new Date(),
-      bankAccountId: bankAccountDoc._id,
-      debitAccount: bankAccountDoc._id,
-      creditAccount: null,
-      vendorId: vendor._id,
-      amount: -Math.abs(paymentAmount), // Always negative for bill payments
-      narration: narrationText,
-      tenantId: req.tenantId,
-      createdBy: req.user?.id
-    });
-
-    // 4. Add payment record to bill
-    bill.payments = bill.payments || [];
-    bill.payments.push({
-      amount: paymentAmount,
-      date: new Date(),
-      paymentMode,
-      bankAccount: bankAccountDoc._id,
-      transactionId: txn._id,
-      vendorBankAccount: req.body.vendorBankAccount || undefined
-    });
-
-    // 5. Update bill payment status
-    const totalPaid = bill.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-    if (totalPaid >= bill.amount) {
+    if (bill.cashOnly) {
+      // For cash-only, mark as paid, add payment record with paymentMode 'Cash', no bankAccount, no transaction
+      bill.payments = bill.payments || [];
+      bill.payments.push({
+        amount: paymentAmount,
+        date: new Date(),
+        paymentMode: 'Cash',
+        bankAccount: null,
+        transactionId: null,
+        vendorBankAccount: undefined
+      });
       bill.isPaid = true;
       bill.paymentStatus = 'paid';
-    } else if (totalPaid > 0) {
-      bill.isPaid = false;
-      bill.paymentStatus = 'partial';
+      await bill.save();
+      return res.json({ bill });
     } else {
-      bill.isPaid = false;
-      bill.paymentStatus = 'pending';
+      let bankAccountDoc = null;
+      if (ourBankAccount) {
+        bankAccountDoc = await BankAccount.findOne({ _id: ourBankAccount, tenantId: req.tenantId });
+        if (!bankAccountDoc) return res.status(400).json({ error: 'Company bank account not found' });
+      } else {
+        return res.status(400).json({ error: 'Bank account required for this payment mode' });
+      }
+      if (!["UPI", "NEFT", "RTGS", "IMPS", "Cheque"].includes(paymentMode)) {
+        return res.status(400).json({ error: 'Only bank transfer payment modes are allowed' });
+      }
+      const txn = await TransactionLine.create({
+        date: new Date(),
+        bankAccountId: bankAccountDoc._id,
+        debitAccount: bankAccountDoc._id,
+        creditAccount: null,
+        vendorId: vendor._id,
+        amount: -Math.abs(paymentAmount),
+        narration: narrationText,
+        tenantId: req.tenantId,
+        createdBy: req.user?.id
+      });
+      bill.payments = bill.payments || [];
+      bill.payments.push({
+        amount: paymentAmount,
+        date: new Date(),
+        paymentMode,
+        bankAccount: bankAccountDoc._id,
+        transactionId: txn._id,
+        vendorBankAccount: req.body.vendorBankAccount || undefined
+      });
+      // 5. Update bill payment status
+      const totalPaid = bill.payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const billTotal = Number(bill.total) || 0;
+      const balance = Math.max(billTotal - totalPaid, 0);
+      if (balance === 0) {
+        bill.isPaid = true;
+        bill.paymentStatus = 'paid';
+      } else if (totalPaid > 0) {
+        bill.isPaid = false;
+        bill.paymentStatus = 'partial';
+      } else {
+        bill.isPaid = false;
+        bill.paymentStatus = 'pending';
+      }
+      bill.relatedTxnId = txn._id;
+      await bill.save();
+      return res.json({ bill, txn });
     }
-    bill.relatedTxnId = txn._id;
-    await bill.save();
-
-    // 6. Update bank account balance
-    res.json({ bill, txn });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -181,6 +193,9 @@ exports.updateBill = async (req, res) => {
       ...req.body,
       vendorId: fixedVendorId
     };
+    // Fetch vendor to check cashOnly
+    const vendorDoc = await Vendor.findById(fixedVendorId);
+    updateData.cashOnly = vendorDoc?.cashOnly || false;
     if (req.file) {
       try {
         const fileUrl = await uploadFile(req.file.buffer, req.file.originalname, req.file.mimetype);

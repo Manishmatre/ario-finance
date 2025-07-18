@@ -21,7 +21,7 @@ app.post('/test-bank-account', (req, res) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ario-finance')
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/SSK-finance')
   .then(() => {
     console.log('MongoDB connected');
     app.listen(4001, () => {

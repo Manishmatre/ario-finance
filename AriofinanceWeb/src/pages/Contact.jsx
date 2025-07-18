@@ -7,8 +7,8 @@ export default function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact - Ario Finance Management</title>
-        <meta name="description" content="Contact Ario Finance Management for support, sales, or partnership inquiries." />
+        <title>Contact - SSK Finance Management</title>
+        <meta name="description" content="Contact SSK Finance Management for support, sales, or partnership inquiries." />
       </Helmet>
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-16 fade-in-up">
@@ -20,7 +20,7 @@ export default function Contact() {
           <button type="submit" className="px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition shadow button-hover">Send Message</button>
         </form>
         <div className="mt-8 text-center text-gray-500 text-sm">
-          Or email us at <a href="mailto:support@ariofinance.com" className="text-primary underline">support@ariofinance.com</a>
+          Or email us at <a href="mailto:support@SSKfinance.com" className="text-primary underline">support@SSKfinance.com</a>
         </div>
       </div>
       <Footer />

@@ -17,7 +17,7 @@ export default function AuthLayout({ children, title, subtitle }) {
                 <span className="text-white font-bold text-lg">A</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900">Ario</span>
+                <span className="text-xl font-bold text-gray-900">SSK</span>
                 <span className="text-sm font-medium text-gray-600">Finance Management</span>
               </div>
             </Link>
@@ -95,7 +95,7 @@ export default function AuthLayout({ children, title, subtitle }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <p className="text-sm text-gray-500 mb-2">
-              &copy; {new Date().getFullYear()} Ario Finance Management. All rights reserved.
+              &copy; {new Date().getFullYear()} SSK Finance Management. All rights reserved.
             </p>
             <div className="flex justify-center space-x-6 text-xs text-gray-400">
               <Link to="/auth/login" className="hover:text-gray-600 transition-colors">Privacy Policy</Link>
